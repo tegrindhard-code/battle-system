@@ -330,7 +330,7 @@ Battle = class({
 	end
 	--
 
-	if self.battleType == BATTLE_TYPE_WILD and self.eid then
+	if (self.battleType == BATTLE_TYPE_WILD or self.battleType == BATTLE_TYPE_SAFARI) and self.eid then
 		-- eid = encounter id
 		-- rfl = repel-forced level
 		local PlayerData = _f.PlayerDataService[creatingPlayer]
