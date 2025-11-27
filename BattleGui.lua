@@ -1429,7 +1429,7 @@ end]]
 				end
 				--self.inputEvent:fire('move '..moveNum..(gui.mega.selected and ' mega ' or ' ')..t)
 				local option = ''
-				if gui.mega.selected then option = ' mega ' elseif gui.zmove.selected then option = ' zmov ' elseif gui.ultra.selected then option = ' ultra ' elseif (gui.dynamax.selected or gui.gigantamax.selected) then option = ' dynamax ' elseif gui.terastallize.selected then option = ' terastallize ' elseif (rqPokemon.currentDyna) then option = ' maxmove ' end
+				if gui.mega.selected then option = ' mega ' elseif gui.zmove.selected then option = ' zmov ' elseif gui.ultra.selected then option = ' ultra ' elseif (gui.dynamax.selected or gui.gigantamax.selected) then option = ' dynamax ' elseif gui.terastallize.selected then option = ' tera ' elseif (rqPokemon.currentDyna) then option = ' maxmove ' end
 				--print("MOVENUM:", moveNum)
 				self.inputEvent:fire('move '..moveNum..option..t)
 
@@ -1974,7 +1974,7 @@ end]]
 				self:chooseMoveTarget(m, move, rqPokemon, slot, nActive)
 			else
 				local option = ''
-				if gui.mega.selected then option = ' mega' elseif gui.zmove.selected then option = ' zmov' elseif gui.ultra.selected then option = ' ultra' elseif (gui.dynamax.selected or gui.gigantamax.selected) then option = ' dynamax' elseif gui.terastallize.selected then option = ' terastallize' elseif (rqPokemon.currentDyna) then option = ' maxmove' end
+				if gui.mega.selected then option = ' mega' elseif gui.zmove.selected then option = ' zmov' elseif gui.ultra.selected then option = ' ultra' elseif (gui.dynamax.selected or gui.gigantamax.selected) then option = ' dynamax' elseif gui.terastallize.selected then option = ' tera' elseif (rqPokemon.currentDyna) then option = ' maxmove' end
 				self.inputEvent:fire('move '..m..option)
 				self:exitButtonsMoveChosen()
 			end
