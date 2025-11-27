@@ -65,7 +65,42 @@ return function(Battle)
 	}
 	
 	data.TypeFromInt = {'Bug','Dark','Dragon','Electric','Fairy','Fighting','Fire','Flying','Ghost','Grass','Ground','Ice','Normal','Poison','Psychic','Rock','Steel','Water'}
-	
+
+	-- Tera Type Calculator
+	-- Calculates the Tera type for a Pokemon based on its IVs and personality
+	-- This makes it deterministic (same Pokemon = same Tera type) but varied across Pokemon
+	function Battle:calculateTeraType(ivs, personality, types)
+		-- Use a combination of IVs and personality to determine Tera type
+		-- Similar to Hidden Power calculation but with all 18 types available
+		local teraTypeValue = 0
+		local multiplier = 1
+
+		-- Calculate based on IVs (6 stats, each contributing)
+		for i = 1, 6 do
+			local iv = ivs[i] or 0
+			teraTypeValue = teraTypeValue + (iv % 4) * multiplier
+			multiplier = multiplier * 4
+		end
+
+		-- Add personality influence for more variation
+		if personality then
+			teraTypeValue = teraTypeValue + (personality % 256)
+		end
+
+		-- Map to one of the 18 types
+		local typeIndex = (teraTypeValue % 18) + 1
+		local teraType = data.TypeFromInt[typeIndex]
+
+		-- 60% chance to match one of the Pokemon's natural types (if provided)
+		-- This makes Tera types more aligned with the Pokemon's identity
+		if types and #types > 0 and teraTypeValue % 10 < 6 then
+			local typeChoice = (teraTypeValue % #types) + 1
+			teraType = types[typeChoice]
+		end
+
+		return teraType
+	end
+
 	function Battle:getImmunity(source, target)
 		-- returns false if the target is immune; true otherwise
 		-- also checks immunity to some statuses

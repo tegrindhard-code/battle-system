@@ -873,6 +873,51 @@ return function(Battle)
 		end
 		return true
 	end
+	-- Terastallization functions
+	function Battle:canTerastallize(pokemon)
+		-- Check if Pokemon has a Tera type
+		if not pokemon.teraType then return false end
+
+		-- Check if already Terastallized
+		if pokemon.isTerastallized then return false end
+
+		-- Check if this Pokemon already used Terastallization in battle
+		if pokemon.usedTerastallization then return false end
+
+		return pokemon.teraType
+	end
+
+	function Battle:runTerastallize(pokemon)
+		-- Store original types for STAB calculation
+		pokemon.originalTypes = pokemon:getTypes(true)
+
+		-- Set Terastallized state
+		pokemon.isTerastallized = true
+		pokemon.usedTerastallization = true
+
+		-- Update details
+		pokemon.details = pokemon.template.species .. ', L' .. pokemon.level ..
+			(pokemon.gender == '' and '' or ', ') .. pokemon.gender ..
+			(pokemon.set.shiny and ', shiny' or '') ..
+			', tera:' .. pokemon.teraType
+
+		-- Announce Terastallization
+		self:add('-terastallize', pokemon, pokemon.teraType)
+
+		-- Update type display
+		self:add('-start', pokemon, 'typechange', pokemon.teraType)
+
+		-- Prevent other Pokemon on the team from Terastallizing
+		for _, ally in pairs(pokemon.side.pokemon) do
+			if ally ~= pokemon and not ally.usedTerastallization then
+				-- Keep their Tera type but mark as unable to use it this battle
+				ally.canTerastallizeThisBattle = false
+			end
+		end
+
+		return true
+	end
+
 	function Battle:isAdjacent(pokemon1, pokemon2)
 		if pokemon1.fainted or pokemon2.fainted then return false end
 		if pokemon1.side == pokemon2.side then return math.abs(pokemon1.position - pokemon2.position) == 1 end

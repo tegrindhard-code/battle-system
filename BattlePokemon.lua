@@ -52,6 +52,10 @@ BattlePokemon = class({
 	duringMove = false,
 	speed = 0,
 
+	-- Terastallization
+	teraType = nil,
+	isTerastallized = false,
+
 	__isBattlePokemon = true,
 
 }, function(self, set, side)
@@ -196,6 +200,12 @@ BattlePokemon = class({
 
 	self.canMegaEvo = self.battle:canMegaEvo(self)
 	self.canZMove = self.battle:canZMove(self)
+
+	-- Initialize Tera Type from set
+	if set.teraType then
+		self.teraType = set.teraType
+		self.baseTeraType = set.teraType
+	end
 
 	self.evs = {}
 	self.ivs = {}
@@ -618,7 +628,8 @@ function BattlePokemon:getRequestData() -- for pokemon in request.active (for re
 	data.fainted = self.fainted
 	if self.teamn then data.teamn = self.teamn end
 	if self.canMegaEvo then data.canMegaEvo = true end
-	if self.canZMove then data.canZMove = self.canZMove end 
+	if self.canZMove then data.canZMove = self.canZMove end
+	if self.teraType and not self.isTerastallized then data.canTerastallize = self.teraType end
 	if isLastActive then
 		if self.maybeDisabled then
 			data.maybeDisabled = true
@@ -792,6 +803,8 @@ function BattlePokemon:clearVolatile(init)
 	self.ability = self.baseAbility
 	self.ivs = deepcopy(self.baseIvs)
 	self.hpType = self.baseHpType
+	-- Reset Terastallization state but keep the Tera type
+	self.isTerastallized = false
 	for i in pairs(self.volatiles) do
 		if self.volatiles[i].linkedStatus then
 			self.volatiles[i].linkedPokemon:removeVolatile(self.volatiles[i].linkedStatus)
@@ -1331,6 +1344,11 @@ function BattlePokemon:addType(newType)
 	return true
 end
 function BattlePokemon:getTypes(getAll)
+	-- If Terastallized, return only the Tera type
+	if self.isTerastallized and self.teraType then
+		return {self.teraType}
+	end
+
 	local types = {}
 	for _, td in pairs(self.typesData) do
 		if getAll or not td.suppressed then
