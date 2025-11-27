@@ -7,6 +7,7 @@ return function(_p)
 	local activated = false
 	local fieldThread = nil
 	local gui, bg, close
+	local isProcessing = false  -- Add debounce flag to prevent double-clicks
 
 	local null, Not, split, indexOf, toId, sync, endsWith; do
 		local util = require(script.Parent.Parent.Battle.BattleUtilities)
@@ -79,19 +80,31 @@ return function(_p)
 			_p.PlayerList:lock()
 
 			local closeFunc = function()
+				-- Prevent closing if already processing
+				if isProcessing then return end
+				isProcessing = true
+
 				-- Add safety check for battleGui
 				if battle.battleGui and battle.battleGui.mainChoices and battle.battleGui.choicePack then
-					spawn(function() battle.battleGui:mainChoices(unpack(battle.battleGui.choicePack)) end)
+					spawn(function()
+						pcall(function()
+							battle.battleGui:mainChoices(unpack(battle.battleGui.choicePack))
+						end)
+					end)
 				end
 				Utilities.Tween(.8, 'easeOutCubic', function(a)
 					bg.BackgroundTransparency = .5+.5*a
 					gui.Position = UDim2.new(.5+.5*a, (-gui.AbsoluteSize.X/2)*(1-a), -0.02, 0)
 				end)
+
+				-- Wait for animation to complete before cleanup
+				task.wait(0.8)
 				_p.PlayerList:unlock()
 				bg.Parent = nil
 				gui.Parent = nil
 				bg = nil
 				gui = nil
+				isProcessing = false
 			end
 			--Actual UI Stuff
 			if not gui then
@@ -453,10 +466,15 @@ return function(_p)
 				Parent = main,
 				Button = true,
 				MouseButton1Click = function()
+					-- Prevent double-clicks while processing
+					if isProcessing then return end
+
 					-- Add safety check before trying to access battle functions
 					if not battle or not battle.battleGui then
 						return
 					end
+
+					isProcessing = true
 
 					spawn(function()
 						pcall(function()
@@ -465,8 +483,14 @@ return function(_p)
 						if battle.battleGui.exitButtonsMain then
 							battle.battleGui:exitButtonsMain()
 						end
+
+						-- Wait for animations to complete before showing field check
+						task.wait(0.7)
+
+						-- Now safe to show field check UI
+						fieldCheck()
+						isProcessing = false
 					end)
-					fieldCheck()
 				end,
 			}
 			write 'Field Status' {
