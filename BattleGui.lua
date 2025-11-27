@@ -1981,7 +1981,7 @@ end]]
 		end
 		local main = gui.main
 		local container = main.container
-		local moves, mega, cancel, zmove, ultra, dynamax, gigantamax = gui.moves, gui.mega, gui.cancel, gui.zmove, gui.ultra, gui.dynamax, gui.gigantamax
+		local moves, mega, cancel, zmove, ultra, dynamax, gigantamax, terastallize = gui.moves, gui.mega, gui.cancel, gui.zmove, gui.ultra, gui.dynamax, gui.gigantamax, gui.terastallize
 
 
 		if not moves then
