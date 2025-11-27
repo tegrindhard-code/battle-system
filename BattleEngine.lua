@@ -3139,11 +3139,11 @@ function Battle:runDecision(decision)
 	if c == 'safari-ball' then
 		self:runSafariBall()
 		return
-	elseif c == 'safari-berry' then
-		self:runSafariBerry()
+	elseif c == 'safari-bait' then
+		self:runSafariBait()
 		return
-	elseif c == 'safari-near' then
-		self:runSafariNear()
+	elseif c == 'safari-rock' then
+		self:runSafariRock()
 		return
 	elseif c == 'safari-run' then
 		self:runSafariRun()
@@ -3335,12 +3335,15 @@ function Battle:runSafariBall()
 	local baseCatchRate = pokemon.template.captureRate or 45
 	local catchRate = baseCatchRate
 
+	-- Game-accurate Safari Zone mechanics:
+	-- Bait (eating): Makes Pokemon less likely to flee, but HARDER to catch
 	if self.safariData.eatingLevel > 0 then
-		catchRate = math.min(255, catchRate * 2)
+		catchRate = math.max(1, math.floor(catchRate / 2))
 	end
 
+	-- Rock (anger): Makes Pokemon MORE likely to flee, but EASIER to catch
 	if self.safariData.angerLevel > 0 then
-		catchRate = math.max(1, math.floor(catchRate / 2))
+		catchRate = math.min(255, catchRate * 2)
 	end
 
 	local maxHP = pokemon:getStat('hp')
@@ -3393,10 +3396,10 @@ function Battle:runSafariBall()
 	self:makeRequest('move')
 end
 
-function Battle:runSafariBerry()
+function Battle:runSafariBait()
 	local pokemon = self.wildFoePokemon
 
-	self:add('-message', 'You threw a Berry!')
+	self:add('-message', 'You threw some Bait!')
 
 	self.safariData.eatingLevel = math.min(5, self.safariData.eatingLevel + 2)
 	self.safariData.angerLevel = math.max(0, self.safariData.angerLevel - 1)
@@ -3406,10 +3409,10 @@ function Battle:runSafariBerry()
 	self:checkSafariFlee()
 	self:makeRequest('move')
 end
-function Battle:runSafariNear()
+function Battle:runSafariRock()
 	local pokemon = self.wildFoePokemon
 
-	self:add('-message', 'You went near the Pokemon!')
+	self:add('-message', 'You threw a Rock!')
 
 	self.safariData.angerLevel = math.min(5, self.safariData.angerLevel + 2)
 	self.safariData.eatingLevel = math.max(0, self.safariData.eatingLevel - 1)
@@ -3591,15 +3594,15 @@ function Battle:parseChoice(player, choices, side)
 				priority = 999,
 				side = side,
 			})
-		elseif choice == 'berry' then
+		elseif choice == 'bait' then
 			table.insert(decisions, {
-				choice = 'safari-berry',
+				choice = 'safari-bait',
 				priority = 999,
 				side = side,
 			})
-		elseif choice == 'gonear' then
+		elseif choice == 'rock' then
 			table.insert(decisions, {
-				choice = 'safari-near',
+				choice = 'safari-rock',
 				priority = 999,
 				side = side,
 			})

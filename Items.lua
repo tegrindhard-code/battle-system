@@ -3026,7 +3026,9 @@ return {
 	['safariball'] = {
 		id = "safariball",
 		name = "Safari Ball",
+		num = 5,
 		gen = 1,
+		isPokeball = true,
 	},
 	['safetygoggles'] = {
 		id = "safetygoggles",
