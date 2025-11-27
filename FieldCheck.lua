@@ -111,7 +111,7 @@ return function(_p)
 				bg = create("Frame")({
 					Name = "BackgroundFrame",
 					BorderSizePixel = 0,
-					BackgroundColor3 = Color3.new(0, 0, 0),
+					BackgroundColor3 = Color3.fromRGB(0, 0, 0),
 					Size = UDim2.new(1.0, 0, 1.0, 60),
 					Position = UDim2.new(0.0, 0, 0.0, -60),
 				})
@@ -123,24 +123,38 @@ return function(_p)
 					SizeConstraint = Enum.SizeConstraint.RelativeXY,
 					Size = UDim2.new(0.9, 0, 1.0, 0),
 					Position = UDim2.new(0.5, 0, -0.02, 0),
-					ImageColor3 = Color3.fromRGB(90, 0, 193),
+					ImageColor3 = Color3.fromRGB(30, 100, 180), -- Modern blue theme
 					ZIndex = 5,
 				})
 
 				close = _p.RoundedFrame:new({
 					Name = "CloseButton",
 					Button = true,
-					BackgroundColor3 = Color3.new(0.1, 0, 0.5),
+					BackgroundColor3 = Color3.fromRGB(220, 60, 60), -- Red close button
 					Size = UDim2.new(.31, 0, .08, 0),
 					Position = UDim2.new(.65, 0, -.03, 0),
 					ZIndex = 6, Parent = gui,
 				})
 
+				-- Add X icon to close button
+				create("TextLabel")({
+					Name = "CloseIcon",
+					BackgroundTransparency = 1.0,
+					Size = UDim2.new(0.2, 0, 0.7, 0),
+					Position = UDim2.new(0.05, 0, 0.15, 0),
+					Text = "✕",
+					TextColor3 = Color3.fromRGB(255, 255, 255),
+					TextScaled = true,
+					Font = Enum.Font.GothamBold,
+					ZIndex = 7,
+					Parent = close.gui,
+				})
+
 				write('Close')({
 					Frame = create('Frame')({
 						BackgroundTransparency = 1.0,
-						Size = UDim2.new(1.0, 0, 0.7, 0),
-						Position = UDim2.new(0.0, 0, 0.15, 0),
+						Size = UDim2.new(0.75, 0, 0.7, 0),
+						Position = UDim2.new(0.25, 0, 0.15, 0),
 						Parent = close.gui,
 						ZIndex = 7,
 					}), Scaled = true,
@@ -158,6 +172,17 @@ return function(_p)
 					}), Scaled = true,
 				})
 
+				-- Field section divider
+				create("Frame")({
+					Name = "FieldDivider",
+					BackgroundColor3 = Color3.fromRGB(100, 180, 255),
+					BorderSizePixel = 0,
+					Size = UDim2.new(0.25, 0, 0.003, 0),
+					Position = UDim2.new(0.65, 0, 0.17, 0),
+					ZIndex = 6,
+					Parent = gui,
+				})
+
 				write('Field')({
 					Frame = create('Frame')({
 						Name = "FieldFrame",
@@ -170,22 +195,56 @@ return function(_p)
 				})
 
 				local weatherStr = "No Weather"
-				local weather = fieldData.field.weather 
+				local weather = fieldData.field.weather
 				local weatherDur = fieldData.field.weatherDuration
+				local weatherColor = Color3.fromRGB(120, 120, 120) -- Default gray
 				if weather ~= "" then
 					if extremeWeathers[weather] then
 						weatherStr = extremeWeathers[weather]
 					else
 						weatherStr = weatherMap[weather] .. ": " .. weatherDur .. " Turns"
-					end	
+					end
+					-- Set colors based on weather type
+					if weather == "sunnyday" or weather == "desolateland" then
+						weatherColor = Color3.fromRGB(255, 200, 80)
+					elseif weather == "raindance" or weather == "primordialsea" then
+						weatherColor = Color3.fromRGB(80, 160, 255)
+					elseif weather == "sandstorm" then
+						weatherColor = Color3.fromRGB(220, 180, 100)
+					elseif weather == "hail" then
+						weatherColor = Color3.fromRGB(180, 220, 255)
+					end
 				end
 
 				local terrainStr = "No Terrain"
 				local terrain = fieldData.field.terrain
 				local terrainDur = fieldData.field.terrainDuration
+				local terrainColor = Color3.fromRGB(120, 120, 120) -- Default gray
 				if terrain ~= "" then
 					terrainStr = terrainMap[terrain] .. ": " .. terrainDur .. " Turns"
+					-- Set colors based on terrain type
+					if terrain == "electricterrain" then
+						terrainColor = Color3.fromRGB(255, 220, 80)
+					elseif terrain == "psychicterrain" then
+						terrainColor = Color3.fromRGB(255, 120, 200)
+					elseif terrain == "mistyterrain" then
+						terrainColor = Color3.fromRGB(220, 180, 255)
+					elseif terrain == "grassyterrain" then
+						terrainColor = Color3.fromRGB(100, 220, 100)
+					end
 				end
+
+				-- Weather background box
+				create("Frame")({
+					Name = "WeatherBG",
+					BackgroundColor3 = weatherColor,
+					BackgroundTransparency = 0.6,
+					BorderSizePixel = 0,
+					Size = UDim2.new(0.22, 0, 0.05, 0),
+					Position = UDim2.new(0.69, 0, 0.295, 0),
+					ZIndex = 6,
+					Parent = gui,
+				})
 
 				write(weatherStr)({
 					Frame = create('Frame')({
@@ -196,6 +255,18 @@ return function(_p)
 						Parent = gui,
 						ZIndex = 7,
 					}), Scaled = true,
+				})
+
+				-- Terrain background box
+				create("Frame")({
+					Name = "TerrainBG",
+					BackgroundColor3 = terrainColor,
+					BackgroundTransparency = 0.6,
+					BorderSizePixel = 0,
+					Size = UDim2.new(0.22, 0, 0.04, 0),
+					Position = UDim2.new(0.69, 0, 0.375, 0),
+					ZIndex = 6,
+					Parent = gui,
 				})
 
 				write(terrainStr)({
@@ -227,6 +298,17 @@ return function(_p)
 					})
 				end
 
+				-- Boosts section divider
+				create("Frame")({
+					Name = "BoostsDivider",
+					BackgroundColor3 = Color3.fromRGB(100, 180, 255),
+					BorderSizePixel = 0,
+					Size = UDim2.new(0.35, 0, 0.003, 0),
+					Position = UDim2.new(0.05, 0, 0.17, 0),
+					ZIndex = 6,
+					Parent = gui,
+				})
+
 				write('Boosts')({
 					Frame = create('Frame')({
 						Name = "BoostFrame",
@@ -238,8 +320,21 @@ return function(_p)
 					}), Scaled = true,
 				})
 
+				-- Boost column headers with improved visuals
 				for i=1, 4 do
 					local index = i-1
+					-- Background for boost column
+					create("Frame")({
+						Name = "BoostColumnBG"..i,
+						BackgroundColor3 = Color3.fromRGB(20, 80, 140),
+						BackgroundTransparency = 0.7,
+						BorderSizePixel = 0,
+						Size = UDim2.new(0.06, 0, 0.08, 0),
+						Position = UDim2.new(0.07 + (index * 0.07), 0, 0.27, 0),
+						Parent = gui,
+						ZIndex = 6,
+					})
+
 					create("ImageLabel")({
 						Name = "Boost"..i,
 						BackgroundTransparency = 1.0,
@@ -247,7 +342,7 @@ return function(_p)
 						SizeConstraint = Enum.SizeConstraint.RelativeXY,
 						Size = UDim2.new(0.06, 0, 0.7, 0),
 						Position = UDim2.new(0.07 + (index * 0.07), 0, 0.27, 0),
-						ImageColor3 = Color3.fromRGB(0, 195, 195),
+						ImageColor3 = Color3.fromRGB(100, 220, 255), -- Brighter cyan
 						Parent = gui,
 						ZIndex = 7,
 					})
@@ -351,6 +446,17 @@ return function(_p)
 
 				--Pos for boost values is UDim2.new(0.07 + (index * monCount), 0, 0.65 + (index * 0.085), 0),
 
+				-- Your Side section divider
+				create("Frame")({
+					Name = "YourSideDivider",
+					BackgroundColor3 = Color3.fromRGB(80, 220, 120), -- Green for player
+					BorderSizePixel = 0,
+					Size = UDim2.new(0.25, 0, 0.003, 0),
+					Position = UDim2.new(0.35, 0, 0.17, 0),
+					ZIndex = 6,
+					Parent = gui,
+				})
+
 				write('Your Side')({
 					Frame = create('Frame')({
 						Name = "PlayerFrame",
@@ -386,6 +492,17 @@ return function(_p)
 						}), Scaled = true,
 					})
 				end
+
+				-- Foe Side section divider
+				create("Frame")({
+					Name = "FoeSideDivider",
+					BackgroundColor3 = Color3.fromRGB(255, 100, 100), -- Red for opponent
+					BorderSizePixel = 0,
+					Size = UDim2.new(0.25, 0, 0.003, 0),
+					Position = UDim2.new(0.35, 0, 0.57, 0),
+					ZIndex = 6,
+					Parent = gui,
+				})
 
 				write('Foe Side')({
 					Frame = create('Frame')({
@@ -458,7 +575,7 @@ return function(_p)
 			end
 			local rf = _p.RoundedFrame:new {
 				Name = "Button",
-				BackgroundColor3 = Color3.new(0.1, 0, 0.5),
+				BackgroundColor3 = Color3.fromRGB(45, 140, 220), -- Modern blue
 				Style = 'HorizontalBar',
 				Size = UDim2.new(2, 0, 0.35, 0),
 				SizeConstraint = Enum.SizeConstraint.RelativeYY,
@@ -493,11 +610,24 @@ return function(_p)
 					end)
 				end,
 			}
+
+			-- Add icon to button
+			create("ImageLabel")({
+				Name = "Icon",
+				BackgroundTransparency = 1.0,
+				Image = 'rbxassetid://6238710220', -- Info/stats icon
+				Size = UDim2.new(0.15, 0, 0.6, 0),
+				Position = UDim2.new(0.05, 0, 0.2, 0),
+				ImageColor3 = Color3.fromRGB(255, 255, 255),
+				ZIndex = 3,
+				Parent = rf.gui,
+			})
+
 			write 'Field Status' {
 				Frame = create 'Frame' {
 					BackgroundTransparency = 1.0,
-					Size = UDim2.new(0.0, 0, 0.7, 0),
-					Position = UDim2.new(0.5, 0, 0.15, 0),
+					Size = UDim2.new(0.75, 0, 0.7, 0),
+					Position = UDim2.new(0.25, 0, 0.15, 0),
 					ZIndex = 2, Parent = rf.gui,
 				}, Scaled = true,
 			}
