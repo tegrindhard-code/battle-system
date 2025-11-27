@@ -281,7 +281,7 @@ return function(_p)
 				})
 
 				local psuedoWeathers = fieldData.field.pseudoWeather
-				for i, pW in ipairs(psuedoWeathers) do 
+				for i, pW in ipairs(psuedoWeathers) do
 					local index = i-1
 					local name = pW[1]
 					local duration = pW[2]
@@ -296,6 +296,123 @@ return function(_p)
 							ZIndex = 7,
 						}), Scaled = true,
 					})
+				end
+
+				-- Tera Types section
+				local teraYStart = 0.45 + (0.07 * #psuedoWeathers)
+				if teraYStart < 0.6 then
+					teraYStart = 0.6
+				end
+
+				-- Tera Types divider
+				create("Frame")({
+					Name = "TeraDivider",
+					BackgroundColor3 = Color3.fromRGB(200, 100, 255), -- Purple for tera
+					BorderSizePixel = 0,
+					Size = UDim2.new(0.25, 0, 0.003, 0),
+					Position = UDim2.new(0.65, 0, teraYStart - 0.03, 0),
+					ZIndex = 6,
+					Parent = gui,
+				})
+
+				write('Tera Types')({
+					Frame = create('Frame')({
+						Name = "TeraFrame",
+						BackgroundTransparency = 1.0,
+						Size = UDim2.new(0.2, 0, 0.05, 0),
+						Position = UDim2.new(0.7, 0, teraYStart, 0),
+						Parent = gui,
+						ZIndex = 7,
+					}), Scaled = true,
+				})
+
+				-- Display tera types for user's active Pokémon
+				local userMons = fieldData.user.mons
+				local teraIndex = 0
+				for i, p in ipairs(userMons) do
+					if Not(p) then continue end
+					local teraStr = ""
+					if p.isTerastallized and p.teraType then
+						teraStr = p:getName() .. " (Tera: " .. p.teraType .. ")"
+					elseif p.teraType then
+						teraStr = p:getName() .. " [" .. p.teraType .. "]"
+					else
+						teraStr = p:getName() .. " [Unknown]"
+					end
+
+					-- Color based on terastallization status
+					local teraColor = Color3.fromRGB(180, 140, 255) -- Light purple default
+					if p.isTerastallized then
+						teraColor = Color3.fromRGB(255, 180, 255) -- Bright pink for active tera
+					end
+
+					-- Background box for tera type
+					create("Frame")({
+						Name = "TeraBG"..i,
+						BackgroundColor3 = teraColor,
+						BackgroundTransparency = 0.6,
+						BorderSizePixel = 0,
+						Size = UDim2.new(0.22, 0, 0.04, 0),
+						Position = UDim2.new(0.69, 0, teraYStart + 0.06 + (0.05 * teraIndex), 0),
+						ZIndex = 6,
+						Parent = gui,
+					})
+
+					write(teraStr)({
+						Frame = create('Frame')({
+							Name = "UserTera"..i,
+							BackgroundTransparency = 1.0,
+							Size = UDim2.new(0.2, 0, 0.03, 0),
+							Position = UDim2.new(0.7, 0, teraYStart + 0.065 + (0.05 * teraIndex), 0),
+							Parent = gui,
+							ZIndex = 7,
+						}), Scaled = true,
+					})
+					teraIndex += 1
+				end
+
+				-- Display tera types for foe's active Pokémon
+				local foeMons = fieldData.foe.mons
+				for i, p in ipairs(foeMons) do
+					if Not(p) then continue end
+					local teraStr = ""
+					if p.isTerastallized and p.teraType then
+						teraStr = p:getName() .. " (Tera: " .. p.teraType .. ")"
+					elseif p.teraType then
+						teraStr = p:getName() .. " [" .. p.teraType .. "]"
+					else
+						teraStr = p:getName() .. " [Unknown]"
+					end
+
+					-- Color based on terastallization status
+					local teraColor = Color3.fromRGB(180, 140, 255) -- Light purple default
+					if p.isTerastallized then
+						teraColor = Color3.fromRGB(255, 180, 255) -- Bright pink for active tera
+					end
+
+					-- Background box for tera type
+					create("Frame")({
+						Name = "FoeTeraBG"..i,
+						BackgroundColor3 = teraColor,
+						BackgroundTransparency = 0.6,
+						BorderSizePixel = 0,
+						Size = UDim2.new(0.22, 0, 0.04, 0),
+						Position = UDim2.new(0.69, 0, teraYStart + 0.06 + (0.05 * teraIndex), 0),
+						ZIndex = 6,
+						Parent = gui,
+					})
+
+					write(teraStr)({
+						Frame = create('Frame')({
+							Name = "FoeTera"..i,
+							BackgroundTransparency = 1.0,
+							Size = UDim2.new(0.2, 0, 0.03, 0),
+							Position = UDim2.new(0.7, 0, teraYStart + 0.065 + (0.05 * teraIndex), 0),
+							Parent = gui,
+							ZIndex = 7,
+						}), Scaled = true,
+					})
+					teraIndex += 1
 				end
 
 				-- Boosts section divider
