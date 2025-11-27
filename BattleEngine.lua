@@ -2817,7 +2817,16 @@ function Battle:getDamage(pokemon, target, move, suppressMessages)
 		-- Not even if you Roost in Gen 4 and somehow manage to use
 		-- Struggle in the same turn.
 		-- (On second thought, it might be easier to get a Missingno.)
-		baseDamage = self:modify(baseDamage, move.stab or 1.5)
+		local stabModifier = move.stab or 1.5
+
+		-- Terastallization STAB boost
+		-- If Terastallized and move matches Tera type, STAB is 2.0x
+		-- If move matches both Tera type and original type, STAB is still 2.0x
+		if pokemon.isTerastallized and pokemon.teraType == type then
+			stabModifier = 2.0
+		end
+
+		baseDamage = self:modify(baseDamage, stabModifier)
 	end
 
 	-- types
@@ -3037,6 +3046,7 @@ function Battle:resolvePriority(decision)
 				runSwitch = 7.1,
 				switch = 7,
 				megaEvo = 6.9,
+				terastallize = 6.8,
 				residual = -100,
 			}
 			if priorities[decision.choice] then
@@ -3229,6 +3239,9 @@ function Battle:runDecision(decision)
 		self:add()
 	elseif c == 'megaEvo' then
 		if decision.pokemon.canMegaEvo then self:runMegaEvo(decision.pokemon) end
+	elseif c == 'terastallize' then
+		local canTera = self:canTerastallize(decision.pokemon)
+		if canTera then self:runTerastallize(decision.pokemon) end
 	elseif c == 'beforeTurnMove' then
 		if not decision.pokemon.isActive then return false end
 		if decision.pokemon.fainted then return false end
@@ -3917,7 +3930,8 @@ function Battle:parseChoice(player, choices, side)
 
 				local evoSubs = {
 					choices = {
-						['megaEvo'] = ' mega'
+						['megaEvo'] = ' mega',
+						['terastallize'] = ' tera'
 					},
 					vars = {
 						[zmove] = ' zmov'

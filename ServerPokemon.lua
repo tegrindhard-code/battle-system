@@ -193,6 +193,36 @@ Pokemon = Utilities.class({
 		self.nature = (math.random(25)+math.floor(tick()*100))%25 + 1
 	end
 
+	-- Calculate Tera Type if not already set
+	if not self.teraType and not self.egg then
+		-- Calculate Tera type based on IVs, personality, and base types
+		local types = self:getTypes()
+		local teraTypeValue = 0
+		local multiplier = 1
+
+		-- Use IVs to calculate
+		for i = 1, 6 do
+			teraTypeValue = teraTypeValue + ((self.ivs[i] or 0) % 4) * multiplier
+			multiplier = multiplier * 4
+		end
+
+		-- Add personality influence
+		teraTypeValue = teraTypeValue + (self.personality % 256)
+
+		-- Map to one of 18 types
+		local typeFromInt = {'Bug','Dark','Dragon','Electric','Fairy','Fighting','Fire','Flying','Ghost','Grass','Ground','Ice','Normal','Poison','Psychic','Rock','Steel','Water'}
+		local typeIndex = (teraTypeValue % 18) + 1
+		local teraType = typeFromInt[typeIndex]
+
+		-- 60% chance to match one of the Pokemon's natural types
+		if #types > 0 and teraTypeValue % 10 < 6 then
+			local typeChoice = (teraTypeValue % #types) + 1
+			teraType = types[typeChoice]
+		end
+
+		self.teraType = teraType
+	end
+
 	self:calculateStats() -- OVH  is this even necessary any more? -> IT'S NEEDED FOR .hp / .maxhp; perhaps should remove other stats from fn
 
 	if self.moves then
@@ -1138,6 +1168,7 @@ function Pokemon:getBattleData(ignoreHPState)
 	--	set.pokerus = self.pokerus -- todo
 	set.index = self:getPartyIndex()
 	set.pokeball = self.pokeball
+	set.teraType = self.teraType
 	return set
 end
 
@@ -1677,7 +1708,7 @@ end
 
 function Pokemon:serialize(inPC)
 	local buffer = BitBuffer.Create()
-	local version = 6
+	local version = 7
 	buffer:WriteUnsigned(6, version)
 	buffer:WriteBool(inPC and true or false)
 	buffer:WriteUnsigned(11, self.data.num)
@@ -1810,6 +1841,24 @@ function Pokemon:serialize(inPC)
 		buffer:WriteUnsigned(2, 0)
 	end
 
+	-- Serialize Tera Type (version 7+)
+	if self.teraType then
+		buffer:WriteBool(true)
+		-- Convert type name to index (1-18)
+		local typeFromInt = {'Bug','Dark','Dragon','Electric','Fairy','Fighting','Fire','Flying','Ghost','Grass','Ground','Ice','Normal','Poison','Psychic','Rock','Steel','Water'}
+		local typeIndex = 0
+		for i, typeName in ipairs(typeFromInt) do
+			if typeName == self.teraType then
+				typeIndex = i
+				break
+			end
+		end
+		typeIndex = self:validateForBitWidth(typeIndex, 5, "teraType")
+		buffer:WriteUnsigned(5, typeIndex)
+	else
+		buffer:WriteBool(false)
+	end
+
 	return buffer:ToBase64()
 end
 
@@ -1933,6 +1982,16 @@ function Pokemon:deserialize(str, PlayerData)
 			end
 			if #stamps > 0 then
 				self.stamps = stamps
+			end
+		end
+		-- Deserialize Tera Type (version 7+)
+		if version >= 7 then
+			if buffer:ReadBool() then
+				local typeIndex = buffer:ReadUnsigned(5)
+				local typeFromInt = {'Bug','Dark','Dragon','Electric','Fairy','Fighting','Fire','Flying','Ghost','Grass','Ground','Ice','Normal','Poison','Psychic','Rock','Steel','Water'}
+				if typeIndex > 0 and typeIndex <= #typeFromInt then
+					self.teraType = typeFromInt[typeIndex]
+				end
 			end
 		end
 	end)

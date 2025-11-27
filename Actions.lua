@@ -1215,6 +1215,12 @@ return function(Battle)
 				poke.sprite:animMegaEvolve(Tools.getSprite(spriteId), c1, c2, c3)
 				poke.forme = kwargs.megaId
 				addAction(poke:getName() .. " Mega Evolved into Mega " .. args[3] .. "!") -- was "has" Mega Evolved
+			elseif arg1 == '-terastallize' then
+				-- Handle Terastallization animation
+				local poke = self:getPokemon(args[2])
+				local teraType = args[3]
+				self:message(poke:getName() .. " Terastallized into " .. teraType .. " type!")
+				addAction(poke:getName() .. " has Terastallized!")
 			elseif arg1 == '-zmove' then 
 				--'-zmove', pokemon, target, zMove, move
 				if args[3] == 'Rayquaza' then

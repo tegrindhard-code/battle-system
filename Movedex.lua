@@ -1319,7 +1319,7 @@ return {
 		target = "self",
 		type = "Bug"
 	},
-	['terablast'] = { --No tera, so it's Hidden Power on steroids
+	['terablast'] = {
 		num = 840,
 		accuracy = 100,
 		basePower = 80,
@@ -1329,7 +1329,12 @@ return {
 		pp = 10,
 		flags = {protect = true, mirror = true},
 		onModifyType = function(move, pokemon)
-			move.type = pokemon.hpType or 'Fairy'
+			-- If Terastallized, use Tera type; otherwise use Hidden Power type
+			if pokemon.isTerastallized and pokemon.teraType then
+				move.type = pokemon.teraType
+			else
+				move.type = pokemon.hpType or 'Normal'
+			end
 		end,
 		onModifyMove = function(move, pokemon)
 			if (pokemon:getStat('atk', false, true) > pokemon:getStat('spa', false, true)) then
@@ -1956,9 +1961,9 @@ return {
 				end
 			end
 			if #faintedPokemon == 0 then
-				return false -- No fainted Pokémon on the user's side
+				return false -- No fainted Pokï¿½mon on the user's side
 			end
-			local revivedPokemon = faintedPokemon[1] -- Revive the first fainted Pokémon
+			local revivedPokemon = faintedPokemon[1] -- Revive the first fainted Pokï¿½mon
 			revivedPokemon.hp = math.floor(revivedPokemon.maxhp / 2)
 			revivedPokemon.status = ''
 			revivedPokemon.fainted = false
