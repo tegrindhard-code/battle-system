@@ -32,6 +32,8 @@ return function(_p)
 
 		-- The actual function
 		local function fieldCheck()
+			-- Prevent creating duplicate GUI
+			if gui then return end
 			-- Add safety checks to prevent errors when battle isn't fully initialized
 			if not battle or not battle.mySide or not battle.yourSide or 
 				not battle.mySide.active or not battle.yourSide.active then
@@ -94,7 +96,7 @@ return function(_p)
 				end
 				Utilities.Tween(.8, 'easeOutCubic', function(a)
 					bg.BackgroundTransparency = .5+.5*a
-					gui.Position = UDim2.new(.5+.5*a, (-gui.AbsoluteSize.X/2)*(1-a), -0.02, 0)
+					gui.Position = UDim2.new(.5+.5*a, 0, -0.02, 0)
 				end)
 
 				-- Wait for animation to complete before cleanup
@@ -123,6 +125,7 @@ return function(_p)
 					SizeConstraint = Enum.SizeConstraint.RelativeXY,
 					Size = UDim2.new(0.9, 0, 1.0, 0),
 					Position = UDim2.new(0.5, 0, -0.02, 0),
+					AnchorPoint = Vector2.new(0.5, 0), -- Center horizontally
 					ImageColor3 = Color3.fromRGB(30, 100, 180), -- Modern blue theme
 					ZIndex = 5,
 				})
@@ -667,7 +670,7 @@ return function(_p)
 
 				Utilities.Tween(.8, 'easeOutCubic', function(a)
 					bg.BackgroundTransparency = 1-.5*a
-					gui.Position = UDim2.new(1-.5*a, -gui.AbsoluteSize.X/2*a, -0.02, 0)
+					gui.Position = UDim2.new(1-.5*a, 0, -0.02, 0)
 				end)
 			end
 		end
@@ -723,6 +726,8 @@ return function(_p)
 
 						-- Now safe to show field check UI
 						fieldCheck()
+						-- Wait for opening animation to complete (0.8s)
+						task.wait(0.8)
 						isProcessing = false
 					end)
 				end,
