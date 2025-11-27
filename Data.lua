@@ -87,16 +87,11 @@ return function(Battle)
 			teraTypeValue = teraTypeValue + (personality % 256)
 		end
 
-		-- Map to one of the 18 types
+		-- Map to one of the 18 types (completely random, anime-accurate)
+		-- In the anime, Pokemon can terastallize into any type including their natural type
+		-- Examples: Floragato→Grass, Fuecoco→Fire, Charizard→Dark, Ceruledge→Ghost
 		local typeIndex = (teraTypeValue % 18) + 1
 		local teraType = data.TypeFromInt[typeIndex]
-
-		-- 60% chance to match one of the Pokemon's natural types (if provided)
-		-- This makes Tera types more aligned with the Pokemon's identity
-		if types and #types > 0 and teraTypeValue % 10 < 6 then
-			local typeChoice = (teraTypeValue % #types) + 1
-			teraType = types[typeChoice]
-		end
 
 		return teraType
 	end

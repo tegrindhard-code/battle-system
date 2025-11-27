@@ -1219,8 +1219,7 @@ return function(Battle)
 				-- Handle Terastallization animation
 				local poke = self:getPokemon(args[2])
 				local teraType = args[3]
-				self:message(poke:getName() .. " Terastallized into " .. teraType .. " type!")
-				addAction(poke:getName() .. " has Terastallized!")
+				addAction(poke:getName() .. " Terastallized into the " .. teraType .. " type!")
 			elseif arg1 == '-zmove' then 
 				--'-zmove', pokemon, target, zMove, move
 				if args[3] == 'Rayquaza' then
