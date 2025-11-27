@@ -3394,8 +3394,7 @@ function Battle:runSafariBall()
 	end
 
 	self.safariData.ballsRemaining = self.safariData.ballsRemaining - 1
-
-	self:add('-message', 'You threw a Safari Ball!')
+	self:add('-safariball', self.safariData.ballsRemaining)
 
 	local baseCatchRate = pokemon.template.captureRate or 45
 	local catchRate = baseCatchRate
@@ -3416,8 +3415,8 @@ function Battle:runSafariBall()
 
 	local success = math.random(255) < shakeProbability
 
+	local shakes = 0
 	if success then
-		local shakes = 0
 		for i = 1, 4 do
 			if math.random(65535) < shakeProbability then
 				shakes = shakes + 1
@@ -3425,22 +3424,33 @@ function Battle:runSafariBall()
 				break
 			end
 		end
+	end
 
-		if shakes == 4 then
-			self:add('-message', 'Gotcha! ' .. pokemon.name .. ' was caught!')
+	-- Add capture animation
+	self:add('-capture', pokemon, 'safariball', shakes, nil)
 
-			local PlayerData = self.p1.playerData
-			if PlayerData then
-				PlayerData:receivePokemon(pokemon)
+	if shakes == 4 then
+		-- Pokemon caught!
+		local playerPokemon = self.wildFoePokemon
+		self.wildFoePokemon = nil -- so it doesn't get destroyed
+
+		local PlayerData = self.p1.playerData
+		if PlayerData then
+			-- Create request for nickname
+			local arq_id = self:ARQ('nickname')
+			self.arq_data[arq_id] = {
+				type = 'nickname',
+				playerPokemon = playerPokemon,
+				completed = false,
+			}
+			local box = PlayerData:caughtPokemon(playerPokemon)
+			if box then
+				self:add('-xfr', pokemon, box)
 			end
-
-			self:win('p1')
-			return
-		else
-			self:add('-message', 'Oh no! The Pokemon broke free!')
 		end
-	else
-		self:add('-message', 'Missed the Pokemon!')
+
+		self:win('p1')
+		return
 	end
 
 	self:checkSafariFlee()

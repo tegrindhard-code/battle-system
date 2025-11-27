@@ -1002,7 +1002,11 @@ end]]
 
 				local battleKind = battle.kind
 				if name == 'Run' then
-					if battleKind == 'pvp' or battleKind == '2v2' then
+					-- Handle Safari Zone Run action
+					if battle.isSafari and battleKind == 'wild' then
+						spawn(function() self:exitButtonsMain() end)
+						self.inputEvent:fire('run')
+					elseif battleKind == 'pvp' or battleKind == '2v2' then
 
 						spawn(function() self:exitButtonsMain() end)
 
@@ -1049,30 +1053,37 @@ end]]
 						return self:mainChoices(unpack(args))
 					end
 				elseif name == 'Bag' or name == 'Berry' then
-					if _p.Battle.currentBattle.kind == 'pvp' or _p.Battle.currentBattle.kind == '2v2' or _p.Battle.currentBattle.noBag then
+					-- Handle Safari Zone Berry action
+					if battle.isSafari and battleKind == 'wild' and name == 'Berry' then
+						spawn(function() self:exitButtonsMain() end)
+						self.inputEvent:fire('berry')
+					elseif _p.Battle.currentBattle.kind == 'pvp' or _p.Battle.currentBattle.kind == '2v2' or _p.Battle.currentBattle.noBag then
 						self:message('You can\'t use that now.')
 						state = 'canchoosemain'
 						return
-					end
-					local sig = Utilities.Signal()
-					spawn(function() self:exitButtonsMain() end)
-					Menu.bag:open(sig)
-					local res = sig:wait()
-					if res == 'cancel' then
-						return self:mainChoices(unpack(args)) --
 					else
-						self.inputEvent:fire(res)
-						Menu.bag:close()
-					end
-				else
-					if battle.isSafari and battleKind == 'wild' then
-						if name == 'Ball' then
-							spawn(function() self:exitButtonsMain() end)
-							self.inputEvent:fire('useitem safariball')
-						elseif name == 'Go Near' then
-							spawn(function() self:exitButtonsMain() end)
-							self.inputEvent:fire('gonear')
+						local sig = Utilities.Signal()
+						spawn(function() self:exitButtonsMain() end)
+						Menu.bag:open(sig)
+						local res = sig:wait()
+						if res == 'cancel' then
+							return self:mainChoices(unpack(args)) --
+						else
+							self.inputEvent:fire(res)
+							Menu.bag:close()
 						end
+					end
+				elseif name == 'Ball' then
+					-- Handle Safari Zone Ball action
+					if battle.isSafari and battleKind == 'wild' then
+						spawn(function() self:exitButtonsMain() end)
+						self.inputEvent:fire('ball')
+					end
+				elseif name == 'Go Near' then
+					-- Handle Safari Zone Go Near action
+					if battle.isSafari and battleKind == 'wild' then
+						spawn(function() self:exitButtonsMain() end)
+						self.inputEvent:fire('gonear')
 					end
 				end
 			end

@@ -235,6 +235,7 @@ return function(_p)
 			if d.isSafari then
 				self.isSafari = d.isSafari
 				self.safariData = d.safariData
+				self.SBCount = d.safariData and d.safariData.ballsRemaining or 30
 			end
 
 			self.sideId = 'p1'
@@ -2333,10 +2334,10 @@ end
 		-- Determine which trainer to animate based on pokemon side
 		local trainerObj = nil
 		if pokemonId:sub(1, 2) == "p1" then
-			-- Player's Pokémon - animate player
+			-- Player's Pokï¿½mon - animate player
 			trainerObj = self.playerModelObj
 		elseif pokemonId:sub(1, 2) == "p2" then
-			-- Opponent's Pokémon - animate opponent
+			-- Opponent's Pokï¿½mon - animate opponent
 			trainerObj = self.trainerModelObj
 		end
 
