@@ -962,7 +962,7 @@ end]]
 	function BattleGui:mainChoices(...)
 
 		local args = {...}
-		local rqPokemon, slot, nActive, moveLocked, isFirstValid, alreadySwitched, alreadyChoseMega, zMoveUsed, alreadyChoseUltra, alreadyChoseDmax = ...
+		local rqPokemon, slot, nActive, moveLocked, isFirstValid, alreadySwitched, alreadyChoseMega, zMoveUsed, alreadyChoseUltra, alreadyChoseDmax, alreadyChoseTera = ...
 		local battle = _p.Battle.currentBattle
 		--local taunt, pokemon, ballLocked, ballId
 
@@ -982,7 +982,7 @@ end]]
 					self.inputEvent:fire('move 1')
 					self:exitButtonsMain()
 				else
-					self:fightChoices(self.moves, rqPokemon, slot, nActive, alreadyChoseMega, zMoveUsed, alreadyChoseUltra, alreadyChoseDmax)
+					self:fightChoices(self.moves, rqPokemon, slot, nActive, alreadyChoseMega, zMoveUsed, alreadyChoseUltra, alreadyChoseDmax, alreadyChoseTera)
 				end
 			else
 				pcall(function()
@@ -996,6 +996,8 @@ end]]
 					gui.dynamax:Pause()
 					gui.gigantamax.selected = false
 					gui.gigantamax:Pause()
+					gui.terastallize.selected = false
+					gui.terastallize:Pause()
 				end)
 
 				local battleKind = battle.kind
@@ -1427,7 +1429,7 @@ end]]
 				end
 				--self.inputEvent:fire('move '..moveNum..(gui.mega.selected and ' mega ' or ' ')..t)
 				local option = ''
-				if gui.mega.selected then option = ' mega ' elseif gui.zmove.selected then option = ' zmov ' elseif gui.ultra.selected then option = ' ultra ' elseif (gui.dynamax.selected or gui.gigantamax.selected) then option = ' dynamax ' elseif (rqPokemon.currentDyna) then option = ' maxmove ' end
+				if gui.mega.selected then option = ' mega ' elseif gui.zmove.selected then option = ' zmov ' elseif gui.ultra.selected then option = ' ultra ' elseif (gui.dynamax.selected or gui.gigantamax.selected) then option = ' dynamax ' elseif gui.terastallize.selected then option = ' terastallize ' elseif (rqPokemon.currentDyna) then option = ' maxmove ' end
 				--print("MOVENUM:", moveNum)
 				self.inputEvent:fire('move '..moveNum..option..t)
 
@@ -1452,6 +1454,8 @@ end]]
 				gui.dynamax:Pause()
 				gui.gigantamax.selected = false
 				gui.gigantamax:Pause()
+				gui.terastallize.selected = false
+				gui.terastallize:Pause()
 				container.Parent = nil
 			end
 		end
@@ -1552,7 +1556,7 @@ end]]
 			updateTargetButton(5, battle.mySide.active[2])
 			updateTargetButton(6, battle.mySide.active[3])
 		end
-		local fight, ms, zm, ub, dm, gm = main.fight, gui.mega.spriteLabel, gui.zmove.spriteLabel, gui.ultra.spriteLabel, gui.dynamax.spriteLabel, gui.gigantamax.spriteLabel
+		local fight, ms, zm, ub, dm, gm, ts = main.fight, gui.mega.spriteLabel, gui.zmove.spriteLabel, gui.ultra.spriteLabel, gui.dynamax.spriteLabel, gui.gigantamax.spriteLabel, gui.terastallize.spriteLabel
 		local spx, spy = selectedMove.Position.X.Scale, selectedMove.Position.Y.Scale
 		local epy = -135/130/2
 
@@ -1571,6 +1575,7 @@ end]]
 			ub.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*a)
 			dm.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*a)
 			gm.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*a)
+			ts.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+ts.AbsoluteSize.Y+36)*a)
 
 			selectedMove.Position = UDim2.new(spx*o, 0, spy + (epy-spy)*a, 0)
 			l = (container.AbsolutePosition.X+moves[1].AbsoluteSize.X)*o
@@ -1600,6 +1605,8 @@ end]]
 			gui.dynamax:Pause()
 			gui.gigantamax.selected = false
 			gui.gigantamax:Pause()
+			gui.terastallize.selected = false
+			gui.terastallize:Pause()
 		end)
 	end
 
@@ -1610,7 +1617,7 @@ end]]
 		local moves = gui.moves
 		local main = gui.main
 		local container = main.container
-		local fight, ms, zm, ub, dm, gm = main.fight, gui.mega.spriteLabel, gui.zmove.spriteLabel, gui.ultra.spriteLabel, gui.dynamax.spriteLabel, gui.gigantamax.spriteLabel
+		local fight, ms, zm, ub, dm, gm, ts = main.fight, gui.mega.spriteLabel, gui.zmove.spriteLabel, gui.ultra.spriteLabel, gui.dynamax.spriteLabel, gui.gigantamax.spriteLabel, gui.terastallize.spriteLabel
 		local selectedMove = moves[moveNum]
 		local spx, spy = selectedMove.Position.X.Scale, selectedMove.Position.Y.Scale
 		local p = ({Vector2.new(-424/522, -134/130),
@@ -1634,6 +1641,7 @@ end]]
 			ub.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*a)
 			dm.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*a)
 			gm.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*a)
+			ts.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+ts.AbsoluteSize.Y+36)*a)
 
 			selectedMove.Position = UDim2.new(spx + (epx-spx)*o, 0, spy + (epy-spy)*o, 0)
 			l = (container.AbsolutePosition.X+moves[1].AbsoluteSize.X)*o
@@ -1946,7 +1954,7 @@ end]]
 		}
 	end
 
-	function BattleGui:fightChoices(moveset, rqPokemon, slot, nActive, alreadyChoseMega, zMoveUsed, alreadyChoseUltra, alreadyChoseDmax)
+	function BattleGui:fightChoices(moveset, rqPokemon, slot, nActive, alreadyChoseMega, zMoveUsed, alreadyChoseUltra, alreadyChoseDmax, alreadyChoseTera)
 		state = 'animating'
 		self.onMoveClicked = function(m)
 			local move = self.moves[m]
@@ -1966,7 +1974,7 @@ end]]
 				self:chooseMoveTarget(m, move, rqPokemon, slot, nActive)
 			else
 				local option = ''
-				if gui.mega.selected then option = ' mega' elseif gui.zmove.selected then option = ' zmov' elseif gui.ultra.selected then option = ' ultra' elseif (gui.dynamax.selected or gui.gigantamax.selected) then option = ' dynamax' elseif (rqPokemon.currentDyna) then option = ' maxmove' end
+				if gui.mega.selected then option = ' mega' elseif gui.zmove.selected then option = ' zmov' elseif gui.ultra.selected then option = ' ultra' elseif (gui.dynamax.selected or gui.gigantamax.selected) then option = ' dynamax' elseif gui.terastallize.selected then option = ' terastallize' elseif (rqPokemon.currentDyna) then option = ' maxmove' end
 				self.inputEvent:fire('move '..m..option)
 				self:exitButtonsMoveChosen()
 			end
@@ -2312,6 +2320,61 @@ end]]
 				end
 			end)
 			gui.mega = mega
+
+			-- #Terastallize
+			terastallize = _p.AnimatedSprite:new{sheets={{id=5348186988,rows=10}},nFrames=20,fWidth=393,fHeight=99,framesPerRow=2,button=true}
+			terastallize:RenderFirstFrame()
+			terastallize.selected = false
+			local s = terastallize.spriteLabel
+			s.Size = UDim2.new(1, 0, 1, 0)
+			s.Visible = false
+			s.Parent = container
+			local teraWrittenWord = write 'Terastallize' {
+				Frame = create 'Frame' {
+					BackgroundTransparency = 1.0,
+					Size = UDim2.new(0.0, 0, 0.4, 0),
+					Position = UDim2.new(0.5, 0, 0.3, 0),
+					ZIndex = 8,
+					Parent = s,
+				},
+				Scaled = true,
+				Color = Color3.fromRGB(150, 255, 200),
+			}
+			local teraLetters = {}
+			local teraPos = {}
+			for _, l in pairs(teraWrittenWord.Labels) do
+				local p = (l.AbsolutePosition.X - s.AbsolutePosition.X) / s.AbsoluteSize.X
+				teraLetters[l] = p
+				teraPos[l] = l.Position
+			end
+			local st = tick()
+			function terastallize.updateCallback(a)
+				if a then
+					local ta = math.min(1, (tick() - st) * 3)
+					for l, p in pairs(teraLetters) do
+						local o = (a + p) % 1
+						l.Position = teraPos[l] + UDim2.new(0, 0, 0.2 * ta * math.sin(o * math.pi * 2), 0)
+					end
+				else
+					local c = Color3.new(1, 1, 1)
+					for l in pairs(teraLetters) do
+						l.Position = teraPos[l]
+					end
+				end
+			end
+			s.MouseButton1Click:connect(function()
+				if terastallize.paused then
+					terastallize.selected = true
+					terastallize:Play()
+					self.moveUpdate(true)
+				else
+					terastallize.selected = false
+					terastallize:Pause()
+					terastallize.updateCallback(nil)
+					self.moveUpdate(true)
+				end
+			end)
+			gui.terastallize = terastallize
 		end
 		local zMoves = rqPokemon.canZMove
 		local maxMoves = rqPokemon.maxMoves
@@ -2384,11 +2447,18 @@ end]]
 		else
 			zmove.spriteLabel.Visible = false
 		end
+		if rqPokemon and rqPokemon.canTerastallize and not alreadyChoseTera then
+			terastallize.spriteLabel.Visible = true
+			terastallize.updateCallback(nil)
+		else
+			terastallize.spriteLabel.Visible = false
+		end
 		local ms = mega.spriteLabel
 		local zm = zmove.spriteLabel
 		local ub = ultra.spriteLabel
 		local dm = dynamax.spriteLabel
 		local gm = gigantamax.spriteLabel
+		local ts = terastallize.spriteLabel
 
 		Utilities.Tween(.6, 'easeOutCubic', function(a)
 			local o = 1-a
@@ -2400,6 +2470,7 @@ end]]
 			ub.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*o)
 			dm.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*o)
 			gm.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y+36)*o)
+			ts.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+ts.AbsoluteSize.Y+36)*o)
 
 			local l = (container.AbsolutePosition.X+moves[1].AbsoluteSize.X)*o
 			moves[1].Position = UDim2.new(-424/522, 0, -135/130, 0) + UDim2.new(0.0, -l, 0.0, -l*.4)
@@ -2418,7 +2489,7 @@ end]]
 	function BattleGui:exitButtonsMoveChosen()
 		state = 'animating'
 		local main = gui.main
-		local fight, ms, zm, ub, dm, gm = main.fight, gui.mega.spriteLabel, gui.zmove.spriteLabel, gui.ultra.spriteLabel, gui.dynamax.spriteLabel, gui.gigantamax.spriteLabel
+		local fight, ms, zm, ub, dm, gm, ts = main.fight, gui.mega.spriteLabel, gui.zmove.spriteLabel, gui.ultra.spriteLabel, gui.dynamax.spriteLabel, gui.gigantamax.spriteLabel, gui.terastallize.spriteLabel
 		local container = main.container
 		local moves, cancel = gui.moves, gui.cancel
 		Utilities.Tween(.6, 'easeOutCubic', function(a)
@@ -2429,6 +2500,7 @@ end]]
 			ub.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y*2+36)*a)
 			dm.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y*2+36)*a)
 			gm.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+zm.AbsoluteSize.Y*2+36)*a)
+			ts.Position = UDim2.new(0.0, 0, -136/130*3/2, -(container.AbsolutePosition.Y+ts.AbsoluteSize.Y*2+36)*a)
 
 			local l = (container.AbsolutePosition.X+moves[1].AbsoluteSize.X)*a
 			moves[1].Position = UDim2.new(-424/522, 0, -134/130, 0) + UDim2.new(0.0, -l, 0.0, -l*.4)
@@ -2448,6 +2520,8 @@ end]]
 		gui.dynamax:Pause()
 		gui.gigantamax.selected = false
 		gui.gigantamax:Pause()
+		gui.terastallize.selected = false
+		gui.terastallize:Pause()
 		for i = 1, 4 do
 			moves[i].Visible = false
 		end

@@ -1708,7 +1708,7 @@ end
 
 function Pokemon:serialize(inPC)
 	local buffer = BitBuffer.Create()
-	local version = 7
+	local version = 6
 	buffer:WriteUnsigned(6, version)
 	buffer:WriteBool(inPC and true or false)
 	buffer:WriteUnsigned(11, self.data.num)
@@ -1841,7 +1841,7 @@ function Pokemon:serialize(inPC)
 		buffer:WriteUnsigned(2, 0)
 	end
 
-	-- Serialize Tera Type (version 7+)
+	-- Serialize Tera Type (appended to version 6, optional for backward compatibility)
 	if self.teraType then
 		buffer:WriteBool(true)
 		-- Convert type name to index (1-18)
