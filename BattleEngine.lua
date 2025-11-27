@@ -330,7 +330,7 @@ Battle = class({
 	end
 	--
 
-	if self.battleType == BATTLE_TYPE_WILD and self.eid then
+	if (self.battleType == BATTLE_TYPE_WILD or self.battleType == BATTLE_TYPE_SAFARI) and self.eid then
 		-- eid = encounter id
 		-- rfl = repel-forced level
 		local PlayerData = _f.PlayerDataService[creatingPlayer]
@@ -653,6 +653,21 @@ Battle = class({
 
 		self.wildFoePokemon = pokemon
 
+		-- Safari Zone specific setup
+		if self.battleType == BATTLE_TYPE_SAFARI then
+			self.isSafari = true
+			self.yieldExp = false
+			self.cantUseBag = true
+
+			-- Get safari ball count from player's bag
+			local safariData = PlayerData:getBagDataById(5, 3)
+			self.safariData = {
+				ballsRemaining = safariData and safariData.quantity or 0,
+				angerLevel = 0,
+				eatingLevel = 0,
+			}
+		end
+
 		self:join(nil, 2, '#Wild', {pokemon:getBattleData()})--player, slot, name, team, megaadornment
 	elseif self.battleType == BATTLE_TYPE_NPC then
 		local PlayerData = _f.PlayerDataService[creatingPlayer]
@@ -679,85 +694,6 @@ Battle = class({
 		self.pvp = true
 	elseif self.battleType == BATTLE_TYPE_2V2 then
 		self.is2v2 = true
-	elseif self.battleType == BATTLE_TYPE_SAFARI then
-		local PlayerData = _f.PlayerDataService[creatingPlayer]
-
-		self.isSafari = true
-		self.yieldExp = false
-		self.cantUseBag = true
-
-		-- Get safari ball count from player's bag
-		local safariData = PlayerData:getBagDataById(5, 3)
-		self.safariData = {
-			ballsRemaining = safariData and safariData.quantity or 0,
-			angerLevel = 0,
-			eatingLevel = 0,
-		}
-
-		-- Standard encounter data loading (same as wild battles)
-		local encounterData = encounterLists[self.eid]
-		if encounterData.Verify and not encounterData.Verify(PlayerData) then return false end
-		if encounterData.PDEvent and PlayerData:completeEventServer(encounterData.PDEvent) == false then return false end
-		if encounterData.Weather then self.startWeather = encounterData.Weather end
-
-		local pokemon
-		if encounterData.GetPokemon then
-			local s, r = pcall(function() return encounterData.GetPokemon(PlayerData) end)
-			if not s or not r then return false end
-			pokemon = r
-		else
-			local encounterList = encounterData.list
-			local foe = weightedRandom(encounterList, function(p)
-				if p[5] == 'day' and not self.isDay then return 0 end
-				if p[5] == 'night' and self.isDay then return 0 end
-				return p[4]
-			end)
-
-			if not foe[3] then foe[3] = foe[2] end
-
-			local foeData = {
-				name = foe[1],
-				level = math.random(foe[2], foe[3]),
-				isWild = true,
-			}
-
-			if foe[6] then foeData.forme = foe[6] end
-			if foe[7] then foeData.item = foe[7] end
-			if foe[8] then foeData.itemChance = foe[8] end
-			if foe[9] then foeData.item2 = foe[9] end
-			if foe[10] then foeData.itemChance2 = foe[10] end
-
-			pokemon = _f.ServerPokemon:new(foeData, PlayerData)
-
-			if pokemon.shiny and (pokemon.hiddenAbility or pokemon.shiny) then
-				pcall(function()
-					_f.Logger:logEncounter(PlayerData.player, {
-						whole = ''..(pokemon.shiny and 'Shiny ' or '')..''..(pokemon.hiddenAbility and 'Hidden Ability ' or '')..''..pokemon.name..(pokemon.forme and '-'..pokemon.forme or ''),
-						name = pokemon.name,
-						Data = {
-							shiny = pokemon.shiny,
-							hiddenAbility = pokemon.hiddenAbility,
-							gamemode = PlayerData.gamemode,
-						},
-					})
-				end)
-			end
-		end
-
-		self.alreadyOwnsFoeSpecies = PlayerData:hasOwnedPokemon(pokemon.num)
-		PlayerData:onSeePokemon(pokemon.num)
-
-		self.wildFoePokemon = pokemon
-
-		self.p2 = BattleSide:new(nil, '#Wild', self, 2, {pokemon:getBattleData()}, nil)
-		self.p1 = BattleSide:new(creatingPlayer, PlayerData.trainerName, self, 1, {}, PlayerData)
-
-		self.sides = {self.p1, self.p2}
-		self.p1.foe = self.p2
-		self.p2.foe = self.p1
-
-		self.p1.active = {}  -- Player has no active Pokemon
-		self.p2.active = {self.wildFoePokemon}
 	else
 		error('unknown battle structure')
 	end
