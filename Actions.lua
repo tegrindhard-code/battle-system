@@ -2087,9 +2087,7 @@ return function(Battle)
 			elseif arg1 == '-safariball' then
 				-- Update Safari Ball count display
 				self.SBCount = tonumber(args[2]) or 0
-				if _p.BattleGui and _p.BattleGui.updateSafariBalls then
-					_p.BattleGui.updateSafariBalls()
-				end
+				-- The ball count will be displayed through the standard UI update flow
 			elseif arg1 == '-anim' then -- used when a two-turn move activates in a single turn
 				local poke = self:getPokemon(args[2])
 				local move = Tools.getMove(args[3])
