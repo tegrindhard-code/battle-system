@@ -91,11 +91,29 @@ return function(Battle)
 		local typeIndex = (teraTypeValue % 18) + 1
 		local teraType = data.TypeFromInt[typeIndex]
 
-		-- 60% chance to match one of the Pokemon's natural types (if provided)
-		-- This makes Tera types more aligned with the Pokemon's identity
-		if types and #types > 0 and teraTypeValue % 10 < 6 then
-			local typeChoice = (teraTypeValue % #types) + 1
-			teraType = types[typeChoice]
+		-- Ensure Tera type is different from Pokemon's natural types (anime accurate)
+		-- Pokemon should never Terastallize into their main type
+		if types and #types > 0 then
+			local maxAttempts = 18
+			local attempt = 0
+			while attempt < maxAttempts do
+				local isNaturalType = false
+				for _, naturalType in ipairs(types) do
+					if teraType == naturalType then
+						isNaturalType = true
+						break
+					end
+				end
+
+				if not isNaturalType then
+					break
+				end
+
+				-- Try next type
+				attempt = attempt + 1
+				typeIndex = ((typeIndex + attempt) % 18) + 1
+				teraType = data.TypeFromInt[typeIndex]
+			end
 		end
 
 		return teraType

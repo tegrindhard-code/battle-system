@@ -904,8 +904,8 @@ return function(Battle)
 		-- Announce Terastallization
 		self:add('-terastallize', pokemon, pokemon.teraType)
 
-		-- Update type display
-		self:add('-start', pokemon, 'typechange', pokemon.teraType)
+		-- Update type display (silent to avoid duplicate message)
+		self:add('-start', pokemon, 'typechange', pokemon.teraType, '[silent]')
 
 		-- Prevent other Pokemon on the team from Terastallizing
 		for _, ally in pairs(pokemon.side.pokemon) do
