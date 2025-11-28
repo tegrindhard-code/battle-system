@@ -21,6 +21,7 @@ return function(_p)
 		completedEvents = {},
 		expShareOn = false,
 		defeatedTrainers = '',
+		safariSteps = 500,
 		firstNonEggLevel = 1, -- remember us!!!
 		firstNonEggAbility = ''
 	}
@@ -417,6 +418,19 @@ return function(_p)
 		return _p.Network:get('PDS', 'saveGame', self:getEtc())
 	end
 
+	function PlayerData:getSafariSteps()
+		return self.safariSteps or 500
+	end
 
-	
+	function PlayerData:setSafariSteps(steps)
+		if type(steps) == 'number' then
+			self.safariSteps = math.max(0, math.floor(steps))
+			_p.Network:post('PDS', 'setSafariSteps', self.safariSteps)
+			return true
+		end
+		return false
+	end
+
+
+
 	return PlayerData end
