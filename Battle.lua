@@ -2225,7 +2225,8 @@ end
 	elseif request.requestType == 'safari' then
 		-- Safari Zone battle - show Safari options (Ball, Bait, Rock, Run)
 		wait(.25)
-		Utilities.fastSpawn(battleGui.mainChoices, battleGui)
+		-- Pass isFirstValid=true (5th param) to ensure Run button is visible
+		Utilities.fastSpawn(battleGui.mainChoices, battleGui, nil, nil, nil, nil, true)
 		local choice = self.InputChosen:wait()
 		spawn(function() battleGui:toggleRemainingPartyGuis(false) end)
 		spawn(function() battleGui:toggleFC(false) end)
