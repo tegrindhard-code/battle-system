@@ -3374,7 +3374,7 @@ function Battle:runSafariBall()
 	if PlayerData then
 		local item = _f.Database.ItemById['safariball']
 		if item then
-			PlayerData:incrementBagItem({num = item.num, quantity = -1})
+			PlayerData:incrementBagItem(item.num, -1)
 		end
 	end
 
@@ -3454,9 +3454,9 @@ function Battle:runSafariBait()
 
 	self:add('-message', pokemon.name .. ' is eating!')
 
-	-- Bait increments steps instead of decrementing
+	-- Bait decrements 5 steps
 	if self.safariData.stepsRemaining then
-		self.safariData.stepsRemaining = self.safariData.stepsRemaining + 1
+		self.safariData.stepsRemaining = self.safariData.stepsRemaining - 5
 		self:add('-safaristeps', self.safariData.stepsRemaining)
 
 		-- Save updated steps to PlayerData
@@ -3464,9 +3464,17 @@ function Battle:runSafariBait()
 		if PlayerData then
 			PlayerData:setSafariSteps(self.safariData.stepsRemaining)
 		end
+
+		-- Check if steps ran out
+		if self.safariData.stepsRemaining <= 0 then
+			self:add('-message', 'You ran out of steps!')
+			self:add('-message', 'Game Over!')
+			self:win()
+			return true
+		end
 	end
 
-	-- Check eating level and flee (without step decrement)
+	-- Check eating level and flee (without additional step decrement)
 	if self.safariData.eatingLevel > 0 then
 		self.safariData.eatingLevel = self.safariData.eatingLevel - 1
 		if self.safariData.eatingLevel == 0 then
