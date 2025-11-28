@@ -3206,7 +3206,22 @@ end
 function PlayerData:pickBerry(berryId, quantity)
 	-- Pick up a berry and add it to the player's bag
 	-- berryId can be a string ID (e.g., 'oranberry') or item number
-	quantity = quantity or 1
+
+	-- Safari Zone obtainable berries
+	local safariBerries = {
+		['nanabberry'] = true,
+		['razzberry'] = true,
+		['blukberry'] = true,
+		['wepearberry'] = true,
+		['pinapberry'] = true
+	}
+
+	-- If no quantity specified and it's a Safari berry, randomize amount (3-6)
+	if not quantity and safariBerries[berryId] then
+		quantity = math.random(3, 6)
+	else
+		quantity = quantity or 1
+	end
 
 	local item
 	if type(berryId) == 'string' then
