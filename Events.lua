@@ -17788,23 +17788,17 @@ return function(_p)--local _p = require(script.Parent)
 				salesperson:LookAt(_p.player.Character.HumanoidRootPart.Position)
 				salesperson:Say('Welcome to Roria\'s Safari Zone.')
 				salesperson:Say('Would you like to have a go at capturing Pokemon safari style?.')
-				local r = _p.Network:get('PDS', 'BuySafariBalls')
-				if r == 'nm' then
-					salesperson:Say('You don\'t have enough [$], please come again.')
-					MasterControl:WalkTo(wkb)
-					_p.Menu:enable()
-					_p.RunningShoes:enable()
-					MasterControl.WalkEnabled = true 
-					return
-				end
-				local h = _p.Network:get('PDS', 'removeSafariBalls')
-				if h == 'hi' then
-					touchEvent(nil, chunk.map.SafariTrigger, false)
-					_p.Menu:enable()
-					_p.RunningShoes:enable()
-					MasterControl.WalkEnabled = true 
-					return
-				end
+
+			-- Check if player has enough money (moneySafari returns true if money < 5000)
+			local notEnoughMoney = _p.Network:get('PDS', 'moneySafari')
+			if notEnoughMoney then
+				salesperson:Say('You don\'t have enough [$], please come again.')
+				MasterControl:WalkTo(wkb)
+				_p.Menu:enable()
+				_p.RunningShoes:enable()
+				MasterControl.WalkEnabled = true
+				return
+			end
 				local moneyFrame = create 'Frame' {
 					BackgroundTransparency = 1.0,
 					Size = UDim2.new(0.0, 0, 0.08, 0),
@@ -17812,16 +17806,26 @@ return function(_p)--local _p = require(script.Parent)
 					Parent = Utilities.gui,
 				}
 				Utilities.Write('[$]' .. _p.PlayerData:formatMoney()) {Frame = moneyFrame, Scaled = true, TextXAlignment = Enum.TextXAlignment.Left}
-				salesperson:Say('For [$]5000, you can have twenty Safari Balls to use to try and capture wild pokemon.')
+				salesperson:Say('For [$]5000, you can have thirty Safari Balls to use to try and capture wild pokemon.')
 				local choice = salesperson:Say('[y/n]Are you interested?')
 				if choice then
-					local success, nm = _p.Network:get('PDS', 'BuySafariBalls')
-					if success then
+				-- Remove any existing safari balls before buying new ones
+				_p.Network:get('PDS', 'removeSafariBalls')
+
+				-- Buy safari balls (single call)
+				local success = _p.Network:get('PDS', 'BuySafariBalls')
+				if success and success ~= 'nm' then
 					moneyFrame:Destroy()
 					salesperson:Say('Here are your Safari Balls. Have fun!')
-					else
-						salesperson:Say('Sorry. You do not have enough money for this, or an error occurred. Come back soon!')
-					end
+				else
+					salesperson:Say('Sorry. You do not have enough money for this, or an error occurred. Come back soon!')
+					moneyFrame:Destroy()
+					MasterControl:WalkTo(wkb)
+					_p.Menu:enable()
+					_p.RunningShoes:enable()
+					MasterControl.WalkEnabled = true
+					return
+				end
 					spawn(function() 
 						chunk:Destroy()
 						local newchunk = _p.DataManager:loadChunk('chunk90')
@@ -17858,7 +17862,9 @@ return function(_p)--local _p = require(script.Parent)
 		onLoad_chunk90 = function(chunk)
 			-- Initialize safari zone step counter
 			if _p.WalkEvents then
-				_p.WalkEvents.stepsRemaining = 500
+				-- Load saved safari steps from PlayerData
+				local savedSteps = _p.Network:get('PDS', 'getSafariSteps') or 500
+				_p.WalkEvents.stepsRemaining = savedSteps
 				_p.WalkEvents:createSafariStepUI()
 			end
 
