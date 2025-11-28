@@ -17891,6 +17891,53 @@ return function(_p)--local _p = require(script.Parent)
 		onExit_chunk90 = function(chunk)
 			_p.Network:get('PDS', 'removeSafariBalls')
 		end,
+		leaveSafari = function(_p, chunk, forced)
+			local escort2 = {
+				"Thank you for visiting the Safari Zone!\n" ..
+					"Come back soon!"
+			}
+			local escort1 = {
+				"You're out of Safari Balls!\n" ..
+					"You were escorted out of the Safari Zone."
+			}
+			local escort = {
+				"You've hit the step limit!\n"..
+					"You were escorted out of the Safari Zone."
+			}
+
+			pcall(function()
+				local MasterControl = _p.MasterControl
+				MasterControl.WalkEnabled = true
+			end)
+
+			if _p.Menu then
+				spawn(function()
+					_p.Menu:enable()
+				end)
+			end
+
+			if forced then
+				spawn(function()
+					wait(0.5)
+					if _p.NPCChat then
+						local count = _p.Battle.SBCount
+						if count == 0 then
+							_p.NPCChat:say(escort1)
+						elseif _p.Battle.stepsRemaining == 0 then
+							_p.NPCChat:say(escort)
+						end
+					end
+					wait(0.5)
+					if _p.DataManager then
+						_p.DataManager.currentChunk:Destroy()
+						_p.DataManager:loadChunk('chunk89')
+						_p.player.Character.HumanoidRootPart.Position = Vector3.new(-1811.142, -3288.876, 733.832)
+						_p.NPCChat:say('Thanks for visiting! Come again anytime you want!')
+					end
+				end)
+				return
+			end
+		end,
 		onExitC_chunk83 = function()
 			local chunk = _p.DataManager.currentChunk
 			if chunk.id ~= 'chunk84' then return end
