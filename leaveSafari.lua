@@ -57,6 +57,7 @@ return function(chunk, forced)
 			-- Reset any Safari-specific flags
 			_p.PlayerData.inSafari = false
 			_p.PlayerData.safariSteps = 0
+			_p.PlayerData.safariStepsRemaining = 0
 		end)
 	end
 

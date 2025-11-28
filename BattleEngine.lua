@@ -306,6 +306,7 @@ Battle = class({
 
 				self.safariData = {
 					ballsRemaining = ballCount,
+					stepsRemaining = 500,
 					angerLevel = 0,
 					eatingLevel = 0,
 				}
@@ -313,6 +314,7 @@ Battle = class({
 				-- Fallback for non-player battles (shouldn't happen but just in case)
 				self.safariData = {
 					ballsRemaining = 30,
+					stepsRemaining = 500,
 					angerLevel = 0,
 					eatingLevel = 0,
 				}
@@ -3454,6 +3456,20 @@ end
 
 function Battle:checkSafariFlee()
 	local pokemon = self.wildFoePokemon
+
+	-- Decrement steps remaining
+	if self.safariData.stepsRemaining then
+		self.safariData.stepsRemaining = self.safariData.stepsRemaining - 1
+		self:add('-safaristeps', self.safariData.stepsRemaining)
+
+		-- Check if steps ran out
+		if self.safariData.stepsRemaining <= 0 then
+			self:add('-message', 'You ran out of steps!')
+			self:add('-message', 'Game Over!')
+			self:win()
+			return true
+		end
+	end
 
 	if self.safariData.eatingLevel > 0 then
 		self.safariData.eatingLevel = self.safariData.eatingLevel - 1
