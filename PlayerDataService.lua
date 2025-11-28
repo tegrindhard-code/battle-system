@@ -3222,7 +3222,25 @@ function PlayerData:pickBerry(berryId, quantity)
 
 	-- Add the berry to the bag
 	self:addBagItems({num = item.num, quantity = quantity})
-	return true, item.name
+
+	-- Create plural form of berry name (add 'ies' for 'Berry' ending)
+	local pluralName = item.name:gsub("Berry$", "Berries")
+
+	-- Convert quantity to text for display
+	local quantityText = ({
+		[1] = 'one',
+		[2] = 'two',
+		[3] = 'three',
+		[4] = 'four',
+		[5] = 'five',
+		[6] = 'six',
+		[7] = 'seven',
+		[8] = 'eight',
+		[9] = 'nine',
+		[10] = 'ten'
+	})[quantity] or tostring(quantity)
+
+	return true, item.name, pluralName, quantityText
 end
 
 -- PC
