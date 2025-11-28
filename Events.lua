@@ -17812,13 +17812,35 @@ return function(_p)--local _p = require(script.Parent)
 					Parent = Utilities.gui,
 				}
 				Utilities.Write('[$]' .. _p.PlayerData:formatMoney()) {Frame = moneyFrame, Scaled = true, TextXAlignment = Enum.TextXAlignment.Left}
-				salesperson:Say('For [$]500, you can have twenty Safari Balls to use to try and capture wild pokemon.')
+				salesperson:Say('For [$]5000, you can have twenty Safari Balls to use to try and capture wild pokemon.')
 				local choice = salesperson:Say('[y/n]Are you interested?')
 				if choice then
+					local success, nm = _p.Network:get('PDS', 'BuySafariBalls')
+					if success then
 					moneyFrame:Destroy()
 					salesperson:Say('Here are your Safari Balls. Have fun!')
-					_p.PlayerData.money = _p.PlayerData.money - 500
-					spawn(function() _p.DataManager:loadChunk('chunk90') end)
+					else
+						salesperson:Say('Sorry. You do not have enough money for this, or an error occurred. Come back soon!')
+					end
+					spawn(function() 
+						chunk:Destroy()
+						local newchunk = _p.DataManager:loadChunk('chunk90')
+
+						local doormod = newchunk.map.DoorA
+						local doorp = doormod.PrimaryPart or doormod:FindFirstChildWhichIsA("BasePart")
+
+						if doorp then
+							local doorpos = doorp.Position
+
+							_p.player.Character.HumanoidRootPart.CFrame = CFrame.new(doorpos)
+
+							local targ = doorpos + (doorp.CFrame.LookVector * 5)
+
+							_p.MasterControl:WalkTo(targ)
+							_p.MasterControl.WalkEnabled = true
+						end
+						
+					end)
 				else
 					moneyFrame:Destroy()
 					salesperson:Say('Oh, I understand.', 'Come back some other time!')
@@ -17829,64 +17851,66 @@ return function(_p)--local _p = require(script.Parent)
 				end
 			end)
 		end,
+
 		
-		Events.leaveSafari = function(_p, chunk, forced)
-			local escort2 = {
-				"Thank you for visiting the Safari Zone!\n" ..
-					"Come back soon!"
-			}
-			local escort1 = {
-				"You're out of Safari Balls!\n" ..
-					"You were escorted out of the Safari Zone."
-			}
-			local escort = {
-				"You've hit the step limit!\n"..
-					"You were escorted out of the Safari Zone."
-			}
-
-			pcall(function()
-				local MasterControl = _p.MasterControl
-				MasterControl.WalkEnabled = true
-			end)
-
-			if _p.Menu then
-				spawn(function()
-					_p.Menu:enable()
-				end)
-			end
-
-			if forced then
-				spawn(function()
-					wait(0.5)
-					if _p.NPCChat then
-						local count = _p.Battle.SBCount
-						if count == 0 then 
-							_p.NPCChat:say(escort1)
-						elseif _p.Battle.stepsRemaining == 0 then
-							_p.NPCChat:say(escort)
-						end
-					end
-					wait(0.5)
-					if _p.DataManager then
-						_p.DataManager.currentChunk:Destroy()
-						_p.DataManager:loadChunk('chunk89')
-						_p.player.Character.HumanoidRootPart.Position = Vector3.new(-1811.142, -3288.876, 733.832)
-						_p.NPCChat:say('Thanks for visiting! Come again anytime you want!')
-					end
-				end)
-				return
-			end
-		end,
+		
 		
 		onLoad_chunk90 = function(chunk)
 			local map = chunk.map
 			if map.DoorA and map.DoorB then
+				leaveSafari = function(_p, chunk, forced)
+					local escort2 = {
+						"Thank you for visiting the Safari Zone!\n" ..
+							"Come back soon!"
+					}
+					local escort1 = {
+						"You're out of Safari Balls!\n" ..
+							"You were escorted out of the Safari Zone."
+					}
+					local escort = {
+						"You've hit the step limit!\n"..
+							"You were escorted out of the Safari Zone."
+					}
+
+					pcall(function()
+						local MasterControl = _p.MasterControl
+						MasterControl.WalkEnabled = true
+					end)
+
+					if _p.Menu then
+						spawn(function()
+							_p.Menu:enable()
+						end)
+					end
+
+					if forced then
+						spawn(function()
+							wait(0.5)
+							if _p.NPCChat then
+								local count = _p.Battle.SBCount
+								if count == 0 then 
+									_p.NPCChat:say(escort1)
+								elseif _p.Battle.stepsRemaining == 0 then
+									_p.NPCChat:say(escort)
+								end
+							end
+							wait(0.5)
+							if _p.DataManager then
+								_p.DataManager.currentChunk:Destroy()
+								_p.DataManager:loadChunk('chunk89')
+								_p.player.Character.HumanoidRootPart.Position = Vector3.new(-1811.142, -3288.876, 733.832)
+								_p.NPCChat:say('Thanks for visiting! Come again anytime you want!')
+							end
+						end)
+						return
+					end
 				local onTouched = function()
 					leaveSafari(chunk, false)
 				end
 				map.DoorA.Touched:Connect(onTouched)
 				map.DoorB.Touched:Connect(onTouched)
 			end
+end
 		end,
 		onExit_chunk90 = function(chunk)
 			_p.Network:get('PDS', 'removeSafariBalls')
@@ -19805,4 +19829,4 @@ return function(_p)--local _p = require(script.Parent)
 			end
 		end,
 	}
-return Events end
+	return Events end
