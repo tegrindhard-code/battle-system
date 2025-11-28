@@ -39,8 +39,8 @@ function WalkEvents:createSafariStepUI()
 	safariStepUI = create 'Frame' {
 		Name = 'SafariStepCounter',
 		BackgroundTransparency = 1.0,
-		Size = UDim2.new(0.15, 0, 0.05, 0),
-		Position = UDim2.new(0.01, 0, 0.9, 0), -- Bottom left corner
+		Size = UDim2.new(0.25, 0, 0.08, 0),
+		Position = UDim2.new(0.02, 0, 0.85, 0), -- Bottom left corner
 		Parent = frontGui,
 		ZIndex = 10,
 	}
