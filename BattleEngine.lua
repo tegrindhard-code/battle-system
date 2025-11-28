@@ -3346,9 +3346,11 @@ function Battle:runDecision(decision)
 	return false
 end
 function Battle:runSafariBall()
-	local pokemon = self.wildFoePokemon
+	-- Get the BattlePokemon (for battle stats) and ServerPokemon (for saving to player)
+	local pokemon = self.p2.active[1] or self.p2.pokemon[1]
+	local serverPokemon = self.wildFoePokemon
 
-	if not pokemon or not pokemon.template then
+	if not pokemon or not pokemon.template or not serverPokemon then
 		self:add('-message', 'Error: No Pokemon found!')
 		self:win()
 		return
@@ -3378,7 +3380,7 @@ function Battle:runSafariBall()
 		catchRate = math.min(255, catchRate * 2)
 	end
 
-	local maxHP = pokemon:getStat('hp')
+	local maxHP = pokemon.maxhp
 	local currentHP = pokemon.hp
 
 	local hpFactor = math.floor((3 * maxHP - 2 * currentHP) * 1024 / (3 * maxHP))
