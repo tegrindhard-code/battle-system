@@ -689,16 +689,28 @@ return function(_p)
 
 	if isSafari and SBCount == 0 then
 		-- Handle Safari Zone exit when out of balls
-		if _p.Events and _p.Events.leaveSafari then
-			_p.Events.leaveSafari(_p.DataManager.currentChunk, true)
-		else
-			-- Simple Safari exit handler
-			spawn(function()
-				if _p.Menu and _p.Menu.message then
-					_p.Menu.message:show("You're out of Safari Balls!\nYou were escorted out of the Safari Zone.")
-				end
-			end)
-		end
+		spawn(function()
+			wait(0.5) -- Brief delay before showing message
+
+			-- Show message
+			if _p.Menu and _p.Menu.message then
+				_p.Menu.message:show("You're out of Safari Balls!\nYou were escorted out of the Safari Zone.")
+			end
+
+			-- Clean up Safari state
+			if _p.PlayerData then
+				pcall(function()
+					_p.PlayerData.inSafari = false
+				end)
+			end
+
+			-- Try to call custom leaveSafari function if it exists
+			if _p.Events and _p.Events.leaveSafari then
+				pcall(function()
+					_p.Events.leaveSafari(_p.DataManager.currentChunk, true)
+				end)
+			end
+		end)
 	end
 		_p.Autosave:queueSave()
 	end
