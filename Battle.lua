@@ -717,10 +717,6 @@ return function(_p)
 			end
 		end)
 	end
-		if isSafari and SBCount == 0 then
-			local leave = _p.DataManager:loadModule('LeaveSafari')
-			leave(_p, _p.DataManager.currentChunk, true)
-		end
 		_p.Autosave:queueSave()
 	end
 

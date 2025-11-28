@@ -1144,6 +1144,28 @@ end]]
 				BattleGui.updateSafariBalls()
 			end
 
+			if name == 'Bait' and battle.isSafari then
+				-- Add steps remaining display for Safari Zone
+				BattleGui.updateSafariSteps = function()
+					local steps = battle.safariData and battle.safariData.stepsRemaining or 500
+					if label:FindFirstChild("stepsText") then
+						label:FindFirstChild("stepsText"):Destroy()
+					end
+					write(steps .. " steps") {
+						Frame = create 'Frame' {
+							Name = 'stepsText',
+							BackgroundTransparency = 1.0,
+							Size = UDim2.new(0.08, 0, 0.25, 0),
+							Position = UDim2.new(0.65, 0, 0.45, 0),
+							Parent = label,
+							ZIndex = 8,
+						},
+						Scaled = true,
+					}
+				end
+				BattleGui.updateSafariSteps()
+			end
+
 			write(name) {
 				Frame = create 'Frame' {
 					Name = 'txt',

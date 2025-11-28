@@ -2088,6 +2088,17 @@ return function(Battle)
 				-- Update Safari Ball count display
 				self.SBCount = tonumber(args[2]) or 0
 				-- The ball count will be displayed through the standard UI update flow
+			elseif arg1 == '-safaristeps' then
+				-- Update Safari Steps count display
+				if self.safariData then
+					self.safariData.stepsRemaining = tonumber(args[2]) or 0
+				end
+				-- Update the steps display if the function exists
+				if _p and _p.Battle and _p.Battle.BattleGui and _p.Battle.BattleGui.updateSafariSteps then
+					pcall(function()
+						_p.Battle.BattleGui.updateSafariSteps()
+					end)
+				end
 			elseif arg1 == '-anim' then -- used when a two-turn move activates in a single turn
 				local poke = self:getPokemon(args[2])
 				local move = Tools.getMove(args[3])

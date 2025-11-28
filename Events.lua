@@ -17882,10 +17882,10 @@ return function(_p)--local _p = require(script.Parent)
 			local map = chunk.map
 			if map.DoorA and map.DoorB then
 				local onTouched = function()
-					Events.leaveSafari()
-					end
-				map.DoorA.PrimaryPart.Touched:Connect(onTouched)
-				map.DoorB.PrimaryPart.Touched:Connect(onTouched)
+					leaveSafari(chunk, false)
+				end
+				map.DoorA.Touched:Connect(onTouched)
+				map.DoorB.Touched:Connect(onTouched)
 			end
 		end,
 		onExit_chunk90 = function(chunk)
