@@ -203,7 +203,7 @@ return function(_p)
 		if d.isSafari then
 			self.isSafari = d.isSafari
 			self.safariData = d.safariData
-			self.SBCount = d.safariData and d.safariData.ballsRemaining or 30
+			self.SBCount = (d.safariData and d.safariData.ballsRemaining) or 30
 		end
 			self.sideId = 'p1'
 			self:send('join', 1, _p.PlayerData.trainerName) -- todo: we don't have to send our trainer name every time any more (PDS)
