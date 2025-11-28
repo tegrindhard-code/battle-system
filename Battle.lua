@@ -200,11 +200,11 @@ return function(_p)
 			})
 			for k, v in pairs(d) do self[k] = v end
 
-		if d.isSafari then
-			self.isSafari = d.isSafari
-			self.safariData = d.safariData
-			self.SBCount = d.safariData and d.safariData.ballsRemaining or 30
-		end
+			if d.isSafari then
+				self.isSafari = d.isSafari
+				self.safariData = d.safariData
+				self.SBCount = d.safariData and d.safariData.ballsRemaining or 30
+			end
 			self.sideId = 'p1'
 			self:send('join', 1, _p.PlayerData.trainerName) -- todo: we don't have to send our trainer name every time any more (PDS)
 
@@ -688,7 +688,8 @@ return function(_p)
 		self.currentBattle = nil
 
 		if isSafari and SBCount == 0 then
-			_p.Events.leaveSafari(_p.DataManager.currentChunk, true)
+			local leave = _p.DataManager:loadModule('LeaveSafari')
+			leave(_p, _p.DataManager.currentChunk, true)
 		end
 		_p.Autosave:queueSave()
 	end
@@ -2222,17 +2223,17 @@ end
 			self:setIdle()
 			--	elseif request.requestType == 'team' then
 			--		
-	elseif request.requestType == 'safari' then
-		-- Safari Zone battle - show Safari options (Ball, Bait, Rock, Run)
-		wait(.25)
-		-- Pass isFirstValid=true (5th param) to ensure Run button is visible
-		Utilities.fastSpawn(battleGui.mainChoices, battleGui, nil, nil, nil, nil, true)
-		local choice = self.InputChosen:wait()
-		spawn(function() battleGui:toggleRemainingPartyGuis(false) end)
-		spawn(function() battleGui:toggleFC(false) end)
-		self:send('choose', self.sideId, {choice}, request.rqid)
-		task.wait(.7)
-		self:setIdle()
+		elseif request.requestType == 'safari' then
+			-- Safari Zone battle - show Safari options (Ball, Bait, Rock, Run)
+			wait(.25)
+			-- Pass isFirstValid=true (5th param) to ensure Run button is visible
+			Utilities.fastSpawn(battleGui.mainChoices, battleGui, nil, nil, nil, nil, true)
+			local choice = self.InputChosen:wait()
+			spawn(function() battleGui:toggleRemainingPartyGuis(false) end)
+			spawn(function() battleGui:toggleFC(false) end)
+			self:send('choose', self.sideId, {choice}, request.rqid)
+			task.wait(.7)
+			self:setIdle()
 		elseif request.requestType == 'wait' then
 			if self.kind == 'pvp' or self.kind == '2v2' then
 				self:setIdle()
