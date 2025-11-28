@@ -2094,9 +2094,12 @@ return function(Battle)
 					self.safariData.stepsRemaining = tonumber(args[2]) or 0
 				end
 				-- Update the steps display if the function exists
-				if _p and _p.Battle and _p.Battle.BattleGui and _p.Battle.BattleGui.updateSafariSteps then
+				-- Update step counter in WalkEvents
+				if _p and _p.WalkEvents then
 					pcall(function()
-						_p.Battle.BattleGui.updateSafariSteps()
+						if _p.WalkEvents.updateSafariStepUI then
+							_p.WalkEvents:updateSafariStepUI()
+						end
 					end)
 				end
 			elseif arg1 == '-anim' then -- used when a two-turn move activates in a single turn

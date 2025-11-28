@@ -17856,6 +17856,12 @@ return function(_p)--local _p = require(script.Parent)
 		
 		
 		onLoad_chunk90 = function(chunk)
+			-- Initialize safari zone step counter
+			if _p.WalkEvents then
+				_p.WalkEvents.stepsRemaining = 500
+				_p.WalkEvents:createSafariStepUI()
+			end
+
 			local map = chunk.map
 			if map.DoorA and map.DoorB then
 				leaveSafari = function(_p, chunk, forced)
@@ -17914,6 +17920,12 @@ end
 		end,
 		onExit_chunk90 = function(chunk)
 			_p.Network:get('PDS', 'removeSafariBalls')
+
+			-- Clean up safari zone step counter
+			if _p.WalkEvents then
+				_p.WalkEvents.stepsRemaining = nil
+				_p.WalkEvents:removeSafariStepUI()
+			end
 		end,
 		onExitC_chunk83 = function()
 			local chunk = _p.DataManager.currentChunk

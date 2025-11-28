@@ -150,6 +150,7 @@ local publicFns = {
 	buySushi              = true,
 	BuySafariBalls        = true,
 	removeSafariBalls     = true,
+	updateSafariSteps     = true,
 	getGreenhouseState    = true,
 	giveEkans             = true,
 	birdsitem             = true,
@@ -4623,6 +4624,12 @@ function PlayerData:removeSafariBalls()
 	local item = _f.Database.ItemById['safariball']
 	self:incrementBagItem({num = item.num, quantity = -20})
 	return item.name
+end
+
+function PlayerData:updateSafariSteps(steps)
+	-- This is called from WalkEvents to keep the server in sync
+	-- No need to do anything on server side, steps are tracked client-side
+	return true
 end
 
 function PlayerData:buySushi()

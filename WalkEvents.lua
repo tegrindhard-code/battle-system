@@ -1,12 +1,14 @@
 return function(_p)--local _p = require(script.Parent)
 local Utilities = _p.Utilities
 local create = Utilities.Create
+local write = Utilities.Write
 local MasterControl = _p.MasterControl
 
 local player = _p.player
 
 local WalkEvents = {
 	checkEggs = true,
+	stepsRemaining = nil, -- Safari zone steps tracking
 }
 
 local boundStepFunctions = {}
@@ -23,6 +25,56 @@ local eggStepCount = 0
 
 local repel, rShoes
 
+-- Safari Zone step counter UI
+local safariStepUI = nil
+
+function WalkEvents:createSafariStepUI()
+	if safariStepUI then
+		safariStepUI:Destroy()
+	end
+
+	local frontGui = Utilities.frontGui
+	if not frontGui then return end
+
+	safariStepUI = create 'Frame' {
+		Name = 'SafariStepCounter',
+		BackgroundTransparency = 1.0,
+		Size = UDim2.new(0.15, 0, 0.05, 0),
+		Position = UDim2.new(0.01, 0, 0.9, 0), -- Bottom left corner
+		Parent = frontGui,
+		ZIndex = 10,
+	}
+
+	self:updateSafariStepUI()
+end
+
+function WalkEvents:updateSafariStepUI()
+	if not safariStepUI then return end
+
+	-- Remove old text
+	for _, child in pairs(safariStepUI:GetChildren()) do
+		child:Destroy()
+	end
+
+	if not self.stepsRemaining or self.stepsRemaining <= 0 then
+		return
+	end
+
+	write(self.stepsRemaining .. " steps remaining") {
+		Frame = safariStepUI,
+		Scaled = true,
+		Color = Color3.new(1, 1, 1), -- White text
+		Size = 1.0,
+	}
+end
+
+function WalkEvents:removeSafariStepUI()
+	if safariStepUI then
+		safariStepUI:Destroy()
+		safariStepUI = nil
+	end
+end
+
 function WalkEvents:init()
 	repel = _p.Repel
 	rShoes = _p.RunningShoes
@@ -35,6 +87,23 @@ function WalkEvents:clearHatchQueue() queuedHatch = nil end
 --local lastEggStepTick = tick()--
 local function onStepTaken(inGrass, inMiscGrass, IsSurfing)
 	if not MasterControl.WalkEnabled then return end -- let's not count forced steps
+
+	-- Deduct safari zone steps when walking
+	if WalkEvents.stepsRemaining and WalkEvents.stepsRemaining > 0 then
+		WalkEvents.stepsRemaining = WalkEvents.stepsRemaining - 1
+		WalkEvents:updateSafariStepUI()
+		_p.Network:post('PDS', 'updateSafariSteps', WalkEvents.stepsRemaining)
+
+		-- Check if steps ran out
+		if WalkEvents.stepsRemaining <= 0 then
+			-- Player ran out of steps, end safari zone
+			WalkEvents:removeSafariStepUI()
+			if _p.leaveSafari then
+				_p.leaveSafari(_p, nil, true)
+			end
+		end
+	end
+
 	for n, t in pairs(boundStepFunctions) do
 		if type(t) == 'function' then
 			t()
