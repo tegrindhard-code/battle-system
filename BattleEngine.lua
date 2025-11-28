@@ -1625,7 +1625,7 @@ function Battle:makeRequest(kind, requestDetails)
 		self.currentRequest = 'safari'
 		self.rqid = self.rqid + 1
 		self.p1.decision = nil
-		self.p2.decision = nil
+		self.p2.decision = true  -- Wild Pokemon doesn't make decisions in Safari
 		self.p1.currentRequest = 'safari'
 		local request = {
 			requestType = 'safari',
