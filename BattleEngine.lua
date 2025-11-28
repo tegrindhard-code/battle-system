@@ -661,8 +661,11 @@ Battle = class({
 
 			-- Safari Zones give you 30 balls by default
 			-- Check if player already has Safari Balls from a previous session
-			local safariData = PlayerData:getBagDataById(5, 3)
-			local ballCount = (safariData and safariData.quantity and safariData.quantity > 0) and safariData.quantity or 30
+			local safariData = PlayerData:getBagDataById('safariball', 3)
+			local ballCount = 30 -- Default to 30 balls
+			if safariData and safariData.quantity and safariData.quantity > 0 then
+				ballCount = safariData.quantity
+			end
 
 			self.safariData = {
 				ballsRemaining = ballCount,
