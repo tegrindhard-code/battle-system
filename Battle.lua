@@ -688,7 +688,9 @@ return function(_p)
 		self.currentBattle = nil
 
 		if isSafari and SBCount == 0 then
+		pcall(function()
 			_p.Events.leaveSafari(_p.DataManager.currentChunk, true)
+		end)
 		end
 		_p.Autosave:queueSave()
 	end
