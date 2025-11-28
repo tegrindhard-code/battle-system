@@ -1622,6 +1622,10 @@ function Battle:getPokemon(id)
 end
 function Battle:makeRequest(kind, requestDetails)
 	if self.isSafari then
+		self.currentRequest = 'safari'
+		self.rqid = self.rqid + 1
+		self.p1.decision = nil
+		self.p2.decision = nil
 		self.p1.currentRequest = 'safari'
 		local request = {
 			requestType = 'safari',
