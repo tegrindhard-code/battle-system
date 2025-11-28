@@ -200,6 +200,11 @@ return function(_p)
 			})
 			for k, v in pairs(d) do self[k] = v end
 
+		if d.isSafari then
+			self.isSafari = d.isSafari
+			self.safariData = d.safariData
+			self.SBCount = (d.safariData and d.safariData.ballsRemaining) or 30
+		end
 			if d.isSafari then
 				self.isSafari = d.isSafari
 				self.safariData = d.safariData
@@ -687,6 +692,31 @@ return function(_p)
 		_p.NPCChat:enable()
 		self.currentBattle = nil
 
+	if isSafari and SBCount == 0 then
+		-- Handle Safari Zone exit when out of balls
+		spawn(function()
+			wait(0.5) -- Brief delay before showing message
+
+			-- Show message
+			if _p.Menu and _p.Menu.message then
+				_p.Menu.message:show("You're out of Safari Balls!\nYou were escorted out of the Safari Zone.")
+			end
+
+			-- Clean up Safari state
+			if _p.PlayerData then
+				pcall(function()
+					_p.PlayerData.inSafari = false
+				end)
+			end
+
+			-- Try to call custom leaveSafari function if it exists
+			if _p.Events and _p.Events.leaveSafari then
+				pcall(function()
+					_p.Events.leaveSafari(_p.DataManager.currentChunk, true)
+				end)
+			end
+		end)
+	end
 		if isSafari and SBCount == 0 then
 			local leave = _p.DataManager:loadModule('LeaveSafari')
 			leave(_p, _p.DataManager.currentChunk, true)
