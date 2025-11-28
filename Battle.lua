@@ -687,11 +687,19 @@ return function(_p)
 		_p.NPCChat:enable()
 		self.currentBattle = nil
 
-		if isSafari and SBCount == 0 then
-		pcall(function()
+	if isSafari and SBCount == 0 then
+		-- Handle Safari Zone exit when out of balls
+		if _p.Events and _p.Events.leaveSafari then
 			_p.Events.leaveSafari(_p.DataManager.currentChunk, true)
-		end)
+		else
+			-- Simple Safari exit handler
+			spawn(function()
+				if _p.Menu and _p.Menu.message then
+					_p.Menu.message:show("You're out of Safari Balls!\nYou were escorted out of the Safari Zone.")
+				end
+			end)
 		end
+	end
 		_p.Autosave:queueSave()
 	end
 
