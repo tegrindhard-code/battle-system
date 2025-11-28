@@ -3392,24 +3392,34 @@ function Battle:runSafariBall()
 		catchRate = math.min(255, catchRate * 2)
 	end
 
+	-- Safari Zone catch calculation (fixed formula)
+	-- Use Gen 6+ formula adapted for Safari Zone (no HP damage required)
+	-- Safari Ball has 1.5x modifier, and we use a base multiplier for full HP
+	local function round(n)
+		return math.floor(n*1024)/1024
+	end
+
 	local maxHP = pokemon.maxhp
 	local currentHP = pokemon.hp
+	local ballModifier = 1.5 -- Safari Ball modifier
 
-	local hpFactor = math.floor((3 * maxHP - 2 * currentHP) * 1024 / (3 * maxHP))
-	local shakeProbability = math.floor(catchRate * hpFactor / 1024)
+	-- Calculate catch value using Gen 6+ formula
+	-- Since Safari Pokemon are at full HP, we apply a base multiplier to make catches possible
+	local a = round(round(round((3*maxHP - 2*currentHP) * catchRate * ballModifier) / (3*maxHP)) * 3.5)
+	local b = math.floor(65536 / round(round(255/a)^0.1875))
 
-	local success = math.random(255) < shakeProbability
-
+	-- If a > 255, guaranteed catch
 	local shakes = 0
-	if success then
-		-- Scale shakeProbability to 0-65535 range for shake checks
-		local shakeCheck = math.floor(shakeProbability * 65535 / 255)
+	if a > 255 then
+		shakes = 4
+	else
+		-- Calculate shakes
 		for i = 1, 4 do
-			if math.random(65535) < shakeCheck then
-				shakes = shakes + 1
-			else
+			local r = math.floor(math.random()*65536)
+			if r >= b then
 				break
 			end
+			shakes = shakes + 1
 		end
 	end
 
