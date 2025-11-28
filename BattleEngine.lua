@@ -1622,17 +1622,10 @@ function Battle:getPokemon(id)
 end
 function Battle:makeRequest(kind, requestDetails)
 	if self.isSafari then
-		local activeData = {}
 		self.p1.currentRequest = 'safari'
-		for i, active in pairs(self.p1.active) do
-			if active ~= null then
-				activeData[i] = active:getRequestData()
-			end
-		end
 		local request = {
 			requestType = 'safari',
 			safari = self.safariData,
-			active = activeData,
 			side = self.p1:getData(),
 			rqid = self.rqid,
 		}
@@ -2342,8 +2335,15 @@ function Battle:start()
 		end
 	end
 
-	if not self.p1.pokemon[1] or not self.p2.pokemon[1] then
-		self:debugError('battle error: one team is empty')
+	-- Safari Zone battles don't require player to have Pokemon
+	if not self.isSafari then
+		if not self.p1.pokemon[1] or not self.p2.pokemon[1] then
+			self:debugError('battle error: one team is empty')
+			return
+		end
+	elseif not self.p2.pokemon[1] then
+		-- Safari battles still need the wild Pokemon
+		self:debugError('battle error: no wild pokemon in safari battle')
 		return
 	end
 
@@ -4075,13 +4075,18 @@ function Battle:join(player, slot, name, team)--::join
 	if player == 'npc' then
 		megaAdornment = 'true'
 	elseif player then
-		local s, r = pcall(function()
-			team = _f.PlayerDataService[player]:getBattleTeam(self.pvp and true or false, self.pvp and team or nil)
-		end)
-		--		if not s then
-		--			print('ERROR DURING GETPLAYERBATTLETEAM:')
-		--			print(r)
-		--		end
+		-- In Safari Zone, player doesn't have a Pokemon team
+		if self.isSafari and (slot ~= 'p2' and slot ~= 2) then
+			team = {}
+		else
+			local s, r = pcall(function()
+				team = _f.PlayerDataService[player]:getBattleTeam(self.pvp and true or false, self.pvp and team or nil)
+			end)
+			--		if not s then
+			--			print('ERROR DURING GETPLAYERBATTLETEAM:')
+			--			print(r)
+			--		end
+		end
 		pcall(function()
 			local bd = _f.PlayerDataService[player]:getBagDataById('megakeystone', 5)
 			if bd and bd.quantity > 0 then
