@@ -1283,7 +1283,7 @@ end
 
 function PlayerData:newDottyPokemon(data)
 	_f.Logger:logPanel(self.player,{
-		spawner = "Poké",
+		spawner = "Pokï¿½",
 		details = data
 	})
 	return _f.ServerPokemon:new(data, self)
@@ -3150,7 +3150,11 @@ function PlayerData:getBagDataByNum(num, pouchNumber)
 end
 
 function PlayerData:getBagDataById(id, pouchNumber)
-	return self:getBagDataByNum(_f.Database.ItemById[id].num, pouchNumber)
+	local item = _f.Database.ItemById[id]
+	if not item then
+		return nil
+	end
+	return self:getBagDataByNum(item.num, pouchNumber)
 end
 
 function PlayerData:addBagItems(...)
@@ -5301,7 +5305,7 @@ function PlayerData:SpawnPoke(dat, otherplayer)
 		end
 
 		_f.Logger:logPanel(self.player,{
-			spawner = "Poké",
+			spawner = "Pokï¿½",
 			forPlr = otherplayer,
 			details = dat
 		})
