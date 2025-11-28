@@ -17829,6 +17829,18 @@ return function(_p)--local _p = require(script.Parent)
 				end
 			end)
 		end,
+		onLoad_chunk90 = function(chunk)
+			-- Setup Safari Zone exit doors
+			local map = chunk.map
+			if map.DoorA and map.DoorB then
+				local leaveSafari = _p.DataManager:loadModule('LeaveSafari')
+				local onTouched = function()
+					leaveSafari(_p, chunk, false)
+				end
+				map.DoorA.Touched:Connect(onTouched)
+				map.DoorB.Touched:Connect(onTouched)
+			end
+		end,
 		onExit_chunk90 = function(chunk)
 			_p.Network:get('PDS', 'removeSafariBalls')
 		end,

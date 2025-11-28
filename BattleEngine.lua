@@ -291,6 +291,32 @@ Battle = class({
 		local roomData = chunkData and roomId and chunkData.buildings and chunkData.buildings[roomId]
 		if regionData and regionData.isSafari and self.battleType == BATTLE_TYPE_WILD then
 			self.battleType = BATTLE_TYPE_SAFARI
+			self.isSafari = true
+			self.yieldExp = false
+			self.cantUseBag = true
+
+			-- Initialize safariData immediately
+			if creatingPlayer then
+				local PlayerData = _f.PlayerDataService[creatingPlayer]
+				local safariData = PlayerData:getBagDataById('safariball', 3)
+				local ballCount = 30  -- Default safari balls
+				if safariData and safariData.quantity and safariData.quantity > 0 then
+					ballCount = safariData.quantity
+				end
+
+				self.safariData = {
+					ballsRemaining = ballCount,
+					angerLevel = 0,
+					eatingLevel = 0,
+				}
+			else
+				-- Fallback for non-player battles (shouldn't happen but just in case)
+				self.safariData = {
+					ballsRemaining = 30,
+					angerLevel = 0,
+					eatingLevel = 0,
+				}
+			end
 		end
 
 		if self.battleSceneType then -- try the scene specific to this battle
@@ -652,26 +678,6 @@ Battle = class({
 		PlayerData:onSeePokemon(pokemon.num)
 
 		self.wildFoePokemon = pokemon
-
-		-- Safari Zone specific setup
-		if self.battleType == BATTLE_TYPE_SAFARI then
-			self.isSafari = true
-			self.yieldExp = false
-			self.cantUseBag = true
-
-			-- Get safari ball count from player's bag
-			local safariData = PlayerData:getBagDataById('safariball', 3)
-			local ballCount = 30  -- Default safari balls
-			if safariData and safariData.quantity and safariData.quantity > 0 then
-				ballCount = safariData.quantity
-			end
-
-			self.safariData = {
-				ballsRemaining = ballCount,
-				angerLevel = 0,
-				eatingLevel = 0,
-			}
-		end
 
 		self:join(nil, 2, '#Wild', {pokemon:getBattleData()})--player, slot, name, team, megaadornment
 	elseif self.battleType == BATTLE_TYPE_NPC then

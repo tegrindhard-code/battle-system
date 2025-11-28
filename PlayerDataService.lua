@@ -3203,6 +3203,61 @@ function PlayerData:incrementBagItem(itemNum, amount) -- num is preferred; id is
 	return true, bd
 end
 
+function PlayerData:pickBerry(berryId, quantity)
+	-- Pick up a berry and add it to the player's bag
+	-- berryId can be a string ID (e.g., 'oranberry') or item number
+
+	-- Safari Zone obtainable berries
+	local safariBerries = {
+		['nanabberry'] = true,
+		['razzberry'] = true,
+		['blukberry'] = true,
+		['wepearberry'] = true,
+		['pinapberry'] = true
+	}
+
+	-- If no quantity specified and it's a Safari berry, randomize amount (3-6)
+	if not quantity and safariBerries[berryId] then
+		quantity = math.random(3, 6)
+	else
+		quantity = quantity or 1
+	end
+
+	local item
+	if type(berryId) == 'string' then
+		item = _f.Database.ItemById[berryId]
+	else
+		item = _f.Database.ItemByNumber[berryId]
+	end
+
+	if not item then
+		warn('PlayerData:pickBerry - Invalid berry ID:', berryId)
+		return false
+	end
+
+	-- Add the berry to the bag
+	self:addBagItems({num = item.num, quantity = quantity})
+
+	-- Create plural form of berry name (add 'ies' for 'Berry' ending)
+	local pluralName = item.name:gsub("Berry$", "Berries")
+
+	-- Convert quantity to text for display
+	local quantityText = ({
+		[1] = 'one',
+		[2] = 'two',
+		[3] = 'three',
+		[4] = 'four',
+		[5] = 'five',
+		[6] = 'six',
+		[7] = 'seven',
+		[8] = 'eight',
+		[9] = 'nine',
+		[10] = 'ten'
+	})[quantity] or tostring(quantity)
+
+	return true, item.name, pluralName, quantityText
+end
+
 -- PC
 PC = Utilities.class({
 	currentBox = 1,

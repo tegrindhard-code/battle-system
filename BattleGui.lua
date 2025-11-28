@@ -1108,6 +1108,22 @@ end]]
 			end
 
 			if name == 'Ball' then
+				-- Add safari ball icon for Safari Zone battles
+				if battle.isSafari then
+					local iconFrame = label:FindFirstChild('FighterIcon')
+					if iconFrame then
+						create 'ImageLabel' {
+							Name = 'SafariBallIcon',
+							BackgroundTransparency = 1.0,
+							Size = UDim2.new(1, 0, 1, 0),
+							Position = UDim2.new(0, 0, 0, 0),
+							Image = 'rbxassetid://12251865', -- Safari Ball icon asset ID
+							ZIndex = 9,
+							Parent = iconFrame,
+						}
+					end
+				end
+
 				BattleGui.updateSafariBalls = function()
 					local n = battle.SBCount
 					if label:FindFirstChild("txt2") then

@@ -41,21 +41,14 @@ return function(_p, chunk, forced)
 		return
 	end
 
-	-- Setup door touch handlers for voluntary exit
-	if chunk and chunk.DoorA and chunk.DoorB then
-		local onTouched = function()
-			if _p.NPCChat:say('[y/n]Leave the safari zone early?') then
-				_p.NPCChat:say(escort2)
-				if _p.PlayerData then
-					pcall(function()
-						_p.PlayerData.inSafari = false
-					end)
-				end
-				_p.DataManager:loadChunk('chunk89')
-			end
+	-- Voluntary exit (door touched)
+	if _p.NPCChat:say('[y/n]Leave the safari zone early?') then
+		_p.NPCChat:say(escort2)
+		if _p.PlayerData then
+			pcall(function()
+				_p.PlayerData.inSafari = false
+			end)
 		end
-
-		chunk.DoorA.Touched:Connect(onTouched)
-		chunk.DoorB.Touched:Connect(onTouched)
+		_p.DataManager:loadChunk('chunk89')
 	end
 end
