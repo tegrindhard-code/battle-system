@@ -660,9 +660,14 @@ Battle = class({
 			self.cantUseBag = true
 
 			-- Get safari ball count from player's bag
-			local safariData = PlayerData:getBagDataById(5, 3)
+			local safariData = PlayerData:getBagDataById('safariball', 3)
+			local ballCount = 30  -- Default safari balls
+			if safariData and safariData.quantity and safariData.quantity > 0 then
+				ballCount = safariData.quantity
+			end
+
 			self.safariData = {
-				ballsRemaining = safariData and safariData.quantity or 0,
+				ballsRemaining = ballCount,
 				angerLevel = 0,
 				eatingLevel = 0,
 			}
