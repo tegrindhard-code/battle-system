@@ -151,6 +151,8 @@ local publicFns = {
 	BuySafariBalls        = true,
 	removeSafariBalls     = true,
 	updateSafariSteps     = true,
+	getSafariSteps        = true,
+	setSafariSteps        = true,
 	getGreenhouseState    = true,
 	giveEkans             = true,
 	birdsitem             = true,
@@ -283,6 +285,7 @@ PlayerData = Utilities.class({
 	lottoTries = 0,
 	lastLottoTryDay = 0,
 	stampSpins = 0,
+	safariSteps = 500,
 	currentHoverboard = '',
 	favoritedItems = {},
 	captureChain = {
@@ -515,6 +518,8 @@ function PlayerData:enterSafari()
 	end
 
 	self:addBagItems({num = 5, quantity = 30})
+	-- Reset safari steps to 500 when entering safari zone
+	self.safariSteps = 500
 	return true
 end
 function PlayerData:getStrengthen()
@@ -4628,8 +4633,22 @@ end
 
 function PlayerData:updateSafariSteps(steps)
 	-- This is called from WalkEvents to keep the server in sync
-	-- No need to do anything on server side, steps are tracked client-side
+	if type(steps) == 'number' then
+		self.safariSteps = math.max(0, math.floor(steps))
+	end
 	return true
+end
+
+function PlayerData:getSafariSteps()
+	return self.safariSteps or 500
+end
+
+function PlayerData:setSafariSteps(steps)
+	if type(steps) == 'number' then
+		self.safariSteps = math.max(0, math.floor(steps))
+		return true
+	end
+	return false
 end
 
 function PlayerData:buySushi()
@@ -6441,7 +6460,7 @@ do
 		local saveString
 		local buffer = BitBuffer.Create()
 
-		local version = 16
+		local version = 17
 		buffer:WriteUnsigned(6, version)
 
 		--// Name
@@ -6483,6 +6502,9 @@ do
 		else
 			buffer:WriteBool(false)
 		end
+
+		--// Safari Steps
+		buffer:WriteUnsigned(10, math.min(1023, self.safariSteps or 500))
 
 		--// Honey & Encounters
 		buffer:WriteUnsigned(12, math.min(4095, self.lastDrifloonEncounterWeek))
@@ -6717,6 +6739,11 @@ do
 			if more and more.quantity and more.quantity > 0 then
 				etc.repel.more = true
 			end
+		end
+
+		--// Safari Steps
+		if version >= 17 then
+			self.safariSteps = buffer:ReadUnsigned(10)
 		end
 
 		--// Encounters

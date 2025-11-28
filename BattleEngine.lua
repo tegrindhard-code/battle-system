@@ -304,9 +304,12 @@ Battle = class({
 					ballCount = safariData.quantity
 				end
 
+				-- Load saved safari steps from PlayerData
+				local savedSteps = PlayerData:getSafariSteps()
+
 				self.safariData = {
 					ballsRemaining = ballCount,
-					stepsRemaining = 500,
+					stepsRemaining = savedSteps,
 					angerLevel = 0,
 					eatingLevel = 0,
 				}
@@ -3366,6 +3369,15 @@ function Battle:runSafariBall()
 	self.safariData.ballsRemaining = self.safariData.ballsRemaining - 1
 	self:add('-safariball', self.safariData.ballsRemaining)
 
+	-- Decrement safari ball from player's bag
+	local PlayerData = self.p1.playerData
+	if PlayerData then
+		local item = _f.Database.ItemById['safariball']
+		if item then
+			PlayerData:incrementBagItem({num = item.num, quantity = -1})
+		end
+	end
+
 	local baseCatchRate = pokemon.template.captureRate or 45
 	local catchRate = baseCatchRate
 
@@ -3390,8 +3402,10 @@ function Battle:runSafariBall()
 
 	local shakes = 0
 	if success then
+		-- Scale shakeProbability to 0-65535 range for shake checks
+		local shakeCheck = math.floor(shakeProbability * 65535 / 255)
 		for i = 1, 4 do
-			if math.random(65535) < shakeProbability then
+			if math.random(65535) < shakeCheck then
 				shakes = shakes + 1
 			else
 				break
@@ -3469,6 +3483,12 @@ function Battle:checkSafariFlee()
 	if self.safariData.stepsRemaining then
 		self.safariData.stepsRemaining = self.safariData.stepsRemaining - 1
 		self:add('-safaristeps', self.safariData.stepsRemaining)
+
+		-- Save updated steps to PlayerData
+		local PlayerData = self.p1.playerData
+		if PlayerData then
+			PlayerData:setSafariSteps(self.safariData.stepsRemaining)
+		end
 
 		-- Check if steps ran out
 		if self.safariData.stepsRemaining <= 0 then
