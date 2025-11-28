@@ -3203,6 +3203,28 @@ function PlayerData:incrementBagItem(itemNum, amount) -- num is preferred; id is
 	return true, bd
 end
 
+function PlayerData:pickBerry(berryId, quantity)
+	-- Pick up a berry and add it to the player's bag
+	-- berryId can be a string ID (e.g., 'oranberry') or item number
+	quantity = quantity or 1
+
+	local item
+	if type(berryId) == 'string' then
+		item = _f.Database.ItemById[berryId]
+	else
+		item = _f.Database.ItemByNumber[berryId]
+	end
+
+	if not item then
+		warn('PlayerData:pickBerry - Invalid berry ID:', berryId)
+		return false
+	end
+
+	-- Add the berry to the bag
+	self:addBagItems({num = item.num, quantity = quantity})
+	return true, item.name
+end
+
 -- PC
 PC = Utilities.class({
 	currentBox = 1,
