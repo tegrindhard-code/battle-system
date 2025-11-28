@@ -1622,9 +1622,18 @@ function Battle:getPokemon(id)
 end
 function Battle:makeRequest(kind, requestDetails)
 	if self.isSafari then
+		local activeData = {}
+		self.p1.currentRequest = 'safari'
+		for i, active in pairs(self.p1.active) do
+			if active ~= null then
+				activeData[i] = active:getRequestData()
+			end
+		end
 		local request = {
 			requestType = 'safari',
 			safari = self.safariData,
+			active = activeData,
+			side = self.p1:getData(),
 			rqid = self.rqid,
 		}
 		self.p1:emitRequest(request)

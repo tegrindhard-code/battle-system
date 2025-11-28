@@ -674,6 +674,8 @@ function BattleSide:emitRequest(request)
 		request.requestType = 'team'
 	elseif request.wait then
 		request.requestType = 'wait'
+	elseif request.safari then
+		request.requestType = 'safari'
 	elseif request.active then
 		request.requestType = 'move'
 	end
