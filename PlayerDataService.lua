@@ -517,9 +517,10 @@ function PlayerData:enterSafari()
 		return 'nm'
 	end
 
-	self:addBagItems({num = 5, quantity = 30})
+	self:addBagItems({num = 5, quantity = 20})
 	-- Reset safari steps to 500 when entering safari zone
 	self.safariSteps = 500
+	_f.Network:post('PDChanged', self.player, 'safariSteps', self.safariSteps)
 	return true
 end
 function PlayerData:getStrengthen()
@@ -1304,6 +1305,8 @@ function PlayerData:startNewGame(gamemode)
 	if self.gameBegan then return false end
 	self.gameBegan = true
 
+	-- Sync initial safariSteps to client
+	_f.Network:post('PDChanged', self.player, 'safariSteps', self.safariSteps or 500)
 	self:onGameBegin(gamemode)
 end
 
@@ -1330,6 +1333,8 @@ function PlayerData:continueGame(gamemode)
 		self:PC_deserialize(pcData)
 		pcall(function() self:PC_fixIcons() end)
 	end
+	-- Sync safariSteps to client after loading
+	_f.Network:post('PDChanged', self.player, 'safariSteps', self.safariSteps or 500)
 	self:onGameBegin(gamemode)
 	return true, etc
 end
@@ -4635,6 +4640,7 @@ function PlayerData:updateSafariSteps(steps)
 	-- This is called from WalkEvents to keep the server in sync
 	if type(steps) == 'number' then
 		self.safariSteps = math.max(0, math.floor(steps))
+		_f.Network:post('PDChanged', self.player, 'safariSteps', self.safariSteps)
 	end
 	return true
 end
@@ -4646,6 +4652,7 @@ end
 function PlayerData:setSafariSteps(steps)
 	if type(steps) == 'number' then
 		self.safariSteps = math.max(0, math.floor(steps))
+		_f.Network:post('PDChanged', self.player, 'safariSteps', self.safariSteps)
 		return true
 	end
 	return false
