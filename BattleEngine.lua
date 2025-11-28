@@ -3348,6 +3348,12 @@ end
 function Battle:runSafariBall()
 	local pokemon = self.wildFoePokemon
 
+	if not pokemon or not pokemon.template then
+		self:add('-message', 'Error: No Pokemon found!')
+		self:win()
+		return
+	end
+
 	if self.safariData.ballsRemaining <= 0 then
 		self:add('-message', 'You have no Safari Balls left!')
 		self:add('-message', 'Game Over!')

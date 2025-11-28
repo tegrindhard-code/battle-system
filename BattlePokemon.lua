@@ -517,6 +517,10 @@ function BattlePokemon:getMoveTargets(move, target)
 	return targets
 end
 function BattlePokemon:ignoringAbility()
+	-- Disable abilities in Safari Zone
+	if self.battle and self.battle.isSafari then
+		return true
+	end
 	return (not self.isActive or self.volatiles['gastroacid']) and true or false
 end
 function BattlePokemon:ignoringItem()
