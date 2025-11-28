@@ -3340,6 +3340,16 @@ end
 function Battle:runSafariBall()
 	local pokemon = self.wildFoePokemon
 
+	-- Safety check: ensure safariData exists
+	if not self.safariData then
+		warn('BattleEngine: safariData is nil in runSafariBall - initializing with defaults')
+		self.safariData = {
+			ballsRemaining = 30,
+			angerLevel = 0,
+			eatingLevel = 0,
+		}
+	end
+
 	if self.safariData.ballsRemaining <= 0 then
 		self:add('-message', 'You have no Safari Balls left!')
 		self:add('-message', 'Game Over!')
@@ -3417,6 +3427,12 @@ end
 function Battle:runSafariBait()
 	local pokemon = self.wildFoePokemon
 
+	-- Safety check: ensure safariData exists
+	if not self.safariData then
+		warn('BattleEngine: safariData is nil in runSafariBait')
+		self.safariData = {ballsRemaining = 30, angerLevel = 0, eatingLevel = 0}
+	end
+
 	self:add('-message', 'You threw some Bait!')
 
 	self.safariData.eatingLevel = math.min(5, self.safariData.eatingLevel + 2)
@@ -3429,6 +3445,12 @@ function Battle:runSafariBait()
 end
 function Battle:runSafariRock()
 	local pokemon = self.wildFoePokemon
+
+	-- Safety check: ensure safariData exists
+	if not self.safariData then
+		warn('BattleEngine: safariData is nil in runSafariRock')
+		self.safariData = {ballsRemaining = 30, angerLevel = 0, eatingLevel = 0}
+	end
 
 	self:add('-message', 'You threw a Rock!')
 
@@ -3448,6 +3470,12 @@ end
 
 function Battle:checkSafariFlee()
 	local pokemon = self.wildFoePokemon
+
+	-- Safety check: ensure safariData exists
+	if not self.safariData then
+		warn('BattleEngine: safariData is nil in checkSafariFlee')
+		self.safariData = {ballsRemaining = 30, angerLevel = 0, eatingLevel = 0}
+	end
 
 	if self.safariData.eatingLevel > 0 then
 		self.safariData.eatingLevel = self.safariData.eatingLevel - 1
