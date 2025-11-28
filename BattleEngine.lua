@@ -504,7 +504,7 @@ Battle = class({
 
 			local random
 			if foe[8] and foe[9] then
-				local rate = foe[9]
+				local rate = tonumber(foe[9]) or 0
 				if firstNonEgg:getAbilityName() == 'Compound Eyes' then
 					if foe[8] and rate == 20 then
 						rate = 5
@@ -526,7 +526,7 @@ Battle = class({
 
 			local random1
 			if foe[10] and foe[11] then
-				local rate1 = foe[11]
+				local rate1 = tonumber(foe[11]) or 0
 				if firstNonEgg:getAbilityName() == 'Compound Eyes' then
 					if foe[10] and rate1 == 20 then
 						rate1 = 5
