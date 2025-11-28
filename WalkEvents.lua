@@ -96,10 +96,49 @@ local function onStepTaken(inGrass, inMiscGrass, IsSurfing)
 
 		-- Check if steps ran out
 		if WalkEvents.stepsRemaining <= 0 then
-			-- Player ran out of steps, end safari zone
+			-- Player ran out of steps, show dramatic display
 			WalkEvents:removeSafariStepUI()
-			if _p.leaveSafari then
-				_p.leaveSafari(_p, nil, true)
+
+			local frontGui = Utilities.frontGui
+			if frontGui then
+				-- Create dramatic center screen display
+				local dramaBG = create 'Frame' {
+					Name = 'SafariOutOfSteps',
+					BackgroundTransparency = 0.3,
+					BackgroundColor3 = Color3.new(0, 0, 0),
+					Size = UDim2.new(1, 0, 1, 0),
+					Position = UDim2.new(0, 0, 0, 0),
+					Parent = frontGui,
+					ZIndex = 100,
+				}
+
+				local textFrame = create 'Frame' {
+					BackgroundTransparency = 1.0,
+					Size = UDim2.new(0.8, 0, 0.3, 0),
+					Position = UDim2.new(0.1, 0, 0.35, 0),
+					Parent = dramaBG,
+					ZIndex = 101,
+				}
+
+				write("OUT OF STEPS!") {
+					Frame = textFrame,
+					Scaled = true,
+					Color = Color3.new(1, 0, 0), -- Red text
+					Size = 2.5, -- Much bigger
+				}
+
+				-- Wait 5 seconds then leave safari
+				delay(5, function()
+					dramaBG:Destroy()
+					if _p.leaveSafari then
+						_p.leaveSafari(_p, nil, true)
+					end
+				end)
+			else
+				-- Fallback if no frontGui
+				if _p.leaveSafari then
+					_p.leaveSafari(_p, nil, true)
+				end
 			end
 		end
 	end

@@ -3374,7 +3374,7 @@ function Battle:runSafariBall()
 	if PlayerData then
 		local item = _f.Database.ItemById['safariball']
 		if item then
-			PlayerData:incrementBagItem({num = item.num, quantity = -1})
+			PlayerData:incrementBagItem(item.num, -1)
 		end
 	end
 
@@ -3454,7 +3454,53 @@ function Battle:runSafariBait()
 
 	self:add('-message', pokemon.name .. ' is eating!')
 
-	self:checkSafariFlee()
+	-- Bait decrements 5 steps
+	if self.safariData.stepsRemaining then
+		self.safariData.stepsRemaining = self.safariData.stepsRemaining - 5
+		self:add('-safaristeps', self.safariData.stepsRemaining)
+
+		-- Save updated steps to PlayerData
+		local PlayerData = self.p1.playerData
+		if PlayerData then
+			PlayerData:setSafariSteps(self.safariData.stepsRemaining)
+		end
+
+		-- Check if steps ran out
+		if self.safariData.stepsRemaining <= 0 then
+			self:add('-message', 'You ran out of steps!')
+			self:add('-message', 'Game Over!')
+			self:win()
+			return true
+		end
+	end
+
+	-- Check eating level and flee (without additional step decrement)
+	if self.safariData.eatingLevel > 0 then
+		self.safariData.eatingLevel = self.safariData.eatingLevel - 1
+		if self.safariData.eatingLevel == 0 then
+			self:add('-message', pokemon.name .. ' stopped eating.')
+		end
+	end
+
+	local fleeChance = 0
+	if self.safariData.angerLevel >= 4 then
+		fleeChance = 50
+	elseif self.safariData.angerLevel >= 2 then
+		fleeChance = 25
+	else
+		fleeChance = 10
+	end
+
+	if self.safariData.eatingLevel > 0 then
+		fleeChance = math.max(5, fleeChance - 20)
+	end
+
+	if math.random(100) <= fleeChance then
+		self:add('-message', pokemon.name .. ' ran away!')
+		self:win()
+		return true
+	end
+
 	self:makeRequest('move')
 end
 function Battle:runSafariRock()

@@ -517,7 +517,7 @@ function PlayerData:enterSafari()
 		return 'nm'
 	end
 
-	self:addBagItems({num = 5, quantity = 20})
+	self:addBagItems({num = 5, quantity = 30})
 	-- Reset safari steps to 500 when entering safari zone
 	self.safariSteps = 500
 	_f.Network:post('PDChanged', self.player, 'safariSteps', self.safariSteps)
@@ -4624,7 +4624,7 @@ function PlayerData:BuySafariBalls()
 	if not self:addMoney(-5000) then return 'nm' end
 
 	local item = _f.Database.ItemById['safariball']
-	self:addBagItems({num = item.num, quantity = 20})
+	self:addBagItems({num = item.num, quantity = 30})
 	return item.name
 end
 
@@ -4632,7 +4632,7 @@ function PlayerData:removeSafariBalls()
 	if not self:getBagDataById('safariball', 1) then return end
 
 	local item = _f.Database.ItemById['safariball']
-	self:incrementBagItem({num = item.num, quantity = -20})
+	self:incrementBagItem(item.num, -30)
 	return item.name
 end
 
