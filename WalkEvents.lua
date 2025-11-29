@@ -181,7 +181,7 @@ return function(_p)--local _p = require(script.Parent)
 							end
 						
 						leaveSafari(nil, true)
-						
+					end)
 				else
 					-- Fallback if no frontGui
 					if _p.L then

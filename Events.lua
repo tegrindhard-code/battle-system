@@ -17918,11 +17918,11 @@ return function(_p)--local _p = require(script.Parent)
 					end
 				end
 			end
-					local onTouched = function()
-						_p.L:leave(chunk, _p, false)
-					end
-					chunk.map.DoorA.PrimaryPart.Touched:Connect(onTouched)
-					chunk.map.DoorB.PrimaryPart.Touched:Connect(onTouched)
+			local onTouched = function()
+				_p.L:leave(chunk, _p, false)
+			end
+			chunk.map.DoorA.PrimaryPart.Touched:Connect(onTouched)
+			chunk.map.DoorB.PrimaryPart.Touched:Connect(onTouched)
 		end,
 		
 		onExit_chunk90 = function(chunk)
