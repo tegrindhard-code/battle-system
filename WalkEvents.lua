@@ -179,7 +179,8 @@ return function(_p)--local _p = require(script.Parent)
 									return
 								end
 							end
-						
+						end
+
 						leaveSafari(nil, true)
 					end)
 				else
