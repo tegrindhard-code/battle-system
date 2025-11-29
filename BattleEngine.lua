@@ -3370,11 +3370,13 @@ function Battle:runSafariBall()
 	self:add('-safariball', self.safariData.ballsRemaining)
 
 	-- Decrement safari ball from player's bag
-	local PlayerData = self.p1.playerData
-	if PlayerData then
-		local item = _f.Database.ItemById['safariball']
-		if item then
-			PlayerData:incrementBagItem(item.num, -1)
+	if self.p1 and self.p1.player then
+		local PlayerData = _f.PlayerDataService[self.p1.player]
+		if PlayerData then
+			local item = _f.Database.ItemById['safariball']
+			if item then
+				PlayerData:incrementBagItem(item.num, -1)
+			end
 		end
 	end
 
@@ -3434,18 +3436,32 @@ function Battle:runSafariBall()
 		local playerPokemon = self.wildFoePokemon
 		self.wildFoePokemon = nil -- so it doesn't get destroyed
 
-		local PlayerData = self.p1.playerData
-		if PlayerData then
-			-- Create request for nickname
-			local arq_id = self:ARQ('nickname')
-			self.arq_data[arq_id] = {
-				type = 'nickname',
-				playerPokemon = playerPokemon,
-				completed = false,
-			}
-			local box = PlayerData:caughtPokemon(playerPokemon)
-			if box then
-				self:add('-xfr', pokemon, box)
+		if self.p1 and self.p1.player then
+			local PlayerData = _f.PlayerDataService[self.p1.player]
+			if PlayerData then
+				-- Set pokeball type for Safari Ball
+				local ballNum = 5 -- Safari ball is 5th in the balls list
+				playerPokemon.pokeball = ballNum
+
+				-- Check if this is a new Pokedex entry
+				if not PlayerData:hasOwnedPokemon(playerPokemon.num) then
+					self:add('-dex', pokemon)
+				end
+
+				-- Create request for nickname using proper ARQ system
+				local arq_id = self.arq_count
+				self.arq_count = arq_id + 1
+
+				self:add('nickname', pokemon, arq_id)
+				self.arq_data[arq_id] = {
+					type = 'nickname',
+					playerPokemon = playerPokemon,
+					completed = false,
+				}
+				local box = PlayerData:caughtPokemon(playerPokemon)
+				if box then
+					self:add('-xfr', pokemon, box)
+				end
 			end
 		end
 
@@ -3473,9 +3489,11 @@ function Battle:runSafariBait()
 		self:add('-safaristeps', self.safariData.stepsRemaining)
 
 		-- Save updated steps to PlayerData
-		local PlayerData = self.p1.playerData
-		if PlayerData then
-			PlayerData:setSafariSteps(self.safariData.stepsRemaining)
+		if self.p1 and self.p1.player then
+			local PlayerData = _f.PlayerDataService[self.p1.player]
+			if PlayerData then
+				PlayerData:setSafariSteps(self.safariData.stepsRemaining)
+			end
 		end
 
 		-- Check if steps ran out
@@ -3544,9 +3562,11 @@ function Battle:checkSafariFlee()
 		self:add('-safaristeps', self.safariData.stepsRemaining)
 
 		-- Save updated steps to PlayerData
-		local PlayerData = self.p1.playerData
-		if PlayerData then
-			PlayerData:setSafariSteps(self.safariData.stepsRemaining)
+		if self.p1 and self.p1.player then
+			local PlayerData = _f.PlayerDataService[self.p1.player]
+			if PlayerData then
+				PlayerData:setSafariSteps(self.safariData.stepsRemaining)
+			end
 		end
 
 		-- Check if steps ran out
