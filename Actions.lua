@@ -2087,16 +2087,22 @@ return function(Battle)
 			elseif arg1 == '-safariball' then
 				-- Update Safari Ball count display
 				self.SBCount = tonumber(args[2]) or 0
-				-- The ball count will be displayed through the standard UI update flow
+				-- Update the ball count display immediately
+				if BattleGui and BattleGui.updateSafariBalls then
+					BattleGui.updateSafariBalls()
+				end
 			elseif arg1 == '-safaristeps' then
 				-- Update Safari Steps count display
+				local newSteps = tonumber(args[2]) or 0
 				if self.safariData then
-					self.safariData.stepsRemaining = tonumber(args[2]) or 0
+					self.safariData.stepsRemaining = newSteps
 				end
-				-- Update the steps display if the function exists
 				-- Update step counter in WalkEvents
 				if _p and _p.WalkEvents then
 					pcall(function()
+						-- Update the actual stepsRemaining value
+						_p.WalkEvents.stepsRemaining = newSteps
+						-- Update the UI display
 						if _p.WalkEvents.updateSafariStepUI then
 							_p.WalkEvents:updateSafariStepUI()
 						end

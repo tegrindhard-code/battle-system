@@ -3381,16 +3381,19 @@ function Battle:runSafariBall()
 	local baseCatchRate = pokemon.template.captureRate or 45
 	local catchRate = baseCatchRate
 
-	-- Game-accurate Safari Zone mechanics:
-	-- Bait (eating): Makes Pokemon less likely to flee, but HARDER to catch
+	-- Game-accurate Safari Zone mechanics (Gen 3 formula):
+	-- Bait (eating): Makes Pokemon less likely to flee, but HARDER to catch (-5 per eating level)
+	-- Rock (anger): Makes Pokemon MORE likely to flee, but EASIER to catch (+5 per anger level)
 	if self.safariData.eatingLevel > 0 then
-		catchRate = math.max(1, math.floor(catchRate / 2))
+		catchRate = catchRate - (5 * self.safariData.eatingLevel)
 	end
 
-	-- Rock (anger): Makes Pokemon MORE likely to flee, but EASIER to catch
 	if self.safariData.angerLevel > 0 then
-		catchRate = math.min(255, catchRate * 2)
+		catchRate = catchRate + (5 * self.safariData.angerLevel)
 	end
+
+	-- Clamp catch rate to valid range [1, 255]
+	catchRate = math.max(1, math.min(255, catchRate))
 
 	-- Safari Zone catch calculation (fixed formula)
 	-- Use Gen 6+ formula adapted for Safari Zone (no HP damage required)
