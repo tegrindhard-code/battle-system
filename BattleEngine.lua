@@ -5040,7 +5040,7 @@ function Battle:runUseItem(decision)
 	if side.player then
 		local PlayerData = _f.PlayerDataService[side.player]
 		if not PlayerData then return false end
-		if not PlayerData:incrementBagItem(item.num, -1) then return false end -- take 1 of item
+		if not PlayerData:incrementBagItem(item.id, -1) then return false end -- take 1 of item
 	elseif side.n == 1 then
 		return false -- p1 should ALWAYS be a player; if it's missing, we have an issue
 	end
