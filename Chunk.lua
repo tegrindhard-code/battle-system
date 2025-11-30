@@ -579,30 +579,6 @@ return function(_p)
 				cam.CoordinateFrame = CFrame.new(camC0:Lerp(camC1,a), camF0:Lerp(camF1,a))
 			end)
 		end
-		if door.id == "C_chunk89:b" or door.id == "C_chunk89:a" then
-			-- Factory function to create Safari exit handlers for both doors
-			local function createSafariExitHandler(doorId)
-				return function()
-					local choose = _p.NPCChat:say('[y/n]Leave the safari zone early?')
-					if choose then
-						_p.WalkEvents:removeSafariStepUI()
-						return false
-					else
-						local d = _p.DataManager.currentChunk:getDoor(doorId)
-						if d and _p.player.Character then
-							local bp = d.Position - d.CFrame.lookVector * 3
-							_p.MasterControl:WalkTo(bp)
-						end
-						_p.NPCChat:enable()
-						_p.Menu:enable()
-						return true
-					end
-				end
-			end
-
-			_p.Events["onBeforeEnter_C_chunk89:a"] = createSafariExitHandler('C_chunk89:a')
-			_p.Events["onBeforeEnter_C_chunk89:b"] = createSafariExitHandler('C_chunk89:b')
-		end
 
 		local event = _p.Events["onDoorFocused_"..door.id]
 		if event and event() then

@@ -17865,6 +17865,29 @@ return function(_p)--local _p = require(script.Parent)
 				_p.WalkEvents:createSafariStepUI()
 			end
 
+			-- Set up Safari exit door prompts
+			local function createSafariExitHandler(doorId)
+				return function()
+					local choose = _p.NPCChat:say('[y/n]Leave the safari zone early?')
+					if choose then
+						_p.WalkEvents:removeSafariStepUI()
+						return false
+					else
+						local d = _p.DataManager.currentChunk:getDoor(doorId)
+						if d and _p.player.Character then
+							local bp = d.Position - d.CFrame.lookVector * 3
+							_p.MasterControl:WalkTo(bp)
+						end
+						_p.NPCChat:enable()
+						_p.Menu:enable()
+						return true
+					end
+				end
+			end
+
+			_p.Events["onBeforeEnter_C_chunk89:a"] = createSafariExitHandler('C_chunk89:a')
+			_p.Events["onBeforeEnter_C_chunk89:b"] = createSafariExitHandler('C_chunk89:b')
+
 			local function leaveSafari(chunk)
 				local escort1 = {
 					"You're out of Safari Balls!\n" ..
