@@ -17885,8 +17885,8 @@ return function(_p)--local _p = require(script.Parent)
 				end
 			end
 
-			_p.Events["onBeforeEnter_C_chunk89:a"] = createSafariExitHandler('C_chunk89:a')
-			_p.Events["onBeforeEnter_C_chunk89:b"] = createSafariExitHandler('C_chunk89:b')
+			_p.Events["onBeforeEnter_C_chunk89|a"] = createSafariExitHandler('C_chunk89|a')
+			_p.Events["onBeforeEnter_C_chunk89|b"] = createSafariExitHandler('C_chunk89|b')
 
 			local function leaveSafari(chunk)
 				local escort1 = {
