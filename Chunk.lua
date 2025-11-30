@@ -596,10 +596,8 @@ return function(_p)
 		-- CHUNK-TO-CHUNK DOOR
 		------------------------------------------------------
 		if door.id:sub(1,2) == "C_" then
-			local findsub = string.split(door.id, "|")
-			if findsub[2] then door.id = findsub[1] end
-
-			-- Check for onBeforeEnter event (e.g., Safari zone exit prompt)
+			-- Check for onBeforeEnter event BEFORE stripping suffix (e.g., Safari zone exit prompt)
+			-- This allows events to be registered with the full door ID including |a or |b suffix
 			local beforeEnterEvent = _p.Events["onBeforeEnter_"..door.id]
 			if beforeEnterEvent and beforeEnterEvent() then
 				-- Event returned true, abort transition
@@ -610,6 +608,10 @@ return function(_p)
 				self.indoors = false
 				return
 			end
+
+			-- Strip suffix for chunk transition
+			local findsub = string.split(door.id, "|")
+			if findsub[2] then door.id = findsub[1] end
 
 			local newChunkId = door.id:sub(3)
 			_p.MusicManager:popMusic("RegionMusic", 1, true)
