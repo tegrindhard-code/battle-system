@@ -634,6 +634,18 @@ return function(_p)
 			local findsub = string.split(door.id, "|")
 			if findsub[2] then door.id = findsub[1] end
 
+			-- Check for onBeforeEnter event (e.g., Safari zone exit prompt)
+			local beforeEnterEvent = _p.Events["onBeforeEnter_"..door.id]
+			if beforeEnterEvent and beforeEnterEvent() then
+				-- Event returned true, abort transition
+				cam.CameraType = Enum.CameraType.Custom
+				_p.NPCChat:enable()
+				spawn(function() _p.Menu:enable() end)
+				MasterControl.WalkEnabled = true
+				self.indoors = false
+				return
+			end
+
 			local newChunkId = door.id:sub(3)
 			_p.MusicManager:popMusic("RegionMusic", 1, true)
 			Utilities.FadeOut(1)
