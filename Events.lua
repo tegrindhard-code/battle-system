@@ -11989,7 +11989,8 @@ return function(_p)--local _p = require(script.Parent)
 				_p.Battle.npcPartner = nil
 			end)
 		end,
-
+		
+		
 		onBeforeEnter_EnergyCore = function(room)
 			local model = room.model
 			if completedEvents.DefeatTEinAC then
@@ -17786,10 +17787,10 @@ return function(_p)--local _p = require(script.Parent)
 				end)
 				MasterControl:LookAt(salesperson.model.Head.Position)
 				salesperson:LookAt(_p.player.Character.HumanoidRootPart.Position)
+				
 				salesperson:Say('Welcome to Roria\'s Safari Zone.')
 				salesperson:Say('Would you like to have a go at capturing Pokemon safari style?.')
 
-				-- Check if player has enough money (moneySafari returns true if money < 5000)
 				local notEnoughMoney = _p.Network:get('PDS', 'moneySafari')
 				if notEnoughMoney then
 					salesperson:Say('You don\'t have enough [$], please come again.')
@@ -17809,10 +17810,8 @@ return function(_p)--local _p = require(script.Parent)
 				salesperson:Say('For [$]5000, you can have thirty Safari Balls to use to try and capture wild pokemon.')
 				local choice = salesperson:Say('[y/n]Are you interested?')
 				if choice then
-					-- Remove any existing safari balls before buying new ones
 					_p.Network:get('PDS', 'removeSafariBalls')
 
-					-- Buy safari balls (single call)
 					local success = _p.Network:get('PDS', 'BuySafariBalls')
 					if success and success ~= 'nm' then
 						moneyFrame:Destroy()
@@ -17830,7 +17829,7 @@ return function(_p)--local _p = require(script.Parent)
 						chunk:Destroy()
 						local newchunk = _p.DataManager:loadChunk('chunk90')
 
-						local doormod = newchunk.map.DoorA
+						local doormod = newchunk.map.Door
 						local doorp = doormod.PrimaryPart or doormod:FindFirstChildWhichIsA("BasePart")
 
 						if doorp then
@@ -17860,69 +17859,73 @@ return function(_p)--local _p = require(script.Parent)
 
 
 		onLoad_chunk90 = function(chunk)
-			-- Initialize safari zone step counter
 			if _p.WalkEvents then
-				-- Load saved safari steps from PlayerData
 				local savedSteps = _p.Network:get('PDS', 'getSafariSteps') or 500
 				_p.WalkEvents.stepsRemaining = savedSteps
 				_p.WalkEvents:createSafariStepUI()
 			end
 
-			function leaveSafari(_p, chunk, forced)
-				local map = chunk.map
-				if map.DoorA and map.DoorB then
-					local escort2 = {
-						"Thank you for visiting the Safari Zone!\n" ..
-							"Come back soon!"
-					}
-					local escort1 = {
-						"You're out of Safari Balls!\n" ..
-							"You were escorted out of the Safari Zone."
-					}
-					local escort = {
-						"You've hit the step limit!\n"..
-							"You were escorted out of the Safari Zone."
-					}
+			local function leaveSafari(chunk)
+				local escort1 = {
+					"You're out of Safari Balls!\n" ..
+						"You were escorted out of the Safari Zone."
+				}
+				local escort = {
+					"You've hit the step limit!\n" ..
+						"You were escorted out of the Safari Zone."
+				}
 
-					pcall(function()
-						local MasterControl = _p.MasterControl
-						MasterControl.WalkEnabled = true
+				pcall(function()
+					local MasterControl = _p.MasterControl
+					MasterControl.WalkEnabled = true
+				end)
+
+				if _p.Menu then
+					spawn(function()
+						_p.Menu:enable()
 					end)
+				end
 
-					if _p.Menu then
-						spawn(function()
-							_p.Menu:enable()
-						end)
-					end
+				local function heks()
+					wait(0.5)
+					if _p.NPCChat then
+						local count = _p.Network:get('PDS', 'getBagDataById', 'safariball', 3) or 0
+						local steps = _p.WalkEvents and _p.WalkEvents.stepsRemaining or 0
 
-					if forced then
-						spawn(function()
-							wait(0.5)
-							if _p.NPCChat then
-								local count = _p.Battle.SBCount
-								if count == 0 then 
-									_p.NPCChat:say(escort1)
-								elseif _p.Battle.stepsRemaining == 0 then
-									_p.NPCChat:say(escort)
-								end
-							end
+						if count == 0 then
+							_p.NPCChat:say(escort1)
+							print("escort 1")
+						elseif steps == 0 then
+							_p.NPCChat:say(escort)
+							print("escort")
+						end
+
+heks()
+if count == 0 or steps == 0 then
 							wait(0.5)
 							if _p.DataManager then
 								_p.DataManager.currentChunk:Destroy()
-								_p.DataManager:loadChunk('chunk89')
-								_p.player.Character.HumanoidRootPart.Position = Vector3.new(-1811.142, -3288.876, 733.832)
-								_p.NPCChat:say('Thanks for visiting! Come again anytime you want!')
+								local justLeft = true
+								_p.DataManager:loadChunk("chunk89")
+								_p.player.Character.HumanoidRootPart.Position =
+									Vector3.new(-1811.142, -3288.876, 733.832)
+								_p.NPCChat:say("Thanks for visiting! Come again anytime you want!")
 							end
-						end)
-						return
+						end
 					end
 				end
+
+				heks()
 			end
+
 			local onTouched = function()
-				_p.L:leave(chunk, _p, false)
+				leaveSafari(chunk)
 			end
-			chunk.map.DoorA.PrimaryPart.Touched:Connect(onTouched)
-			chunk.map.DoorB.PrimaryPart.Touched:Connect(onTouched)
+
+			--[[while true do
+				wait(5)
+				onTouched()
+			end]] -- ☠️
 		end,
 		
 		onExit_chunk90 = function(chunk)
@@ -17933,6 +17936,7 @@ return function(_p)--local _p = require(script.Parent)
 				_p.WalkEvents:removeSafariStepUI()
 			end
 		end,
+		
 		onExitC_chunk83 = function()
 			local chunk = _p.DataManager.currentChunk
 			if chunk.id ~= 'chunk84' then return end
