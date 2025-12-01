@@ -10,6 +10,10 @@ end
 local Utilities = _p.Utilities
 local Tween, MoveModel = Utilities.Tween, Utilities.MoveModel
 local create = Utilities.Create
+
+-- Model animation support
+local ModelAnimator = require(script.Parent.modelAnimator)
+local modelsData = require(script.Parent.modelsData)
 local dataChanges = {
 	alpha = {
 		size = 1.25,
@@ -70,6 +74,9 @@ local Sprite = class({
 
 	forme = '',
 	offset = Vector3.new(),
+	use3D = false,
+	modelAnimator = nil,
+	model3D = nil,
 
 }, function(self, pokemon, battle, siden)
 	self.pokemon = pokemon
@@ -82,6 +89,9 @@ local Sprite = class({
 	self.isRaid = false
 	self.alpha = false
 	self.sub = nil
+
+	-- Check if 3D battles are enabled
+	self.use3D = _p.Options and _p.Options.battles3D or false
 
 	self:updateSpriteData()
 	self.duringMove = false
@@ -161,6 +171,33 @@ function Sprite:updateSpriteData()
 		spriteId = spriteId .. '-' .. self.forme
 	end
 	self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), spriteId, pokemon.gender=='F')
+end
+
+function Sprite:get3DModelData()
+	-- Get model data for 3D battles
+	local pokemon = self.pokemon
+	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
+	if self.forme and self.forme ~= '' then
+		spriteId = spriteId .. '-' .. self.forme
+	end
+
+	local tableName = (pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT')
+	local modelTable = modelsData[tableName]
+
+	if modelTable and modelTable[spriteId] then
+		return modelTable[spriteId]
+	end
+
+	-- Fallback to non-shiny if shiny not found
+	if pokemon.shiny then
+		tableName = self.isBackSprite and '_BACK' or '_FRONT'
+		modelTable = modelsData[tableName]
+		if modelTable and modelTable[spriteId] then
+			return modelTable[spriteId]
+		end
+	end
+
+	return nil
 end
 
 local mobile = Utilities.isTouchDevice()
@@ -1056,58 +1093,85 @@ function Sprite:animCaptureAttempt(ballId, shakes, critical, caught, isSafari)
 end
 -- transform
 function Sprite:renderNewSpriteData(item, illusion)
-	if self.animation then
-		local wasPlaying = not self.animation.paused
-		self.animation:destroy()
+	if self.use3D then
+		-- 3D Model rendering path
+		if self.modelAnimator then
+			local wasPlaying = not self.modelAnimator._p
+			if self.modelAnimator then
+				self.modelAnimator:Destroy()
+			end
 
-		local sd, part = self.spriteData, self.part
-		if self.slot then
-			local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..self.slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
-			self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
-			local scale
-			if sd.scale then
-				scale = sd.scale
-			else
-				scale = 1
+			local modelData = self:get3DModelData()
+			if modelData and modelData.modelId and self.model3D then
+				-- Create new model animator with updated data
+				self.modelAnimator = ModelAnimator.new(self.model3D, modelData)
+
+				if item then
+					self.modelAnimator:PlayOnce(true)
+				elseif wasPlaying then
+					self.modelAnimator:Play()
+				end
 			end
-			local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
-			if self.alpha then
-				size = size * dataChanges.alpha.size--1.25
+
+			if illusion then
+				self.pokemon.revealed = true
 			end
-			if self.isDyna then
-				size = size * dataChanges.dynamax.size
-			elseif self.isRaid then
-				size = size * dataChanges.dynamax.size2
-			elseif self.isGmax then
-				size = size * dataChanges.dynamax.size3
+		end
+	else
+		-- 2D Sprite rendering path (original logic)
+		if self.animation then
+			local wasPlaying = not self.animation.paused
+			self.animation:destroy()
+
+			local sd, part = self.spriteData, self.part
+			if self.slot then
+				local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..self.slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
+				self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
+				local scale
+				if sd.scale then
+					scale = sd.scale
+				else
+					scale = 1
+				end
+				local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
+				if self.alpha then
+					size = size * dataChanges.alpha.size--1.25
+				end
+				if self.isDyna then
+					size = size * dataChanges.dynamax.size
+				elseif self.isRaid then
+					size = size * dataChanges.dynamax.size2
+				elseif self.isGmax then
+					size = size * dataChanges.dynamax.size3
+				end
+				part.Size = size
+				--	if _p.PlayerData.isDate == 'aprilfools' then
+				--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
+				--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0) * CFrame.Angles(0, math.rad(180), 0)
+				--else
+				part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
+				--end
+				part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
 			end
-			part.Size = size
-			--	if _p.PlayerData.isDate == 'aprilfools' then
-			--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
-			--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0) * CFrame.Angles(0, math.rad(180), 0)
-			--else
-			part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
+			--if self.volatiles['dynamax'] then
+			--	part.Size.X = part.Size.X * 2
+			--	part.Size.Y = part.Size.Y * 2
+			--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
 			--end
-			part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
-		end
-		--if self.volatiles['dynamax'] then 
-		--	part.Size.X = part.Size.X * 2 
-		--	part.Size.Y = part.Size.Y * 2 
-		--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
-		--end
-		local a = _p.AnimatedSprite:New(sd)
-		a.spriteLabel.Parent = part.Gui
-		if _p.PlayerData.isDate == 'aprilfools' then
-			a.spriteLabel.Rotation = 180
-		end
-		if item then 
-			a:PlayOnce(true)
-		elseif wasPlaying then
-			a:Play() 
-		end
-		self.animation = a 
-		if illusion then
-			self.pokemon.revealed = true
+			local a = _p.AnimatedSprite:New(sd)
+			a.spriteLabel.Parent = part.Gui
+			if _p.PlayerData.isDate == 'aprilfools' then
+				a.spriteLabel.Rotation = 180
+			end
+			if item then
+				a:PlayOnce(true)
+			elseif wasPlaying then
+				a:Play()
+			end
+			self.animation = a
+			if illusion then
+				self.pokemon.revealed = true
+			end
 		end
 	end
 end
@@ -1377,17 +1441,61 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 		--end
 	end
 
-	if not self.animation then
-		local a = _p.AnimatedSprite:New(sd)
-		a.spriteLabel.Visible = false
-		a.spriteLabel.Parent = self.part.Gui
-		if _p.PlayerData.isDate == 'aprilfools' then
-			a.spriteLabel.Rotation = 180
+	if self.use3D then
+		-- 3D Model creation path
+		if not self.modelAnimator then
+			local modelData = self:get3DModelData()
+			if modelData and modelData.modelId then
+				-- Load the 3D model from storage or create it
+				local modelAsset = storage.Models:FindFirstChild(self.pokemon.species)
+				if modelAsset then
+					self.model3D = modelAsset:Clone()
+					self.model3D.Parent = self.battle.scene
+
+					-- Position the model at the battle position
+					local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
+					local scale = modelData.scale or 1.0
+					if self.alpha then
+						scale = scale * dataChanges.alpha.size
+					end
+
+					-- Set model position
+					if self.model3D.PrimaryPart then
+						self.model3D:ScaleTo(scale)
+						self.model3D:MoveTo(posPart.Position + Vector3.new(modelData.xOffset or 0, modelData.inAir or 0, 0))
+					end
+
+					-- Create model animator
+					self.modelAnimator = ModelAnimator.new(self.model3D, modelData)
+					self.modelAnimator:Play()
+				else
+					-- Fallback to 2D if model not found
+					warn(string.format("3D model not found for %s, falling back to 2D sprite", self.pokemon.species))
+					self.use3D = false
+				end
+			else
+				-- Fallback to 2D if no model data
+				self.use3D = false
+			end
+		else
+			self.modelAnimator:Play()
 		end
-		self.animation = a
 	end
 
-	self.animation:Play()
+	if not self.use3D then
+		-- 2D Sprite creation path (original logic)
+		if not self.animation then
+			local a = _p.AnimatedSprite:New(sd)
+			a.spriteLabel.Visible = false
+			a.spriteLabel.Parent = self.part.Gui
+			if _p.PlayerData.isDate == 'aprilfools' then
+				a.spriteLabel.Rotation = 180
+			end
+			self.animation = a
+		end
+
+		self.animation:Play()
+	end
 	local customSparkle
 	local pokemon = self.pokemon
 	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
@@ -1708,8 +1816,18 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 end
 function Sprite:animUnsummon()
 	if self.battle.fastForward then
-		self.animation.spriteLabel.Visible = false
-		self.animation:Pause()
+		if self.use3D then
+			-- Cleanup 3D model
+			if self.modelAnimator then
+				self.modelAnimator:Pause()
+			end
+			if self.model3D then
+				self.model3D.Parent = nil
+			end
+		else
+			self.animation.spriteLabel.Visible = false
+			self.animation:Pause()
+		end
 		return
 	end
 	local pos = (self.part.CFrame*CFrame.new(0, -self.part.Size.Y/2+1, 0)).p
@@ -1742,21 +1860,42 @@ function Sprite:animUnsummon()
 	}
 
 	Utilities.sound(300394866, nil, .2, 8)
-	local sprite = self.animation.spriteLabel
-	local offset = (self.part.Size.Y-1)/self.part.Size.Y - .5
-	Tween(.5, 'easeInCubic', function(a)
-		orb.Size = UDim2.new(a, 0, a, 0)
-		orb.Position = UDim2.new(0.5-a/2, 0, 0.5-a/2, 0)
-		local o = 1-a 
-		sprite.Size = UDim2.new(o, 0, o, 0)
-		sprite.Position = UDim2.new(0.5-o/2, 0, 0.5-o/2+offset*a, 0)
-	end)
-	sprite.Visible = false
-	if self.pokemon.shiny then
-		self.part.Aura:destroy()
-	end
 
-	self.animation:Pause()
+	if self.use3D then
+		-- 3D model recall animation
+		if self.modelAnimator then
+			-- Tween the model shrinking into the orb
+			Tween(.5, 'easeInCubic', function(a)
+				orb.Size = UDim2.new(a, 0, a, 0)
+				orb.Position = UDim2.new(0.5-a/2, 0, 0.5-a/2, 0)
+				if self.model3D and self.model3D.PrimaryPart then
+					local o = 1-a
+					self.model3D:ScaleTo(o)
+				end
+			end)
+			self.modelAnimator:Pause()
+			if self.model3D then
+				self.model3D.Parent = nil
+			end
+		end
+	else
+		-- 2D sprite recall animation
+		local sprite = self.animation.spriteLabel
+		local offset = (self.part.Size.Y-1)/self.part.Size.Y - .5
+		Tween(.5, 'easeInCubic', function(a)
+			orb.Size = UDim2.new(a, 0, a, 0)
+			orb.Position = UDim2.new(0.5-a/2, 0, 0.5-a/2, 0)
+			local o = 1-a
+			sprite.Size = UDim2.new(o, 0, o, 0)
+			sprite.Position = UDim2.new(0.5-o/2, 0, 0.5-o/2+offset*a, 0)
+		end)
+		sprite.Visible = false
+		if self.pokemon.shiny then
+			self.part.Aura:destroy()
+		end
+
+		self.animation:Pause()
+	end
 	local timerx = Utilities.Timing.easeInCubic(1)
 	local timery = Utilities.Timing.easeOutCubic(1)
 	local lastp = 0
@@ -1784,28 +1923,65 @@ end
 function Sprite:animDragOut()
 	self.pokemon.statbar:slideOffscreen(true)
 	self.pokemon.statbar = nil
+
 	if self.battle.fastForward then
-		self.animation.spriteLabel.Visible = false
-		self.animation:Pause()
+		if self.use3D then
+			if self.modelAnimator then
+				self.modelAnimator:Pause()
+			end
+			if self.model3D then
+				self.model3D.Parent = nil
+			end
+		else
+			self.animation.spriteLabel.Visible = false
+			self.animation:Pause()
+		end
 		return
 	end
+
 	local dir = -self.battle['CoordinateFrame'..self.siden].lookVector
-	local part = self.part
-	local sprite = self.animation.spriteLabel
-	local cf = part.CFrame
-	Utilities.Tween(.5, nil, function(a)
-		self.offset = dir*3*a
-		--		part.CFrame = cf + dir*3*a
-		sprite.ImageTransparency = a
-	end)
-	sprite.Visible = false
-	sprite.ImageTransparency = 0.0
-	self.animation:Pause()
-	self.offset = nil
-	if self.pokemon.shiny then
-		self.part.Aura:destroy()
+
+	if self.use3D then
+		-- 3D model drag out
+		if self.model3D and self.model3D.PrimaryPart then
+			local startCF = self.model3D.PrimaryPart.CFrame
+			Utilities.Tween(.5, nil, function(a)
+				self.offset = dir*3*a
+				if self.model3D and self.model3D.PrimaryPart then
+					-- Fade out the model by making parts transparent
+					for _, part in pairs(self.model3D:GetDescendants()) do
+						if part:IsA("BasePart") then
+							part.Transparency = a
+						end
+					end
+				end
+			end)
+		end
+		if self.modelAnimator then
+			self.modelAnimator:Pause()
+		end
+		if self.model3D then
+			self.model3D.Parent = nil
+		end
+	else
+		-- 2D sprite drag out
+		local part = self.part
+		local sprite = self.animation.spriteLabel
+		local cf = part.CFrame
+		Utilities.Tween(.5, nil, function(a)
+			self.offset = dir*3*a
+			--		part.CFrame = cf + dir*3*a
+			sprite.ImageTransparency = a
+		end)
+		sprite.Visible = false
+		sprite.ImageTransparency = 0.0
+		self.animation:Pause()
+		if self.pokemon.shiny then
+			self.part.Aura:destroy()
+		end
 	end
 
+	self.offset = nil
 	--	part.CFrame = cf
 end
 function Sprite:animFaint()
@@ -1813,21 +1989,53 @@ function Sprite:animFaint()
 		self:playCry(0.75)
 	end
 	if self.battle.kind == 'wild' and self.siden == 2 then
-		local s = self.animation.spriteLabel
-		local inAir = self.spriteData.inAir or 0
-		local xOffset = self.spriteData.xOffset or 0
 		delay(.5, function()
 			self.pokemon.statbar:slideOffscreen(true)
 			self.pokemon.statbar = nil
 		end)
-		Utilities.Tween(1, 'easeInCubic', function(a)
-			self.offset = Vector3.new(xOffset*a, -inAir * a, 0)
-			local o = 1-a
-			s.Size = UDim2.new(o, 0, o, 0)
-			s.Position = UDim2.new(.5-o/2, 0, a, 0)
-			s.ImageColor3 = Color3.new(o, o, o)
-		end)
-		s.Visible = false
+
+		if self.use3D then
+			-- 3D model faint animation for wild battles
+			local modelData = self:get3DModelData()
+			local inAir = (modelData and modelData.inAir) or 0
+			local xOffset = (modelData and modelData.xOffset) or 0
+
+			Utilities.Tween(1, 'easeInCubic', function(a)
+				self.offset = Vector3.new(xOffset*a, -inAir * a, 0)
+				if self.model3D then
+					local o = 1-a
+					-- Fade and shrink the model
+					for _, part in pairs(self.model3D:GetDescendants()) do
+						if part:IsA("BasePart") then
+							part.Transparency = part.Transparency + a * (1 - part.Transparency)
+						end
+					end
+					if self.model3D.PrimaryPart then
+						self.model3D:ScaleTo(o)
+					end
+				end
+			end)
+			if self.model3D then
+				self.model3D.Parent = nil
+			end
+			if self.modelAnimator then
+				self.modelAnimator:Pause()
+			end
+		else
+			-- 2D sprite faint animation for wild battles
+			local s = self.animation.spriteLabel
+			local inAir = self.spriteData.inAir or 0
+			local xOffset = self.spriteData.xOffset or 0
+
+			Utilities.Tween(1, 'easeInCubic', function(a)
+				self.offset = Vector3.new(xOffset*a, -inAir * a, 0)
+				local o = 1-a
+				s.Size = UDim2.new(o, 0, o, 0)
+				s.Position = UDim2.new(.5-o/2, 0, a, 0)
+				s.ImageColor3 = Color3.new(o, o, o)
+			end)
+			s.Visible = false
+		end
 	else
 		self.pokemon.statbar:slideOffscreen(true)
 		self.pokemon.statbar = nil
