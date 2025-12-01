@@ -1453,7 +1453,7 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	if self.use3D then
 		-- 3D Model creation path
 		-- Uses spriteData from GifData for animation, modelId from modelsData
-		print("[3D BATTLES] Attempting to load 3D model for", self.pokemon.species or self.pokemon.name)
+		print("[3D BATTLES V2] Attempting to load 3D model for", self.pokemon.species or self.pokemon.name, "- Code version: cd3d17d")
 		if not self.modelAnimator then
 			local modelId = self:get3DModelId()
 			print("[3D BATTLES] Model ID:", modelId)
