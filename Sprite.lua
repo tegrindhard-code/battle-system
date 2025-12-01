@@ -205,6 +205,19 @@ function Sprite:get3DModelId()
 	return modelId
 end
 
+-- Get position for both 2D and 3D sprites
+function Sprite:getPosition()
+	if self.use3D and self.model3D and self.model3D.PrimaryPart then
+		return self.model3D.PrimaryPart.Position
+	elseif self.part then
+		return self.part.Position
+	else
+		-- Fallback to battle coordinate frame
+		local cf = self.battle and self.battle['CoordinateFrame'..self.siden]
+		return cf and cf.p or Vector3.new(0, 0, 0)
+	end
+end
+
 local mobile = Utilities.isTouchDevice()
 function Sprite:playCry(pitch, cry, volume, speed)
 	pitch = pitch or 1.0
@@ -1631,7 +1644,7 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	local illusionCheck = pokemon.baseSpecies == "Zoroark"
 	pokemon.revealed = not illusionCheck
 	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-	if self.part:FindFirstChild('ParticleEmitter') then
+	if self.part and self.part:FindFirstChild('ParticleEmitter') then
 		self.part:FindFirstChild('ParticleEmitter'):Destroy()
 	end
 

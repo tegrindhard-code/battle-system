@@ -371,8 +371,8 @@ return function(_p)--local _p = require(script.Parent)
 	end
 	function BattleGui:animHit(target, source, type, soundid, effectiveness, suppressParticles)
 		effectiveness = effectiveness or 1
-		local to = target.sprite.part.Position
-		local from = source and source.sprite.part.Position or to+Vector3.new(0, 0, target.side.n==1 and -1 or 1)
+		local to = target.sprite:getPosition()
+		local from = source and source.sprite:getPosition() or to+Vector3.new(0, 0, target.side.n==1 and -1 or 1)
 		local color = typeColors[type or 'Normal']
 		local p, s = Utilities.extents(to, 2)
 		local smack = create 'ImageLabel' {
