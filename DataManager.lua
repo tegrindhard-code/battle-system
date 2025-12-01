@@ -518,6 +518,23 @@ return function(_p)
 		return sp
 	end
 
+	-- Get 3D model ID for battles (modelsData integration)
+	cache.modelIds = {}
+	function DataManager:getModelId(kind, pokemon)
+		if not cache.modelIds[kind] then
+			cache.modelIds[kind] = {}
+		end
+		local modelId = cache.modelIds[kind][pokemon]
+		if not modelId then
+			-- Request model ID from server (modelsData)
+			modelId = self:request({'modelsData', kind, pokemon})
+			if modelId then
+				cache.modelIds[kind][pokemon] = modelId
+			end
+		end
+		return modelId
+	end
+
 	--function DataManager:tryCacheSprite(kind, pokemon, )
 	--	
 	--end
