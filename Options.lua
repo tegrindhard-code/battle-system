@@ -622,12 +622,11 @@ return function(_p)
 				local BattlesTog = _p.ToggleButton:new {
 					Size = UDim2.new(0.0, 0, 0.1, 0),
 					Position = UDim2.new(0.8, 0, 0.055, 0),
-					Value = false,
+					Value = options.battles3D,
 					ZIndex = 3, Parent = pageGui,
 				}
 				BattlesTog.ValueChanged:connect(function()
-					options.battles3D = true
-					-- TODO: 3D Battles are enabled, that data goes to the necessary battle routes
+					options.battles3D = BattlesTog.Value
 				end)
 				table.insert(toggles, BattlesTog)
 
