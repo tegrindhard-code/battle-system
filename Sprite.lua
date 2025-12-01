@@ -1164,7 +1164,7 @@ function Sprite:renderNewSpriteData(item, illusion)
 			--	part.Size.Y = part.Size.Y * 2
 			--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
 			--end
-			local a = _p.AnimatedSprite:New(sd)
+			local a = _p.AnimatedSprite:new(sd)
 			a.spriteLabel.Parent = part.Gui
 			if _p.PlayerData.isDate == 'aprilfools' then
 				a.spriteLabel.Rotation = 180
@@ -1540,7 +1540,7 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	if not self.use3D then
 		-- 2D Sprite creation path (original logic)
 		if not self.animation then
-			local a = _p.AnimatedSprite:New(sd)
+			local a = _p.AnimatedSprite:new(sd)
 			a.spriteLabel.Visible = false
 			if self.part and self.part.Gui then
 				a.spriteLabel.Parent = self.part.Gui
@@ -1754,51 +1754,51 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 
 			-- Ground landing animation (only for 2D sprites)
 			if not sd.inAir then
-			wait(.2)
-			local CFRAME = workspace.CurrentCamera.CFrame
-			local function shake(vig, dur)
-				Utilities.Tween(dur or 1.2, nil, function(a)
-					local r = (1-a)*vig
-					local t = math.random()*math.pi*2
-					workspace.CurrentCamera.CFrame = CFRAME * CFrame.new(0, math.cos(t)*r, 0)
-				end)
-			end
-
-
-			Tween(.4, "easeInCubic", function(a)
-				s.Position = UDim2.new(0, 0, -0.5+.5*a, 0)
-			end)
-			local shakeValue = .025
-			local values = {
-				ground = {
-					{15, 0, 315912428, .025},
-					{30, 15, 315912428, .05},
-					{50, 30, 315912428, .1},
-					{100, 50, 1014910006, .2},
-					{150, 100, 514867425, .5},
-					{9999, 150, 6271036229, .7},
-				},
-				water = {
-					{15, 0, 7058273073, .025},
-					{30, 15, 7058273073, .05},
-					{50, 30, 7058273073, .1},
-					{100, 50, 137304720, .2},
-					{150, 100, 5564174993, .5},
-					{9999, 150, 8031010108, .7},
-				},
-			}
-			local gType = 'ground'
-			if self.battle.scene.Name == 'ShallowWater' then
-				gType = 'water'
-			end
-			for i, p in pairs(values[gType]) do
-				if (pdata.weightkg < p[1] and pdata.weightkg > p[2]) or i == #values then
-					shakeValue = p[4]
-					Utilities.sound(p[3])
-					shake(shakeValue, .3)
-					break
+				wait(.2)
+				local CFRAME = workspace.CurrentCamera.CFrame
+				local function shake(vig, dur)
+					Utilities.Tween(dur or 1.2, nil, function(a)
+						local r = (1-a)*vig
+						local t = math.random()*math.pi*2
+						workspace.CurrentCamera.CFrame = CFRAME * CFrame.new(0, math.cos(t)*r, 0)
+					end)
 				end
-			end
+
+
+				Tween(.4, "easeInCubic", function(a)
+					s.Position = UDim2.new(0, 0, -0.5+.5*a, 0)
+				end)
+				local shakeValue = .025
+				local values = {
+					ground = {
+						{15, 0, 315912428, .025},
+						{30, 15, 315912428, .05},
+						{50, 30, 315912428, .1},
+						{100, 50, 1014910006, .2},
+						{150, 100, 514867425, .5},
+						{9999, 150, 6271036229, .7},
+					},
+					water = {
+						{15, 0, 7058273073, .025},
+						{30, 15, 7058273073, .05},
+						{50, 30, 7058273073, .1},
+						{100, 50, 137304720, .2},
+						{150, 100, 5564174993, .5},
+						{9999, 150, 8031010108, .7},
+					},
+				}
+				local gType = 'ground'
+				if self.battle.scene.Name == 'ShallowWater' then
+					gType = 'water'
+				end
+				for i, p in pairs(values[gType]) do
+					if (pdata.weightkg < p[1] and pdata.weightkg > p[2]) or i == #values then
+						shakeValue = p[4]
+						Utilities.sound(p[3])
+						shake(shakeValue, .3)
+						break
+					end
+				end
 			end
 		elseif self.use3D and self.model3D then
 			-- For 3D mode, model is already visible and animating
