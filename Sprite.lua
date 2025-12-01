@@ -1616,12 +1616,16 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	end
 	--
 	if self.battle.kind == 'wild' and self.siden == 2 then
-		self.animation.spriteLabel.Visible = true
+		if self.animation then
+			self.animation.spriteLabel.Visible = true
+		end
 		if customSparkle or self.pokemon.shiny then delay(.5, sparkle) end
 
 		return
 	end
-	self.animation:Play()
+	if self.animation then
+		self.animation:Play()
+	end
 
 	local pokemon = self.pokemon
 	local illusionCheck = pokemon.baseSpecies == "Zoroark"
@@ -1645,7 +1649,9 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 		end
 	end
 	if self.battle.fastForward then
-		self.animation.spriteLabel.Visible = true
+		if self.animation then
+			self.animation.spriteLabel.Visible = true
+		end
 		if trainer and not isSecondary then
 			trainer.Model.Parent = nil
 			trainer.Root.CFrame = trainer.Root.CFrame * CFrame.new(0, 8, 0)
@@ -1663,7 +1669,20 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	pokeball.Parent = self.battle.scene
 	local p2; do
 		local cf = self.battle['CoordinateFrame'..self.siden]
-		p2 = (cf - cf.p + self.part.Position + Vector3.new(0, self.part.Size.Y/2, 0)) * CFrame.new(0, 0, .25)
+		-- Get position from either 2D part or 3D model
+		local targetPos, targetSize
+		if self.use3D and self.model3D and self.model3D.PrimaryPart then
+			targetPos = self.model3D.PrimaryPart.Position
+			targetSize = self.model3D:GetExtentsSize().Y
+		elseif self.part then
+			targetPos = self.part.Position
+			targetSize = self.part.Size.Y
+		else
+			-- Fallback to coordinate frame position
+			targetPos = cf.p
+			targetSize = 5
+		end
+		p2 = (cf - cf.p + targetPos + Vector3.new(0, targetSize/2, 0)) * CFrame.new(0, 0, .25)
 	end
 	local p1 = p2 * CFrame.new(0, 0, 4)
 
@@ -1713,24 +1732,28 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	end)
 
 	delay(.9/speed, function() -- pokemon growing from small / fading in from black
-		local s = self.animation.spriteLabel
-
 		if self.alpha then
 			pdata.weightkg = pdata.weightkg * dataChanges.alpha.weight
 		end
-		s.Visible = true
-		local scf = self.part.CFrame
-		local fallHeight = .5
-		if sd.inAir then
-			fallHeight = 0
-		end
-		s.Position = UDim2.new(0, 0, -fallHeight, 0)
-		Tween(.3/speed, 'easeInCubic', function(a)
-			s.Size = UDim2.new(a, 0, a, 0)
-			s.Position = UDim2.new(.5-a/2, 0, -fallHeight*a, 0)--s.Position = UDim2.new(.5-a/2, 0, 0.0, 0)
-			s.ImageColor3 = Color3.new(a, a, a)
-		end)
-		if not sd.inAir then
+
+		-- Only do 2D sprite animation if in 2D mode
+		if self.animation and self.part then
+			local s = self.animation.spriteLabel
+			s.Visible = true
+			local scf = self.part.CFrame
+			local fallHeight = .5
+			if sd.inAir then
+				fallHeight = 0
+			end
+			s.Position = UDim2.new(0, 0, -fallHeight, 0)
+			Tween(.3/speed, 'easeInCubic', function(a)
+				s.Size = UDim2.new(a, 0, a, 0)
+				s.Position = UDim2.new(.5-a/2, 0, -fallHeight*a, 0)--s.Position = UDim2.new(.5-a/2, 0, 0.0, 0)
+				s.ImageColor3 = Color3.new(a, a, a)
+			end)
+
+			-- Ground landing animation (only for 2D sprites)
+			if not sd.inAir then
 			wait(.2)
 			local CFRAME = workspace.CurrentCamera.CFrame
 			local function shake(vig, dur)
@@ -1776,6 +1799,10 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 					break
 				end
 			end
+			end
+		elseif self.use3D and self.model3D then
+			-- For 3D mode, model is already visible and animating
+			-- Could add a spawn-in effect here if desired
 		end
 
 
@@ -1784,7 +1811,15 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 		delay(.8/speed, function()
 			for _, stamp in pairs(pokemon.pbs) do
 				local pos = pokeball.Main.Position
-				local cf = self.part.CFrame
+				-- Get CFrame from either 2D part or 3D model
+				local cf
+				if self.part then
+					cf = self.part.CFrame
+				elseif self.use3D and self.model3D and self.model3D.PrimaryPart then
+					cf = self.model3D.PrimaryPart.CFrame
+				else
+					cf = CFrame.new(pos)
+				end
 				cf = cf-cf.p+pos
 				pcall(function() stampEmitter[stamp.style](stamp, cf) end)
 				wait(.1)
