@@ -1405,60 +1405,68 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	while not self.spriteData do runService.RenderStepped:wait() end
 	local sd = self.spriteData
 
-	if not self.part then
-		local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
-		self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
-		local part = posPart:Clone()
-		local scale = 1
-		if sd.scale then
-			scale = sd.scale
+	-- Only create 2D part if NOT using 3D
+	if not self.use3D then
+		if not self.part then
+			local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
+			self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
+			local part = posPart:Clone()
+			local scale = 1
+			if sd.scale then
+				scale = sd.scale
+			else
+				scale = 1
+			end
+			local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
+			if self.alpha then
+				size = size * dataChanges.alpha.size
+			end
+			part.Size = size
+			--if _p.PlayerData.isDate == 'aprilfools' then
+			--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
+			--	part.CFrame = (self.cf + Vector3.new(0, part.Size.y/2, 0)) * CFrame.Angles(0, math.rad(180), 0)
+			--else
+			part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
+			--end
+			part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
+			part.Name = 'Part'
+			part.Parent = self.battle.scene
+			self.part = part
 		else
-			scale = 1
+			local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
+			self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
+			local part = self.part
+			--if _p.PlayerData.isDate == 'aprilfools' then
+			--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
+			--	part.CFrame = (self.cf + Vector3.new(0, part.Size.y/2, 0)) * CFrame.Angles(0, math.rad(180), 0)
+			--else
+			part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
+			--end
 		end
-		local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
-		if self.alpha then
-			size = size * dataChanges.alpha.size
-		end
-		part.Size = size
-		--if _p.PlayerData.isDate == 'aprilfools' then
-		--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
-		--	part.CFrame = (self.cf + Vector3.new(0, part.Size.y/2, 0)) * CFrame.Angles(0, math.rad(180), 0)
-		--else
-		part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
-		--end
-		part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
-		part.Name = 'Part'
-		part.Parent = self.battle.scene
-		self.part = part
-	else
-		local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
-		self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
-		local part = self.part
-		--if _p.PlayerData.isDate == 'aprilfools' then
-		--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
-		--	part.CFrame = (self.cf + Vector3.new(0, part.Size.y/2, 0)) * CFrame.Angles(0, math.rad(180), 0)
-		--else
-		part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
-		--end
 	end
 
 	if self.use3D then
 		-- 3D Model creation path
 		-- Uses spriteData from GifData for animation, modelId from modelsData
+		print("[3D BATTLES] Attempting to load 3D model for", self.pokemon.species or self.pokemon.name)
 		if not self.modelAnimator then
 			local modelId = self:get3DModelId()
+			print("[3D BATTLES] Model ID:", modelId)
 			if modelId then
 				-- Load the 3D model from storage
 				local modelAsset
 				if type(modelId) == "string" then
 					-- Model name provided
 					modelAsset = storage.Models:FindFirstChild(modelId)
+					print("[3D BATTLES] Looking for model by name:", modelId, "Found:", modelAsset ~= nil)
 				elseif type(modelId) == "number" then
 					-- Asset ID provided - try to load from InsertService or use existing
 					modelAsset = storage.Models:FindFirstChild(self.pokemon.species)
+					print("[3D BATTLES] Looking for model by species:", self.pokemon.species, "Found:", modelAsset ~= nil)
 				end
 
 				if modelAsset then
+					print("[3D BATTLES] Loading 3D model for", self.pokemon.species)
 					self.model3D = modelAsset:Clone()
 					self.model3D.Parent = self.battle.scene
 
@@ -1478,13 +1486,15 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 					-- Create model animator using sprite data from GifData
 					self.modelAnimator = ModelAnimator.new(self.model3D, sd)
 					self.modelAnimator:Play()
+					print("[3D BATTLES] 3D model loaded and animating!")
 				else
 					-- Fallback to 2D if model not found
-					warn(string.format("3D model not found for %s (ID: %s), falling back to 2D sprite", self.pokemon.species, tostring(modelId)))
+					warn(string.format("[3D BATTLES] 3D model not found for %s (ID: %s), falling back to 2D sprite", self.pokemon.species, tostring(modelId)))
 					self.use3D = false
 				end
 			else
 				-- Fallback to 2D if no model ID in modelsData
+				print("[3D BATTLES] No model ID found in modelsData for", self.pokemon.species, "- falling back to 2D")
 				self.use3D = false
 			end
 		else
