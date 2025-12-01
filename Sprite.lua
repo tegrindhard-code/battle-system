@@ -90,7 +90,12 @@ local Sprite = class({
 	self.sub = nil
 
 	-- Check if 3D battles are enabled
-	self.use3D = _p.Options and _p.Options.battles3D or false
+	print("[SPRITE DEBUG] Constructor called for pokemon:", pokemon and pokemon.species or "nil")
+	print("[SPRITE DEBUG] _p.Menu exists:", _p.Menu ~= nil)
+	print("[SPRITE DEBUG] _p.Menu.options exists:", _p.Menu and _p.Menu.options ~= nil)
+	print("[SPRITE DEBUG] battles3D value:", _p.Menu and _p.Menu.options and _p.Menu.options.battles3D or "nil")
+	self.use3D = _p.Menu and _p.Menu.options and _p.Menu.options.battles3D or false
+	print("[SPRITE DEBUG] use3D set to:", self.use3D)
 
 	self:updateSpriteData()
 	self.duringMove = false
