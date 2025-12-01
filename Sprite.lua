@@ -1496,11 +1496,45 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 					-- Fallback to 2D if model not found
 					warn(string.format("[3D BATTLES] 3D model not found for %s (ID: %s), falling back to 2D sprite", self.pokemon.species, tostring(modelId)))
 					self.use3D = false
+					-- Create 2D part for fallback
+					if not self.part then
+						local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
+						self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
+						local part = posPart:Clone()
+						local scale = sd.scale or 1
+						local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
+						if self.alpha then
+							size = size * dataChanges.alpha.size
+						end
+						part.Size = size
+						part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
+						part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
+						part.Name = 'Part'
+						part.Parent = self.battle.scene
+						self.part = part
+					end
 				end
 			else
 				-- Fallback to 2D if no model ID in modelsData
 				print("[3D BATTLES] No model ID found in modelsData for", self.pokemon.species, "- falling back to 2D")
 				self.use3D = false
+				-- Create 2D part for fallback
+				if not self.part then
+					local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
+					self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
+					local part = posPart:Clone()
+					local scale = sd.scale or 1
+					local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
+					if self.alpha then
+						size = size * dataChanges.alpha.size
+					end
+					part.Size = size
+					part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
+					part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
+					part.Name = 'Part'
+					part.Parent = self.battle.scene
+					self.part = part
+				end
 			end
 		else
 			self.modelAnimator:Play()
