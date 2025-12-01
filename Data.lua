@@ -26,6 +26,7 @@ local function setupConcatenator(class, classname)
 end
 
 local gifData = require(game:GetService('ServerStorage').Data.GifData)
+local modelsData = require(game:GetService('ServerStorage').Data.modelsData)
 
 
 return function(Battle)
@@ -450,6 +451,14 @@ return function(Battle)
 	function Battle:getSprite(id) -- only called by getDataForTransferToPlayer (see :runMegaEvo in Extension)
 		local folder, spriteId = id:match('^(.+)/(.+)$')
 		return gifData[folder][spriteId]
+	end
+
+	function Battle:getModelId(id) -- Get 3D model ID for battle animations
+		local folder, spriteId = id:match('^(.+)/(.+)$')
+		if modelsData[folder] then
+			return modelsData[folder][spriteId]
+		end
+		return nil
 	end
 	
 	

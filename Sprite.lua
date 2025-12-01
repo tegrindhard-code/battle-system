@@ -13,7 +13,6 @@ local create = Utilities.Create
 
 -- Model animation support
 local ModelAnimator = require(script.Parent.modelAnimator)
-local modelsData = require(script.Parent.modelsData)
 local dataChanges = {
 	alpha = {
 		size = 1.25,
@@ -174,7 +173,7 @@ function Sprite:updateSpriteData()
 end
 
 function Sprite:get3DModelId()
-	-- Get 3D model ID from modelsData
+	-- Get 3D model ID via DataManager (which queries modelsData on server)
 	-- Animation config comes from existing spriteData (GifData)
 	local pokemon = self.pokemon
 	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
@@ -182,33 +181,23 @@ function Sprite:get3DModelId()
 		spriteId = spriteId .. '-' .. self.forme
 	end
 
-	-- Try to get model ID with fallback chain
+	-- Try to get model ID with fallback chain via DataManager
 	local tableName = (pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT')
-	local modelTable = modelsData[tableName]
-
-	if modelTable and modelTable[spriteId] then
-		return modelTable[spriteId]
-	end
+	local modelId = _p.DataManager:getModelId(tableName, spriteId)
 
 	-- Fallback: Try non-shiny version
-	if pokemon.shiny then
+	if not modelId and pokemon.shiny then
 		tableName = self.isBackSprite and '_BACK' or '_FRONT'
-		modelTable = modelsData[tableName]
-		if modelTable and modelTable[spriteId] then
-			return modelTable[spriteId]
-		end
+		modelId = _p.DataManager:getModelId(tableName, spriteId)
 	end
 
 	-- Fallback: Try _FRONT if looking for _BACK
-	if self.isBackSprite then
+	if not modelId and self.isBackSprite then
 		tableName = pokemon.shiny and '_SHINY_FRONT' or '_FRONT'
-		modelTable = modelsData[tableName]
-		if modelTable and modelTable[spriteId] then
-			return modelTable[spriteId]
-		end
+		modelId = _p.DataManager:getModelId(tableName, spriteId)
 	end
 
-	return nil
+	return modelId
 end
 
 local mobile = Utilities.isTouchDevice()

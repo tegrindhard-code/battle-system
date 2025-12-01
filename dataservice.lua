@@ -46,6 +46,7 @@ end
 local indoorOrigins = {{},{},{},{},{}}
 local data = {
 	storage.Data.GifData,
+	storage.Data.modelsData,
 	storage.Data.Chunks,
 	storage.Data.ObtainableItems,
 	storage.Data.Trainers,
@@ -68,6 +69,7 @@ end
 do -- Database Setup
 	Database.ChunkData = data.Chunks
 	Database.GifData = data.GifData
+	Database.modelsData = data.modelsData
 
 	Database.PokemonById = data.Pokedex -- use sparingly...?
 	Database.MoveById = data.Movedex
@@ -1223,6 +1225,14 @@ function DataService.fulfillRequest(player, ...)
 				if sprites[request[3]..'_F'] then
 					v.male = true
 				end
+			end
+		elseif kind == 'modelsData' then
+			-- Get 3D model ID for Pokemon
+			-- request[2] = table name (_FRONT, _BACK, _SHINY_FRONT, _SHINY_BACK)
+			-- request[3] = pokemon sprite ID
+			local modelTable = data.modelsData[request[2]]
+			if modelTable then
+				v = modelTable[request[3]]
 			end
 		elseif kind == 'BabyEvolutionPokedexNumber' then
 			local pokemon-- = data.Pokedex[request[2]]
