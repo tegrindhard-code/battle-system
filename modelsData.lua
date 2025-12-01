@@ -1,0 +1,1 @@
+-- basically gifdata but instead of all the gif data associated with the pokemon its model ids
