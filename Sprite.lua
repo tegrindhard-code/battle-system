@@ -173,14 +173,16 @@ function Sprite:updateSpriteData()
 	self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), spriteId, pokemon.gender=='F')
 end
 
-function Sprite:get3DModelData()
-	-- Get model data for 3D battles
+function Sprite:get3DModelId()
+	-- Get 3D model ID from modelsData
+	-- Animation config comes from existing spriteData (GifData)
 	local pokemon = self.pokemon
 	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
 	if self.forme and self.forme ~= '' then
 		spriteId = spriteId .. '-' .. self.forme
 	end
 
+	-- Try to get model ID with fallback chain
 	local tableName = (pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT')
 	local modelTable = modelsData[tableName]
 
@@ -188,9 +190,18 @@ function Sprite:get3DModelData()
 		return modelTable[spriteId]
 	end
 
-	-- Fallback to non-shiny if shiny not found
+	-- Fallback: Try non-shiny version
 	if pokemon.shiny then
 		tableName = self.isBackSprite and '_BACK' or '_FRONT'
+		modelTable = modelsData[tableName]
+		if modelTable and modelTable[spriteId] then
+			return modelTable[spriteId]
+		end
+	end
+
+	-- Fallback: Try _FRONT if looking for _BACK
+	if self.isBackSprite then
+		tableName = pokemon.shiny and '_SHINY_FRONT' or '_FRONT'
 		modelTable = modelsData[tableName]
 		if modelTable and modelTable[spriteId] then
 			return modelTable[spriteId]
@@ -1095,16 +1106,17 @@ end
 function Sprite:renderNewSpriteData(item, illusion)
 	if self.use3D then
 		-- 3D Model rendering path
+		-- Uses spriteData from GifData for animation configuration
 		if self.modelAnimator then
 			local wasPlaying = not self.modelAnimator._p
 			if self.modelAnimator then
 				self.modelAnimator:Destroy()
 			end
 
-			local modelData = self:get3DModelData()
-			if modelData and modelData.modelId and self.model3D then
-				-- Create new model animator with updated data
-				self.modelAnimator = ModelAnimator.new(self.model3D, modelData)
+			-- Use spriteData (from GifData) as the animation config
+			if self.spriteData and self.model3D then
+				-- Create new model animator with sprite data from GifData
+				self.modelAnimator = ModelAnimator.new(self.model3D, self.spriteData)
 
 				if item then
 					self.modelAnimator:PlayOnce(true)
@@ -1443,38 +1455,47 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 
 	if self.use3D then
 		-- 3D Model creation path
+		-- Uses spriteData from GifData for animation, modelId from modelsData
 		if not self.modelAnimator then
-			local modelData = self:get3DModelData()
-			if modelData and modelData.modelId then
-				-- Load the 3D model from storage or create it
-				local modelAsset = storage.Models:FindFirstChild(self.pokemon.species)
+			local modelId = self:get3DModelId()
+			if modelId then
+				-- Load the 3D model from storage
+				local modelAsset
+				if type(modelId) == "string" then
+					-- Model name provided
+					modelAsset = storage.Models:FindFirstChild(modelId)
+				elseif type(modelId) == "number" then
+					-- Asset ID provided - try to load from InsertService or use existing
+					modelAsset = storage.Models:FindFirstChild(self.pokemon.species)
+				end
+
 				if modelAsset then
 					self.model3D = modelAsset:Clone()
 					self.model3D.Parent = self.battle.scene
 
-					-- Position the model at the battle position
+					-- Position the model at the battle position using spriteData config
 					local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
-					local scale = modelData.scale or 1.0
+					local scale = sd.scale or 1.0
 					if self.alpha then
 						scale = scale * dataChanges.alpha.size
 					end
 
-					-- Set model position
+					-- Set model position using GifData offsets
 					if self.model3D.PrimaryPart then
 						self.model3D:ScaleTo(scale)
-						self.model3D:MoveTo(posPart.Position + Vector3.new(modelData.xOffset or 0, modelData.inAir or 0, 0))
+						self.model3D:MoveTo(posPart.Position + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0))
 					end
 
-					-- Create model animator
-					self.modelAnimator = ModelAnimator.new(self.model3D, modelData)
+					-- Create model animator using sprite data from GifData
+					self.modelAnimator = ModelAnimator.new(self.model3D, sd)
 					self.modelAnimator:Play()
 				else
 					-- Fallback to 2D if model not found
-					warn(string.format("3D model not found for %s, falling back to 2D sprite", self.pokemon.species))
+					warn(string.format("3D model not found for %s (ID: %s), falling back to 2D sprite", self.pokemon.species, tostring(modelId)))
 					self.use3D = false
 				end
 			else
-				-- Fallback to 2D if no model data
+				-- Fallback to 2D if no model ID in modelsData
 				self.use3D = false
 			end
 		else
@@ -1996,9 +2017,9 @@ function Sprite:animFaint()
 
 		if self.use3D then
 			-- 3D model faint animation for wild battles
-			local modelData = self:get3DModelData()
-			local inAir = (modelData and modelData.inAir) or 0
-			local xOffset = (modelData and modelData.xOffset) or 0
+			-- Use spriteData from GifData for positioning
+			local inAir = (self.spriteData and self.spriteData.inAir) or 0
+			local xOffset = (self.spriteData and self.spriteData.xOffset) or 0
 
 			Utilities.Tween(1, 'easeInCubic', function(a)
 				self.offset = Vector3.new(xOffset*a, -inAir * a, 0)
