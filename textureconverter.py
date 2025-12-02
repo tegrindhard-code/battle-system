@@ -4,6 +4,7 @@ import shutil
 
 print("\n" + "="*60)
 print("POKEMON MODEL CONVERTER - BATCH PROCESSOR")
+print("Matches Sprite.lua scaling: baseScale 0.2 (20% of original)")
 print("="*60 + "\n")
 
 # Prompt for model folder
@@ -32,6 +33,35 @@ MODEL_NAME = input("Model name: ").strip()
 if not MODEL_NAME:
     MODEL_NAME = "pokemon_model"
 
+# SCALING CONFIGURATION
+# Match Sprite.lua scaling: baseModelScale = 0.2
+# Models exported from Blender at 1.0 scale will be scaled to 0.2 in Roblox
+# If your source models are tiny (common with Pokemon models), increase BLENDER_EXPORT_SCALE
+print("\n" + "-"*60)
+print("SCALING CONFIGURATION")
+print("-"*60)
+print("\nDefault: Exports at 1.0 scale, Roblox applies 0.2x in Sprite.lua")
+print("If source models are very small, enter a multiplier (e.g., 100 for tiny models)")
+BLENDER_EXPORT_SCALE = input("Blender export scale multiplier [1.0]: ").strip()
+
+if not BLENDER_EXPORT_SCALE:
+    BLENDER_EXPORT_SCALE = 1.0
+else:
+    try:
+        BLENDER_EXPORT_SCALE = float(BLENDER_EXPORT_SCALE)
+    except:
+        print("Invalid scale, using 1.0")
+        BLENDER_EXPORT_SCALE = 1.0
+
+# Calculate what the final Roblox scale will be
+LUA_BASE_SCALE = 0.2  # From Sprite.lua:1497
+FINAL_ROBLOX_SCALE = BLENDER_EXPORT_SCALE * LUA_BASE_SCALE
+
+print(f"\nExport scale: {BLENDER_EXPORT_SCALE}x")
+print(f"Roblox base scale: {LUA_BASE_SCALE}x (from Sprite.lua)")
+print(f"Final in-game size: {FINAL_ROBLOX_SCALE}x original model")
+print(f"(For 96px sprite = 3.84 studs)")
+
 print("\n" + "-"*60)
 print("CREATING BLENDER SCRIPT...")
 print("-"*60 + "\n")
@@ -47,6 +77,22 @@ MODEL_FOLDER = r"{MODEL_FOLDER}"
 OUTPUT_FOLDER = r"{OUTPUT_FOLDER}"
 MODEL_NAME = "{MODEL_NAME}"
 
+# SCALING: Match Sprite.lua logic
+# Sprite.lua applies: baseModelScale = 0.2 (20% of imported model)
+# This export scale adjusts source model size before Roblox import
+EXPORT_SCALE = {BLENDER_EXPORT_SCALE}
+
+# Expected final in-game scale
+LUA_BASE_SCALE = 0.2  # From Sprite.lua:1497
+FINAL_SCALE = EXPORT_SCALE * LUA_BASE_SCALE
+
+print("\\n" + "="*60)
+print(f"SCALING INFO:")
+print(f"  Export scale: {{EXPORT_SCALE}}x")
+print(f"  Roblox base:  {{LUA_BASE_SCALE}}x (Sprite.lua)")
+print(f"  Final size:   {{FINAL_SCALE}}x original")
+print("="*60 + "\\n")
+
 def clear_scene():
     bpy.ops.object.select_all(action='SELECT')
     bpy.ops.object.delete(use_global=False)
@@ -54,7 +100,7 @@ def clear_scene():
 def find_file_with_extension(folder, extensions):
     if isinstance(extensions, str):
         extensions = [extensions]
-    
+
     for file in os.listdir(folder):
         if any(file.lower().endswith(ext) for ext in extensions):
             return os.path.join(folder, file)
@@ -79,7 +125,7 @@ def load_material_json(folder):
 def find_texture(folder, texture_name):
     if not texture_name:
         return None
-    
+
     for file in os.listdir(folder):
         name_without_ext = os.path.splitext(file)[0]
         if name_without_ext == texture_name:
@@ -88,29 +134,29 @@ def find_texture(folder, texture_name):
 
 def setup_material(mat_data, folder, obj):
     mat_name = mat_data.get('name', 'Material')
-    
+
     if mat_name in bpy.data.materials:
         mat = bpy.data.materials[mat_name]
     else:
         mat = bpy.data.materials.new(name=mat_name)
-    
+
     mat.use_nodes = True
     nodes = mat.node_tree.nodes
     links = mat.node_tree.links
-    
+
     nodes.clear()
-    
+
     bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')
     bsdf.location = (0, 0)
-    
+
     output = nodes.new(type='ShaderNodeOutputMaterial')
     output.location = (300, 0)
-    
+
     links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])
-    
+
     x_offset = -300
     y_offset = 0
-    
+
     # Base Color
     base_color_map = mat_data.get('BaseColorMap', '')
     if base_color_map:
@@ -122,7 +168,7 @@ def setup_material(mat_data, folder, obj):
             links.new(tex_node.outputs['Color'], bsdf.inputs['Base Color'])
             print(f"  [OK] Applied Base Color: {{base_color_map}}")
             y_offset -= 300
-    
+
     # Normal Map
     normal_map = mat_data.get('NormalMap', '')
     if normal_map:
@@ -132,15 +178,15 @@ def setup_material(mat_data, folder, obj):
             tex_node.image = bpy.data.images.load(texture_path)
             tex_node.image.colorspace_settings.name = 'Non-Color'
             tex_node.location = (x_offset, y_offset)
-            
+
             normal_node = nodes.new(type='ShaderNodeNormalMap')
             normal_node.location = (x_offset + 200, y_offset)
-            
+
             links.new(tex_node.outputs['Color'], normal_node.inputs['Color'])
             links.new(normal_node.outputs['Normal'], bsdf.inputs['Normal'])
             print(f"  [OK] Applied Normal Map: {{normal_map}}")
             y_offset -= 300
-    
+
     # Roughness
     roughness_map = mat_data.get('RoughnessMap', '')
     if roughness_map:
@@ -153,13 +199,13 @@ def setup_material(mat_data, folder, obj):
             links.new(tex_node.outputs['Color'], bsdf.inputs['Roughness'])
             print(f"  [OK] Applied Roughness: {{roughness_map}}")
             y_offset -= 300
-    
+
     return mat
 
 def apply_materials_to_mesh(obj, materials_dict):
     if not obj.data.materials:
         return
-    
+
     for i, mat_slot in enumerate(obj.material_slots):
         mat_name = mat_slot.name
         if mat_name in materials_dict:
@@ -201,32 +247,36 @@ material_data = load_material_json(MODEL_FOLDER)
 
 if material_data:
     print(f"[OK] Found {{len(material_data)}} materials\\n")
-    
+
     materials_dict = {{}}
-    
+
     for mat_data in material_data:
         mat_name = mat_data.get('name', 'Material')
         print(f"Processing: {{mat_name}}")
-        
+
         for obj in bpy.data.objects:
             if obj.type == 'MESH':
                 mat = setup_material(mat_data, MODEL_FOLDER, obj)
                 materials_dict[mat_name] = mat
-    
+
     print("\\nApplying materials...")
     for obj in bpy.data.objects:
         if obj.type == 'MESH':
             apply_materials_to_mesh(obj, materials_dict)
 
-# Scale up the model before export (Pokemon models are tiny)
-for obj in bpy.data.objects:
-    if obj.type == 'MESH' or obj.type == 'ARMATURE':
-        obj.scale = (100, 100, 100)
-        bpy.context.view_layer.update()
+# Scale the model for export
+# This scale will be applied in Blender, then Sprite.lua applies additional 0.2x
+if EXPORT_SCALE != 1.0:
+    print(f"\\nApplying export scale: {{EXPORT_SCALE}}x")
+    for obj in bpy.data.objects:
+        if obj.type == 'MESH' or obj.type == 'ARMATURE':
+            obj.scale = (EXPORT_SCALE, EXPORT_SCALE, EXPORT_SCALE)
+            bpy.context.view_layer.update()
 
-# Apply the scale
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    # Apply the scale transform
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    print(f"  [OK] Scale applied")
 
 # Export FBX
 output_path = os.path.join(OUTPUT_FOLDER, f"{{MODEL_NAME}}.fbx")
@@ -237,7 +287,7 @@ bpy.ops.export_scene.fbx(
     filepath=output_path,
     use_selection=False,
     apply_scale_options='FBX_SCALE_ALL',
-    global_scale=100.0,
+    global_scale=1.0,  # Don't double-scale, we already applied EXPORT_SCALE
     object_types={{'ARMATURE', 'MESH'}},
     use_mesh_modifiers=True,
     mesh_smooth_type='FACE',
@@ -251,7 +301,12 @@ print("\\n" + "="*60)
 print("CONVERSION COMPLETE!")
 print("="*60)
 print(f"\\nOutput: {{output_path}}")
+print(f"\\nModel will be scaled in Roblox by Sprite.lua:")
+print(f"  - baseModelScale = {{LUA_BASE_SCALE}}")
+print(f"  - Final in-game size = {{FINAL_SCALE}}x original")
+print(f"  - Target: ~3.84 studs (96px sprite equivalent)")
 print("\\nReady to import into Roblox Studio!")
+print("Place in ReplicatedStorage.Models")
 print("="*60 + "\\n")
 '''
 
@@ -262,9 +317,15 @@ with open(script_path, 'w', encoding='utf-8') as f:
 
 print(f"[OK] Created Blender script: {script_path}")
 
-# Create a batch file to run it - Fixed version
+# Create a batch file to run it
 batch_content = f'''@echo off
 echo Running Blender converter...
+echo.
+echo SCALING INFO:
+echo   Export scale: {BLENDER_EXPORT_SCALE}x
+echo   Roblox base:  0.2x (from Sprite.lua)
+echo   Final size:   {FINAL_ROBLOX_SCALE}x original
+echo   Target:       ~3.84 studs (96px sprite)
 echo.
 
 REM Try common Blender installation paths
@@ -307,9 +368,18 @@ print(f"[OK] Created batch file: {batch_path}")
 print("\n" + "="*60)
 print("SETUP COMPLETE!")
 print("="*60)
+print(f"\nScaling configuration:")
+print(f"  Export: {BLENDER_EXPORT_SCALE}x")
+print(f"  Roblox: 0.2x (Sprite.lua baseModelScale)")
+print(f"  Final:  {FINAL_ROBLOX_SCALE}x original")
+print(f"\nFor 96px sprite (3.84 studs):")
+print(f"  Model should be ~19.2 studs tall after export")
+print(f"  (19.2 * 0.2 = 3.84 studs in-game)")
 print("\nNext steps:")
 print(f"1. Double-click: {os.path.basename(batch_path)}")
 print("2. Wait for Blender to process (runs in background)")
 print(f"3. Your FBX will be in: {OUTPUT_FOLDER}")
-print("4. Import the FBX into Roblox Studio!")
+print("4. Import into Roblox Studio → ReplicatedStorage.Models")
+print("5. Set PrimaryPart on the model")
+print("6. Add model name to modelsData.lua")
 print("\n" + "="*60 + "\n")
