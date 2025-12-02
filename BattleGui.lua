@@ -300,7 +300,12 @@ return function(_p)--local _p = require(script.Parent)
 		local n = poke.side.n
 		local posYS, posYO = 0.0, 0
 		if #poke.side.active == 1 then
-			posYO = poke.statbar.main--[[.gui]].AbsolutePosition.y + poke.statbar.main--[[.gui]].AbsoluteSize.y + 20
+			if poke.statbar and poke.statbar.main then
+				posYO = poke.statbar.main--[[.gui]].AbsolutePosition.y + poke.statbar.main--[[.gui]].AbsoluteSize.y + 20
+			else
+				-- Fallback positioning if statbar doesn't exist (e.g., 3D mode)
+				posYO = 0
+			end
 		else
 			posYS = (n==1 and .45 or .4)-.1/292*110
 		end
