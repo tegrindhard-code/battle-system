@@ -1,243 +1,385 @@
-#!/usr/bin/env python3
-"""
-Texture Converter for 3D Battle System
-Converts sprite sheet dimensions to proper 3D model scale factors.
-
-Matches the scaling logic from Sprite.lua:
-- 2D sprites: pixels/25 = studs (e.g., 96px = 3.84 studs)
-- 3D models: baseScale * spriteScale = finalScale
-- Default baseScale: 0.2 (20% of original model size)
-"""
-
 import json
-import sys
-from pathlib import Path
-from typing import Dict, Optional, Tuple
+import os
+import shutil
 
+print("\n" + "="*60)
+print("POKEMON MODEL CONVERTER - BATCH PROCESSOR")
+print("Matches Sprite.lua scaling: baseScale 0.2 (20% of original)")
+print("="*60 + "\n")
 
-class TextureConverter:
-    """Converts sprite sheet data to 3D model scaling parameters."""
+# Prompt for model folder
+print("Enter the folder path containing your Pokemon model files:")
+print("(Should contain .dae or .obj, .png textures, and .txt/.json material file)")
+MODEL_FOLDER = input("Folder path: ").strip().strip('"')
 
-    # Constants from Sprite.lua
-    PIXELS_TO_STUDS = 25  # Divisor for converting pixels to Roblox studs
-    BASE_MODEL_SCALE = 0.2  # Default 3D model scale (20% of original)
+if not os.path.exists(MODEL_FOLDER):
+    print(f"\nERROR: Folder not found: {MODEL_FOLDER}")
+    exit()
 
-    # Data changes from Sprite.lua
-    ALPHA_SIZE = 1.25
-    TOTEM_SIZE = 1.2
-    DYNAMAX_SIZE = 2.0
+print(f"\n[OK] Found folder: {MODEL_FOLDER}")
 
-    def __init__(self):
-        self.sprite_data = {}
+# Prompt for output folder
+print("\nEnter the output folder path (where to save the ready files):")
+OUTPUT_FOLDER = input("Output folder: ").strip().strip('"')
 
-    def pixels_to_studs(self, pixels: int) -> float:
-        """
-        Convert pixel dimensions to Roblox studs.
+if not os.path.exists(OUTPUT_FOLDER):
+    print(f"Creating output folder: {OUTPUT_FOLDER}")
+    os.makedirs(OUTPUT_FOLDER)
 
-        From Sprite.lua:1545
-        local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
+# Prompt for model name
+print("\nEnter a name for the output (without extension):")
+MODEL_NAME = input("Model name: ").strip()
 
-        Args:
-            pixels: Pixel dimension (width or height)
+if not MODEL_NAME:
+    MODEL_NAME = "pokemon_model"
 
-        Returns:
-            Equivalent size in studs
-        """
-        return pixels / self.PIXELS_TO_STUDS
+# SCALING CONFIGURATION
+# Match Sprite.lua scaling: baseModelScale = 0.2
+# Models exported from Blender at 1.0 scale will be scaled to 0.2 in Roblox
+# If your source models are tiny (common with Pokemon models), increase BLENDER_EXPORT_SCALE
+print("\n" + "-"*60)
+print("SCALING CONFIGURATION")
+print("-"*60)
+print("\nDefault: Exports at 1.0 scale, Roblox applies 0.2x in Sprite.lua")
+print("If source models are very small, enter a multiplier (e.g., 100 for tiny models)")
+BLENDER_EXPORT_SCALE = input("Blender export scale multiplier [1.0]: ").strip()
 
-    def calculate_sprite_size(self, width: int, height: int, scale: float = 1.0) -> Tuple[float, float]:
-        """
-        Calculate 2D sprite size in studs.
+if not BLENDER_EXPORT_SCALE:
+    BLENDER_EXPORT_SCALE = 1.0
+else:
+    try:
+        BLENDER_EXPORT_SCALE = float(BLENDER_EXPORT_SCALE)
+    except:
+        print("Invalid scale, using 1.0")
+        BLENDER_EXPORT_SCALE = 1.0
 
-        Args:
-            width: Sprite width in pixels
-            height: Sprite height in pixels
-            scale: Scale multiplier from GifData (default 1.0)
+# Calculate what the final Roblox scale will be
+LUA_BASE_SCALE = 0.2  # From Sprite.lua:1497
+FINAL_ROBLOX_SCALE = BLENDER_EXPORT_SCALE * LUA_BASE_SCALE
 
-        Returns:
-            Tuple of (width_studs, height_studs)
-        """
-        width_studs = self.pixels_to_studs(width) * scale
-        height_studs = self.pixels_to_studs(height) * scale
-        return (width_studs, height_studs)
+print(f"\nExport scale: {BLENDER_EXPORT_SCALE}x")
+print(f"Roblox base scale: {LUA_BASE_SCALE}x (from Sprite.lua)")
+print(f"Final in-game size: {FINAL_ROBLOX_SCALE}x original model")
+print(f"(For 96px sprite = 3.84 studs)")
 
-    def calculate_3d_scale(
-        self,
-        sprite_scale: float = 1.0,
-        is_alpha: bool = False,
-        is_totem: bool = False,
-        dynamax_level: int = 0
-    ) -> float:
-        """
-        Calculate final 3D model scale factor.
+print("\n" + "-"*60)
+print("CREATING BLENDER SCRIPT...")
+print("-"*60 + "\n")
 
-        Matches Sprite.lua:1494-1503
+# Create a Blender Python script that will do the work
+blender_script = f'''
+import bpy
+import json
+import os
 
-        Args:
-            sprite_scale: Scale from GifData (default 1.0)
-            is_alpha: True if Alpha Pokemon
-            is_totem: True if Totem Pokemon
-            dynamax_level: 0=normal, 1=dynamax, 2=gigantamax
+# Configuration
+MODEL_FOLDER = r"{MODEL_FOLDER}"
+OUTPUT_FOLDER = r"{OUTPUT_FOLDER}"
+MODEL_NAME = "{MODEL_NAME}"
 
-        Returns:
-            Final scale factor for Model:ScaleTo()
-        """
-        # Base calculation
-        final_scale = self.BASE_MODEL_SCALE * sprite_scale
+# SCALING: Match Sprite.lua logic
+# Sprite.lua applies: baseModelScale = 0.2 (20% of imported model)
+# This export scale adjusts source model size before Roblox import
+EXPORT_SCALE = {BLENDER_EXPORT_SCALE}
 
-        # Apply modifiers
-        if is_alpha:
-            final_scale *= self.ALPHA_SIZE
-        if is_totem:
-            final_scale *= self.TOTEM_SIZE
-        if dynamax_level > 0:
-            final_scale *= self.DYNAMAX_SIZE
+# Expected final in-game scale
+LUA_BASE_SCALE = 0.2  # From Sprite.lua:1497
+FINAL_SCALE = EXPORT_SCALE * LUA_BASE_SCALE
 
-        return final_scale
+print("\\n" + "="*60)
+print(f"SCALING INFO:")
+print(f"  Export scale: {{EXPORT_SCALE}}x")
+print(f"  Roblox base:  {{LUA_BASE_SCALE}}x (Sprite.lua)")
+print(f"  Final size:   {{FINAL_SCALE}}x original")
+print("="*60 + "\\n")
 
-    def get_scale_category(self, pokemon_name: str) -> float:
-        """
-        Get recommended base scale for specific Pokemon categories.
+def clear_scene():
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.delete(use_global=False)
 
-        Args:
-            pokemon_name: Name of the Pokemon
+def find_file_with_extension(folder, extensions):
+    if isinstance(extensions, str):
+        extensions = [extensions]
 
-        Returns:
-            Recommended base model scale
-        """
-        # Small Pokemon (0.1-0.15x)
-        small_pokemon = [
-            "Joltik", "Flabébé", "Cutiefly", "Comfey", "Cosmoem",
-            "Natu", "Azurill", "Igglybuff", "Cleffa", "Togepi"
-        ]
+    for file in os.listdir(folder):
+        if any(file.lower().endswith(ext) for ext in extensions):
+            return os.path.join(folder, file)
+    return None
 
-        # Large Pokemon (0.3-0.5x)
-        large_pokemon = [
-            "Wailord", "Eternatus", "Alolan Exeggutor", "Steelix",
-            "Onix", "Gyarados", "Rayquaza", "Dialga", "Palkia", "Giratina"
-        ]
+def load_material_json(folder):
+    for file in os.listdir(folder):
+        if file.endswith('.txt') or file.endswith('.json'):
+            filepath = os.path.join(folder, file)
+            try:
+                with open(filepath, 'r') as f:
+                    content = f.read()
+                    data = json.loads(content)
+                    if isinstance(data, list) and len(data) > 0:
+                        if 'BaseColorMap' in str(data):
+                            print(f"[OK] Found material JSON: {{file}}")
+                            return data
+            except:
+                continue
+    return None
 
-        if pokemon_name in small_pokemon:
-            return 0.12  # Small
-        elif pokemon_name in large_pokemon:
-            return 0.4  # Large
-        else:
-            return 0.2  # Medium (default)
+def find_texture(folder, texture_name):
+    if not texture_name:
+        return None
 
-    def estimate_model_height(
-        self,
-        model_height_studs: float,
-        sprite_scale: float = 1.0
-    ) -> float:
-        """
-        Given a model's current height, calculate what scale factor to use.
+    for file in os.listdir(folder):
+        name_without_ext = os.path.splitext(file)[0]
+        if name_without_ext == texture_name:
+            return os.path.join(folder, file)
+    return None
 
-        Args:
-            model_height_studs: Current height of the model in studs
-            sprite_scale: Scale from GifData
+def setup_material(mat_data, folder, obj):
+    mat_name = mat_data.get('name', 'Material')
 
-        Returns:
-            Scale factor to match sprite size
-        """
-        # Target sprite size (assuming typical 96px sprite)
-        target_height = self.pixels_to_studs(96) * sprite_scale  # ~3.84 studs
+    if mat_name in bpy.data.materials:
+        mat = bpy.data.materials[mat_name]
+    else:
+        mat = bpy.data.materials.new(name=mat_name)
 
-        # Calculate scale needed
-        return target_height / model_height_studs
+    mat.use_nodes = True
+    nodes = mat.node_tree.nodes
+    links = mat.node_tree.links
 
-    def generate_scale_guide(self, sprite_width: int, sprite_height: int) -> Dict:
-        """
-        Generate a complete scaling guide for a sprite.
+    nodes.clear()
 
-        Args:
-            sprite_width: Sprite width in pixels
-            sprite_height: Sprite height in pixels
+    bsdf = nodes.new(type='ShaderNodeBsdfPrincipled')
+    bsdf.location = (0, 0)
 
-        Returns:
-            Dictionary with scaling information
-        """
-        width_studs, height_studs = self.calculate_sprite_size(sprite_width, sprite_height)
+    output = nodes.new(type='ShaderNodeOutputMaterial')
+    output.location = (300, 0)
 
-        return {
-            "sprite_dimensions_px": {
-                "width": sprite_width,
-                "height": sprite_height
-            },
-            "sprite_size_studs": {
-                "width": round(width_studs, 2),
-                "height": round(height_studs, 2)
-            },
-            "recommended_3d_scales": {
-                "small_pokemon": self.calculate_3d_scale(sprite_scale=0.75),  # Small with reduced sprite scale
-                "medium_pokemon": self.calculate_3d_scale(),  # Default
-                "large_pokemon": self.calculate_3d_scale(sprite_scale=1.5),  # Large with increased sprite scale
-                "alpha": self.calculate_3d_scale(is_alpha=True),
-                "totem": self.calculate_3d_scale(is_totem=True),
-                "dynamax": self.calculate_3d_scale(dynamax_level=1),
-            },
-            "model_height_estimates": {
-                "if_model_15_studs": round(self.estimate_model_height(15), 3),
-                "if_model_20_studs": round(self.estimate_model_height(20), 3),
-                "if_model_25_studs": round(self.estimate_model_height(25), 3),
-            }
-        }
+    links.new(bsdf.outputs['BSDF'], output.inputs['Surface'])
 
+    x_offset = -300
+    y_offset = 0
 
-def main():
-    """CLI interface for texture converter."""
-    converter = TextureConverter()
+    # Base Color
+    base_color_map = mat_data.get('BaseColorMap', '')
+    if base_color_map:
+        texture_path = find_texture(folder, base_color_map)
+        if texture_path and os.path.exists(texture_path):
+            tex_node = nodes.new(type='ShaderNodeTexImage')
+            tex_node.image = bpy.data.images.load(texture_path)
+            tex_node.location = (x_offset, y_offset)
+            links.new(tex_node.outputs['Color'], bsdf.inputs['Base Color'])
+            print(f"  [OK] Applied Base Color: {{base_color_map}}")
+            y_offset -= 300
 
-    if len(sys.argv) < 2:
-        print("Texture Converter - 3D Battle System")
-        print("=" * 50)
-        print("\nUsage:")
-        print("  python textureconverter.py <width> <height> [sprite_scale]")
-        print("  python textureconverter.py guide <width> <height>")
-        print("\nExamples:")
-        print("  python textureconverter.py 96 96")
-        print("  python textureconverter.py 120 120 1.2")
-        print("  python textureconverter.py guide 96 96")
-        print("\nDefault Values:")
-        print(f"  Base 3D scale: {converter.BASE_MODEL_SCALE} (20%)")
-        print(f"  Pixels to studs: /{converter.PIXELS_TO_STUDS}")
+    # Normal Map
+    normal_map = mat_data.get('NormalMap', '')
+    if normal_map:
+        texture_path = find_texture(folder, normal_map)
+        if texture_path and os.path.exists(texture_path):
+            tex_node = nodes.new(type='ShaderNodeTexImage')
+            tex_node.image = bpy.data.images.load(texture_path)
+            tex_node.image.colorspace_settings.name = 'Non-Color'
+            tex_node.location = (x_offset, y_offset)
+
+            normal_node = nodes.new(type='ShaderNodeNormalMap')
+            normal_node.location = (x_offset + 200, y_offset)
+
+            links.new(tex_node.outputs['Color'], normal_node.inputs['Color'])
+            links.new(normal_node.outputs['Normal'], bsdf.inputs['Normal'])
+            print(f"  [OK] Applied Normal Map: {{normal_map}}")
+            y_offset -= 300
+
+    # Roughness
+    roughness_map = mat_data.get('RoughnessMap', '')
+    if roughness_map:
+        texture_path = find_texture(folder, roughness_map)
+        if texture_path and os.path.exists(texture_path):
+            tex_node = nodes.new(type='ShaderNodeTexImage')
+            tex_node.image = bpy.data.images.load(texture_path)
+            tex_node.image.colorspace_settings.name = 'Non-Color'
+            tex_node.location = (x_offset, y_offset)
+            links.new(tex_node.outputs['Color'], bsdf.inputs['Roughness'])
+            print(f"  [OK] Applied Roughness: {{roughness_map}}")
+            y_offset -= 300
+
+    return mat
+
+def apply_materials_to_mesh(obj, materials_dict):
+    if not obj.data.materials:
         return
 
-    if sys.argv[1] == "guide":
-        # Generate full guide
-        if len(sys.argv) < 4:
-            print("Error: guide requires width and height")
-            print("Usage: python textureconverter.py guide <width> <height>")
-            return
+    for i, mat_slot in enumerate(obj.material_slots):
+        mat_name = mat_slot.name
+        if mat_name in materials_dict:
+            mat_slot.material = materials_dict[mat_name]
+            print(f"  [OK] Assigned material '{{mat_name}}' to slot {{i}}")
 
-        width = int(sys.argv[2])
-        height = int(sys.argv[3])
+# Main execution
+print("\\n" + "="*60)
+print("PROCESSING IN BLENDER...")
+print("="*60 + "\\n")
 
-        guide = converter.generate_scale_guide(width, height)
-        print(json.dumps(guide, indent=2))
+clear_scene()
 
-    else:
-        # Simple conversion
-        width = int(sys.argv[1])
-        height = int(sys.argv[2])
-        sprite_scale = float(sys.argv[3]) if len(sys.argv) > 3 else 1.0
+# Find model file
+dae_file = find_file_with_extension(MODEL_FOLDER, '.dae')
+obj_file = find_file_with_extension(MODEL_FOLDER, '.obj')
 
-        # Calculate 2D sprite size
-        width_studs, height_studs = converter.calculate_sprite_size(width, height, sprite_scale)
+model_file = dae_file if dae_file else obj_file
 
-        # Calculate 3D model scale
-        model_scale = converter.calculate_3d_scale(sprite_scale)
+if not model_file:
+    print("[ERROR] No .dae or .obj file found!")
+    import sys
+    sys.exit(1)
 
-        print(f"\n2D Sprite: {width}x{height} pixels")
-        print(f"  → {width_studs:.2f} x {height_studs:.2f} studs")
-        print(f"\n3D Model Scale: {model_scale:.3f}")
-        print(f"  (Base: {converter.BASE_MODEL_SCALE} × Sprite: {sprite_scale})")
+print(f"[OK] Found model: {{os.path.basename(model_file)}}")
 
-        # Show special variants
-        print("\nSpecial Variants:")
-        print(f"  Alpha:   {converter.calculate_3d_scale(sprite_scale, is_alpha=True):.3f}")
-        print(f"  Totem:   {converter.calculate_3d_scale(sprite_scale, is_totem=True):.3f}")
-        print(f"  Dynamax: {converter.calculate_3d_scale(sprite_scale, dynamax_level=1):.3f}")
+# Import model
+if model_file.lower().endswith('.dae'):
+    print("Importing DAE...")
+    bpy.ops.wm.collada_import(filepath=model_file)
+else:
+    print("Importing OBJ...")
+    bpy.ops.import_scene.obj(filepath=model_file)
 
+print("[OK] Model imported\\n")
 
-if __name__ == "__main__":
-    main()
+# Load and apply materials
+material_data = load_material_json(MODEL_FOLDER)
+
+if material_data:
+    print(f"[OK] Found {{len(material_data)}} materials\\n")
+
+    materials_dict = {{}}
+
+    for mat_data in material_data:
+        mat_name = mat_data.get('name', 'Material')
+        print(f"Processing: {{mat_name}}")
+
+        for obj in bpy.data.objects:
+            if obj.type == 'MESH':
+                mat = setup_material(mat_data, MODEL_FOLDER, obj)
+                materials_dict[mat_name] = mat
+
+    print("\\nApplying materials...")
+    for obj in bpy.data.objects:
+        if obj.type == 'MESH':
+            apply_materials_to_mesh(obj, materials_dict)
+
+# Scale the model for export
+# This scale will be applied in Blender, then Sprite.lua applies additional 0.2x
+if EXPORT_SCALE != 1.0:
+    print(f"\\nApplying export scale: {{EXPORT_SCALE}}x")
+    for obj in bpy.data.objects:
+        if obj.type == 'MESH' or obj.type == 'ARMATURE':
+            obj.scale = (EXPORT_SCALE, EXPORT_SCALE, EXPORT_SCALE)
+            bpy.context.view_layer.update()
+
+    # Apply the scale transform
+    bpy.ops.object.select_all(action='SELECT')
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    print(f"  [OK] Scale applied")
+
+# Export FBX
+output_path = os.path.join(OUTPUT_FOLDER, f"{{MODEL_NAME}}.fbx")
+
+print(f"\\nExporting FBX: {{output_path}}")
+
+bpy.ops.export_scene.fbx(
+    filepath=output_path,
+    use_selection=False,
+    apply_scale_options='FBX_SCALE_ALL',
+    global_scale=1.0,  # Don't double-scale, we already applied EXPORT_SCALE
+    object_types={{'ARMATURE', 'MESH'}},
+    use_mesh_modifiers=True,
+    mesh_smooth_type='FACE',
+    add_leaf_bones=False,
+    bake_anim=False,
+    path_mode='COPY',
+    embed_textures=True
+)
+
+print("\\n" + "="*60)
+print("CONVERSION COMPLETE!")
+print("="*60)
+print(f"\\nOutput: {{output_path}}")
+print(f"\\nModel will be scaled in Roblox by Sprite.lua:")
+print(f"  - baseModelScale = {{LUA_BASE_SCALE}}")
+print(f"  - Final in-game size = {{FINAL_SCALE}}x original")
+print(f"  - Target: ~3.84 studs (96px sprite equivalent)")
+print("\\nReady to import into Roblox Studio!")
+print("Place in ReplicatedStorage.Models")
+print("="*60 + "\\n")
+'''
+
+# Save the Blender script with UTF-8 encoding
+script_path = os.path.join(OUTPUT_FOLDER, f"{MODEL_NAME}_blender_script.py")
+with open(script_path, 'w', encoding='utf-8') as f:
+    f.write(blender_script)
+
+print(f"[OK] Created Blender script: {script_path}")
+
+# Create a batch file to run it
+batch_content = f'''@echo off
+echo Running Blender converter...
+echo.
+echo SCALING INFO:
+echo   Export scale: {BLENDER_EXPORT_SCALE}x
+echo   Roblox base:  0.2x (from Sprite.lua)
+echo   Final size:   {FINAL_ROBLOX_SCALE}x original
+echo   Target:       ~3.84 studs (96px sprite)
+echo.
+
+REM Try common Blender installation paths
+set BLENDER=""
+
+if exist "C:\\Program Files\\Blender Foundation\\Blender 4.4\\blender.exe" (
+    set BLENDER="C:\\Program Files\\Blender Foundation\\Blender 4.4\\blender.exe"
+) else if exist "C:\\Program Files\\Blender Foundation\\Blender 4.2\\blender.exe" (
+    set BLENDER="C:\\Program Files\\Blender Foundation\\Blender 4.2\\blender.exe"
+) else if exist "C:\\Program Files\\Blender Foundation\\Blender 4.1\\blender.exe" (
+    set BLENDER="C:\\Program Files\\Blender Foundation\\Blender 4.1\\blender.exe"
+) else if exist "C:\\Program Files\\Blender Foundation\\Blender 4.0\\blender.exe" (
+    set BLENDER="C:\\Program Files\\Blender Foundation\\Blender 4.0\\blender.exe"
+) else if exist "C:\\Program Files\\Blender Foundation\\Blender 3.6\\blender.exe" (
+    set BLENDER="C:\\Program Files\\Blender Foundation\\Blender 3.6\\blender.exe"
+) else (
+    echo ERROR: Blender not found in common locations!
+    echo Please install Blender from https://www.blender.org/download/
+    echo Or edit this batch file to point to your Blender installation.
+    pause
+    exit /b 1
+)
+
+echo Found Blender at: %BLENDER%
+echo.
+
+%BLENDER% --background --python "{script_path.replace(chr(92), chr(92)+chr(92))}"
+
+echo.
+echo Done! Check the output folder.
+pause
+'''
+
+batch_path = os.path.join(OUTPUT_FOLDER, f"RUN_CONVERTER_{MODEL_NAME}.bat")
+with open(batch_path, 'w', encoding='utf-8') as f:
+    f.write(batch_content)
+
+print(f"[OK] Created batch file: {batch_path}")
+
+print("\n" + "="*60)
+print("SETUP COMPLETE!")
+print("="*60)
+print(f"\nScaling configuration:")
+print(f"  Export: {BLENDER_EXPORT_SCALE}x")
+print(f"  Roblox: 0.2x (Sprite.lua baseModelScale)")
+print(f"  Final:  {FINAL_ROBLOX_SCALE}x original")
+print(f"\nFor 96px sprite (3.84 studs):")
+print(f"  Model should be ~19.2 studs tall after export")
+print(f"  (19.2 * 0.2 = 3.84 studs in-game)")
+print("\nNext steps:")
+print(f"1. Double-click: {os.path.basename(batch_path)}")
+print("2. Wait for Blender to process (runs in background)")
+print(f"3. Your FBX will be in: {OUTPUT_FOLDER}")
+print("4. Import into Roblox Studio → ReplicatedStorage.Models")
+print("5. Set PrimaryPart on the model")
+print("6. Add model name to modelsData.lua")
+print("\n" + "="*60 + "\n")
