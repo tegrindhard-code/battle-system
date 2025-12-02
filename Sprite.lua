@@ -1490,21 +1490,33 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 
 					-- Position the model at the battle position using spriteData config
 					local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
-					local scale = sd.scale or 1.0
+
+					-- Calculate scale for 3D model
+					-- Base scale: 0.2 (20% of original) to match typical sprite size of ~4 studs
+					-- Most Roblox models are ~15-20 studs, so 0.2 * 20 = 4 studs
+					local baseModelScale = 0.2  -- Default for medium-sized Pokemon
+					local spriteScale = sd.scale or 1.0  -- From GifData
+					local finalScale = baseModelScale * spriteScale
+
 					if self.alpha then
-						scale = scale * dataChanges.alpha.size
+						finalScale = finalScale * dataChanges.alpha.size  -- 1.25x for alpha
 					end
 
-					-- Set model position using GifData offsets
+					-- Validate and position model
 					if self.model3D.PrimaryPart then
-						self.model3D:ScaleTo(scale)
+						self.model3D:ScaleTo(finalScale)
 						self.model3D:MoveTo(posPart.Position + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0))
-					end
 
-					-- Create model animator using sprite data from GifData
-					self.modelAnimator = ModelAnimator.new(self.model3D, sd)
-					self.modelAnimator:Play()
-					print("[3D BATTLES] 3D model loaded and animating!")
+						-- Create model animator using sprite data from GifData
+						self.modelAnimator = ModelAnimator.new(self.model3D, sd)
+						self.modelAnimator:Play()
+						print("[3D BATTLES] 3D model loaded and animating! Scale:", finalScale)
+					else
+						warn("[3D BATTLES] Model has no PrimaryPart:", self.pokemon.species, "- falling back to 2D")
+						self.use3D = false
+						self.model3D:Destroy()
+						self.model3D = nil
+					end
 				else
 					-- Fallback to 2D if model not found
 					warn(string.format("[3D BATTLES] 3D model not found for %s (ID: %s), falling back to 2D sprite", self.pokemon.species, tostring(modelId)))
