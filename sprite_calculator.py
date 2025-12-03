@@ -22,7 +22,7 @@ class SpriteScaleCalculator:
 
     # Constants from Sprite.lua
     PIXELS_TO_STUDS = 25  # Divisor for converting pixels to Roblox studs
-    BASE_MODEL_SCALE = 0.2  # Default 3D model scale (20% of original)
+    BASE_MODEL_SCALE = 0.1  # Default 3D model scale (10% of original)
 
     # Data changes from Sprite.lua
     ALPHA_SIZE = 1.25

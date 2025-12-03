@@ -34,13 +34,13 @@ if not MODEL_NAME:
     MODEL_NAME = "pokemon_model"
 
 # SCALING CONFIGURATION
-# Match Sprite.lua scaling: baseModelScale = 0.2
-# Models exported from Blender at 1.0 scale will be scaled to 0.2 in Roblox
+# Match Sprite.lua scaling: baseModelScale = 0.1
+# Models exported from Blender at 1.0 scale will be scaled to 0.1 in Roblox
 # If your source models are tiny (common with Pokemon models), increase BLENDER_EXPORT_SCALE
 print("\n" + "-"*60)
 print("SCALING CONFIGURATION")
 print("-"*60)
-print("\nDefault: Exports at 1.0 scale, Roblox applies 0.2x in Sprite.lua")
+print("\nDefault: Exports at 1.0 scale, Roblox applies 0.1x in Sprite.lua")
 print("If source models are very small, enter a multiplier (e.g., 100 for tiny models)")
 BLENDER_EXPORT_SCALE = input("Blender export scale multiplier [1.0]: ").strip()
 
@@ -54,13 +54,13 @@ else:
         BLENDER_EXPORT_SCALE = 1.0
 
 # Calculate what the final Roblox scale will be
-LUA_BASE_SCALE = 0.2  # From Sprite.lua:1497
+LUA_BASE_SCALE = 0.1  # From Sprite.lua:1496
 FINAL_ROBLOX_SCALE = BLENDER_EXPORT_SCALE * LUA_BASE_SCALE
 
 print(f"\nExport scale: {BLENDER_EXPORT_SCALE}x")
 print(f"Roblox base scale: {LUA_BASE_SCALE}x (from Sprite.lua)")
 print(f"Final in-game size: {FINAL_ROBLOX_SCALE}x original model")
-print(f"(For 96px sprite = 3.84 studs)")
+print(f"(Models are centered on _User/_Foe parts)")
 
 print("\n" + "-"*60)
 print("CREATING BLENDER SCRIPT...")
@@ -78,12 +78,12 @@ OUTPUT_FOLDER = r"{OUTPUT_FOLDER}"
 MODEL_NAME = "{MODEL_NAME}"
 
 # SCALING: Match Sprite.lua logic
-# Sprite.lua applies: baseModelScale = 0.2 (20% of imported model)
+# Sprite.lua applies: baseModelScale = 0.1 (10% of imported model)
 # This export scale adjusts source model size before Roblox import
 EXPORT_SCALE = {BLENDER_EXPORT_SCALE}
 
 # Expected final in-game scale
-LUA_BASE_SCALE = 0.2  # From Sprite.lua:1497
+LUA_BASE_SCALE = 0.1  # From Sprite.lua:1496
 FINAL_SCALE = EXPORT_SCALE * LUA_BASE_SCALE
 
 print("\\n" + "="*60)
@@ -91,6 +91,7 @@ print(f"SCALING INFO:")
 print(f"  Export scale: {{EXPORT_SCALE}}x")
 print(f"  Roblox base:  {{LUA_BASE_SCALE}}x (Sprite.lua)")
 print(f"  Final size:   {{FINAL_SCALE}}x original")
+print(f"  Models centered on _User/_Foe parts")
 print("="*60 + "\\n")
 
 def clear_scene():
@@ -302,9 +303,9 @@ print("CONVERSION COMPLETE!")
 print("="*60)
 print(f"\\nOutput: {{output_path}}")
 print(f"\\nModel will be scaled in Roblox by Sprite.lua:")
-print(f"  - baseModelScale = {{LUA_BASE_SCALE}}")
+print(f"  - baseModelScale = {{LUA_BASE_SCALE}} (10% of exported size)")
 print(f"  - Final in-game size = {{FINAL_SCALE}}x original")
-print(f"  - Target: ~3.84 studs (96px sprite equivalent)")
+print(f"  - Models are centered on _User/_Foe battle positions")
 print("\\nReady to import into Roblox Studio!")
 print("Place in ReplicatedStorage.Models")
 print("="*60 + "\\n")
@@ -323,9 +324,9 @@ echo Running Blender converter...
 echo.
 echo SCALING INFO:
 echo   Export scale: {BLENDER_EXPORT_SCALE}x
-echo   Roblox base:  0.2x (from Sprite.lua)
+echo   Roblox base:  0.1x (from Sprite.lua)
 echo   Final size:   {FINAL_ROBLOX_SCALE}x original
-echo   Target:       ~3.84 studs (96px sprite)
+echo   Centered on _User/_Foe parts
 echo.
 
 REM Try common Blender installation paths
@@ -370,11 +371,11 @@ print("SETUP COMPLETE!")
 print("="*60)
 print(f"\nScaling configuration:")
 print(f"  Export: {BLENDER_EXPORT_SCALE}x")
-print(f"  Roblox: 0.2x (Sprite.lua baseModelScale)")
+print(f"  Roblox: 0.1x (Sprite.lua baseModelScale)")
 print(f"  Final:  {FINAL_ROBLOX_SCALE}x original")
-print(f"\nFor 96px sprite (3.84 studs):")
-print(f"  Model should be ~19.2 studs tall after export")
-print(f"  (19.2 * 0.2 = 3.84 studs in-game)")
+print(f"\nPositioning:")
+print(f"  Models will be centered on _User/_Foe parts")
+print(f"  No sprite offsets applied (centered positioning)")
 print("\nNext steps:")
 print(f"1. Double-click: {os.path.basename(batch_path)}")
 print("2. Wait for Blender to process (runs in background)")
