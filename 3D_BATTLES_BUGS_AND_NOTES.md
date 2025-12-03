@@ -197,40 +197,40 @@ See `BATTLE_SCENE_ANALYSIS.md` for complete details.
 
 ## Pikachu Model Pivot Issue (lol.rbxmx)
 
-**Status**: ❌ CRITICAL - Model pivot way off from mesh geometry
+**Status**: ✅ FIXED - Automatic pivot offset correction implemented
 
-### Problem
-The Pikachu model's pivot is so far from the actual mesh that it appears **massive and incorrectly positioned** in battles.
+### Problem (RESOLVED)
+The Pikachu model's pivot was so far from the actual mesh that it appeared **massive and incorrectly positioned** in battles.
 
 **Root Cause:**
 - Pivot (RootPart): 0.0035 studs at (4.67, 0.29, -1.97)
 - Actual mesh geometry: Positioned 50+ studs away from pivot
-- When `ScaleTo(0.1)` scales around the pivot, mesh is still huge
-- When `MoveTo()` positions the pivot, mesh appears way off
+- When `ScaleTo(0.1)` scaled around the pivot, mesh remained huge
+- When `MoveTo()` positioned the pivot, mesh appeared way off
 
-**Why it looks massive:**
-```
-If mesh is 100 studs from pivot:
-- After 0.1x scale → mesh still 10 studs from pivot
-- Model appears 10 studs away from where it should be
-- And appears 10x larger than intended
-```
+### Solution Implemented
+**Automatic pivot offset correction** now handles this programmatically:
 
-### Issues
-1. **Pivot way off from mesh:** Makes model appear massive even after 0.1x scale
-2. **Y-position too low:** Pivot at Y=0.29 instead of Y≈1.9 (center)
-3. **Facing backwards:** 180° rotation (R00=-1, R22=-1)
+1. After scaling, calculate bounding box center: `bbCFrame, bbSize = model:GetBoundingBox()`
+2. Calculate offset from pivot to visual center: `pivotOffset = bbCFrame.Position - PrimaryPart.Position`
+3. Compensate when positioning: `model:MoveTo(targetPos - pivotOffset)`
+4. Result: Visual center lands exactly at target position
 
-### Fix Required
-**CRITICAL:** Use Roblox Studio's "Edit Pivot" tool (Alt+P) to move the pivot to the **visual center** of Pikachu's body.
+**Backwards compatibility layer** created:
+- Dynamic `sprite.part` proxy using metatables
+- All legacy code accessing `sprite.part.Position`, `sprite.part.Size`, `sprite.part.CFrame` works seamlessly
+- No need to update 50+ animation functions individually
 
-The pivot MUST be at the center of the mesh geometry for scaling and positioning to work correctly.
+### Files Modified
+- **Sprite.lua**: Core pivot offset correction + helper methods + dynamic part proxy
+- **BattleGui.lua**: Boost animation updated
+- **MoveAnimations.lua**: 6+ animation functions updated
 
-See `BATTLE_SCENE_ANALYSIS.md` for detailed fix instructions.
+**No manual Studio fixes required!** The code now handles misaligned pivots automatically.
 
 ## Next Steps
 
-1. **CRITICAL**: Fix Pikachu model pivot in Roblox Studio (Alt+P, move to center)
+1. **CRITICAL**: ~~Fix Pikachu model pivot in Roblox Studio~~ ✅ FIXED PROGRAMMATICALLY
 2. **CRITICAL**: Add pos11, pos12, pos21, pos22 to battle scene in Roblox Studio
 3. **Immediate**: Fix BattleGui:303 statbar nil check ✅ (FIXED)
 4. **High Priority**: Test that client has loaded latest code (31020b6)
