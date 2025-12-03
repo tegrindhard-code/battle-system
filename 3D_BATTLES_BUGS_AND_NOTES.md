@@ -158,13 +158,86 @@ Statbar may not initialize for 3D sprites. Need to check:
 - [ ] Dynamax/Gigantamax
 - [ ] Statbar visibility/positioning
 
+## Battle Scene Structure Issue
+
+**Status**: ❌ CRITICAL - Battle scene missing doubles battle positions
+
+### Problem
+The `bscene.rbxmx` file is missing required position parts for doubles battles:
+- ❌ Missing `pos11` (Player Pokemon #1)
+- ❌ Missing `pos12` (Player Pokemon #2)
+- ❌ Missing `pos21` (Opponent Pokemon #1)
+- ❌ Missing `pos22` (Opponent Pokemon #2)
+
+### Current Structure
+- ✅ `_User` at (5, 1.9, -2) - Player side fallback
+- ✅ `_Foe` at (5, 1.9, 9) - Opponent side fallback
+- Both parts: Size 2×3×0.2, with Gui (SurfaceGui) child
+
+### Impact
+- **Singles battles:** Will work (uses _User/_Foe fallback)
+- **Doubles battles:** Will NOT work properly
+- **Team move animations:** May fail (MoveAnimations.lua expects pos11/12/21/22)
+- **BattleEngine.lua:278:** Iterates over all 6 position parts
+
+### Required Fix
+Add the following parts to bscene.rbxmx in Roblox Studio:
+
+**Player side (Z = -2):**
+- `pos11`: (3.5, 1.9, -2), Size: 2×3×0.2, +Gui child
+- `pos12`: (6.5, 1.9, -2), Size: 2×3×0.2, +Gui child
+
+**Opponent side (Z = 9):**
+- `pos21`: (6.5, 1.9, 9), Size: 2×3×0.2, +Gui child (mirrored)
+- `pos22`: (3.5, 1.9, 9), Size: 2×3×0.2, +Gui child (mirrored)
+
+All parts: Transparency=1, Anchored=true, CanCollide=false
+
+See `BATTLE_SCENE_ANALYSIS.md` for complete details.
+
+## Pikachu Model Pivot Issue (lol.rbxmx)
+
+**Status**: ❌ CRITICAL - Model pivot way off from mesh geometry
+
+### Problem
+The Pikachu model's pivot is so far from the actual mesh that it appears **massive and incorrectly positioned** in battles.
+
+**Root Cause:**
+- Pivot (RootPart): 0.0035 studs at (4.67, 0.29, -1.97)
+- Actual mesh geometry: Positioned 50+ studs away from pivot
+- When `ScaleTo(0.1)` scales around the pivot, mesh is still huge
+- When `MoveTo()` positions the pivot, mesh appears way off
+
+**Why it looks massive:**
+```
+If mesh is 100 studs from pivot:
+- After 0.1x scale → mesh still 10 studs from pivot
+- Model appears 10 studs away from where it should be
+- And appears 10x larger than intended
+```
+
+### Issues
+1. **Pivot way off from mesh:** Makes model appear massive even after 0.1x scale
+2. **Y-position too low:** Pivot at Y=0.29 instead of Y≈1.9 (center)
+3. **Facing backwards:** 180° rotation (R00=-1, R22=-1)
+
+### Fix Required
+**CRITICAL:** Use Roblox Studio's "Edit Pivot" tool (Alt+P) to move the pivot to the **visual center** of Pikachu's body.
+
+The pivot MUST be at the center of the mesh geometry for scaling and positioning to work correctly.
+
+See `BATTLE_SCENE_ANALYSIS.md` for detailed fix instructions.
+
 ## Next Steps
 
-1. **Immediate**: Fix BattleGui:303 statbar nil check
-2. **High Priority**: Test that client has loaded latest code (31020b6)
-3. **Medium Priority**: Implement proper 3D model base scaling (0.2 default)
-4. **Low Priority**: Test all special animations (Mega, Gigantamax, etc.)
-5. **Enhancement**: Add per-species scale overrides in modelsData
+1. **CRITICAL**: Fix Pikachu model pivot in Roblox Studio (Alt+P, move to center)
+2. **CRITICAL**: Add pos11, pos12, pos21, pos22 to battle scene in Roblox Studio
+3. **Immediate**: Fix BattleGui:303 statbar nil check ✅ (FIXED)
+4. **High Priority**: Test that client has loaded latest code (31020b6)
+5. **High Priority**: Test 3D battles with corrected Pikachu pivot
+6. **Medium Priority**: Test doubles battles with new position parts
+7. **Low Priority**: Test all special animations (Mega, Gigantamax, etc.)
+8. **Enhancement**: Add per-species scale overrides in modelsData
 
 ## Code Reload Required
 
