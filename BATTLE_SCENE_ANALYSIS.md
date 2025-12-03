@@ -138,27 +138,47 @@ The Pikachu model in `lol.rbxmx` has incorrect pivot positioning that will cause
 
 ### Critical Issues
 
-1. **Y-Position Too Low (-1.61 studs)**
+1. **Pivot Way Off from Mesh Geometry** ⚠️⚠️⚠️
+   - **Pivot (RootPart):** 0.0035 studs at (4.67, 0.29, -1.97)
+   - **Actual mesh geometry:** Positioned elsewhere in world space
+   - **When ScaleTo(0.1) is applied:** Scales around the tiny ground-level pivot
+   - **Result:** Model appears MASSIVE and in completely wrong location
+   - **Why:** Mesh is far from pivot, so even after 0.1x scaling, visible parts are still huge/offset
+
+2. **Y-Position Too Low (-1.61 studs)**
    - Model pivot is at ground level (Y=0.29)
    - Should be at center of Pokemon (Y≈1.9)
-   - Result: Pikachu will appear **underground** or very low
+   - Combined with issue #1, makes model appear way off
 
-2. **Facing Backwards (180° rotation)**
+3. **Facing Backwards (180° rotation)**
    - Rotation matrix shows R00=-1, R22=-1
    - Pokemon will face away from opponent
    - Needs to face opponent (towards +Z)
-
-3. **Tiny Size**
-   - RootPart is only 0.0035 studs
-   - Sprite.lua will apply 0.1 scale to this
-   - Final size will be microscopic
 
 ### Root Cause
 
 This looks like a model exported from Blender where:
 - The armature root/origin was placed at world origin (0,0,0)
-- The actual mesh geometry is positioned elsewhere
-- Roblox uses the RootPart position as the pivot
+- The actual mesh geometry is positioned elsewhere (likely 5-10+ studs away)
+- Roblox uses the RootPart position as the pivot for scaling/positioning
+
+**What happens when Sprite.lua runs:**
+```lua
+self.model3D:ScaleTo(0.1)  -- Scales to 10% around the pivot point
+self.model3D:MoveTo(posPart.Position)  -- Moves the pivot to battle position
+```
+
+**The problem:**
+1. Pivot is at (4.67, 0.29, -1.97) - tiny RootPart
+2. Actual Pikachu mesh is positioned 50+ studs away (estimated)
+3. When scaled to 0.1x around that distant pivot, the mesh is still huge
+4. When MoveTo() positions the pivot at _User, the mesh appears way off
+
+**Example calculation:**
+- If mesh is 100 studs from pivot
+- After 0.1x scale: mesh is still 10 studs from pivot
+- Model appears 10 studs away from where it should be
+- And appears 10x larger than intended
 
 ### Fix in Roblox Studio
 
