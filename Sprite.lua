@@ -49,10 +49,13 @@ local function bind()
 		local cam = workspace.CurrentCamera
 		local lv = (cam.Focus.p - cam.CFrame.p).unit * xzPlane
 		for _, s in pairs(Sprites) do
-			local part = s.part
-			if part then
-				local p = s.cf.p + v3(0, part.Size.y/2, 0) + s.offset
-				part.CFrame = cframe(p, p - lv)
+			-- Skip 3D models - they handle their own positioning via ModelAnimator
+			if not s.use3D then
+				local part = s.part
+				if part then
+					local p = s.cf.p + v3(0, part.Size.y/2, 0) + s.offset
+					part.CFrame = cframe(p, p - lv)
+				end
 			end
 		end
 	end)
@@ -1529,6 +1532,10 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 
 					-- Position the model at the battle position using spriteData config
 					local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
+
+					-- Set coordinate frame for render loop compatibility
+					-- For 3D models, we don't use xOffset/inAir since positioning is handled differently
+					self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0)
 
 					-- Calculate scale for 3D model
 					-- Base scale: 0.1 (10% of original) - fixed scale for all models
