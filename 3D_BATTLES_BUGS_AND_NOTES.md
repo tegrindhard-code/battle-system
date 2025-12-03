@@ -158,13 +158,51 @@ Statbar may not initialize for 3D sprites. Need to check:
 - [ ] Dynamax/Gigantamax
 - [ ] Statbar visibility/positioning
 
+## Battle Scene Structure Issue
+
+**Status**: ❌ CRITICAL - Battle scene missing doubles battle positions
+
+### Problem
+The `bscene.rbxmx` file is missing required position parts for doubles battles:
+- ❌ Missing `pos11` (Player Pokemon #1)
+- ❌ Missing `pos12` (Player Pokemon #2)
+- ❌ Missing `pos21` (Opponent Pokemon #1)
+- ❌ Missing `pos22` (Opponent Pokemon #2)
+
+### Current Structure
+- ✅ `_User` at (5, 1.9, -2) - Player side fallback
+- ✅ `_Foe` at (5, 1.9, 9) - Opponent side fallback
+- Both parts: Size 2×3×0.2, with Gui (SurfaceGui) child
+
+### Impact
+- **Singles battles:** Will work (uses _User/_Foe fallback)
+- **Doubles battles:** Will NOT work properly
+- **Team move animations:** May fail (MoveAnimations.lua expects pos11/12/21/22)
+- **BattleEngine.lua:278:** Iterates over all 6 position parts
+
+### Required Fix
+Add the following parts to bscene.rbxmx in Roblox Studio:
+
+**Player side (Z = -2):**
+- `pos11`: (3.5, 1.9, -2), Size: 2×3×0.2, +Gui child
+- `pos12`: (6.5, 1.9, -2), Size: 2×3×0.2, +Gui child
+
+**Opponent side (Z = 9):**
+- `pos21`: (6.5, 1.9, 9), Size: 2×3×0.2, +Gui child (mirrored)
+- `pos22`: (3.5, 1.9, 9), Size: 2×3×0.2, +Gui child (mirrored)
+
+All parts: Transparency=1, Anchored=true, CanCollide=false
+
+See `BATTLE_SCENE_ANALYSIS.md` for complete details.
+
 ## Next Steps
 
-1. **Immediate**: Fix BattleGui:303 statbar nil check
-2. **High Priority**: Test that client has loaded latest code (31020b6)
-3. **Medium Priority**: Implement proper 3D model base scaling (0.2 default)
-4. **Low Priority**: Test all special animations (Mega, Gigantamax, etc.)
-5. **Enhancement**: Add per-species scale overrides in modelsData
+1. **CRITICAL**: Add pos11, pos12, pos21, pos22 to battle scene in Roblox Studio
+2. **Immediate**: Fix BattleGui:303 statbar nil check ✅ (FIXED)
+3. **High Priority**: Test that client has loaded latest code (31020b6)
+4. **Medium Priority**: Test doubles battles with new position parts
+5. **Low Priority**: Test all special animations (Mega, Gigantamax, etc.)
+6. **Enhancement**: Add per-species scale overrides in modelsData
 
 ## Code Reload Required
 
