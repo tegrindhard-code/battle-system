@@ -84,19 +84,19 @@ Example calculations:
 - 120x120 sprite: `120/25 = 4.8 studs`
 - Average sprite: **~3-5 studs**
 
-### Recommended 3D Model Scale Factor
+### 3D Model Scale Factor
 
-**Base Scale: 0.15-0.25** (15-25% of original model size)
+**Base Scale: 0.1** (10% of original model size) - **FIXED FOR ALL MODELS**
 
 Reasoning:
-1. **Sprite equivalence**: Most Pokémon sprites are 96-120 pixels (3.84-4.8 studs)
-2. **Roblox model typical size**: Most Roblox character models are ~15-20 studs tall
-3. **Scale factor**: `4 studs / 20 studs = 0.2` (20%)
+1. **Consistent sizing**: All models use the same base scale
+2. **Smaller than 2D**: Models at 10% provide better detail visibility
+3. **Easier management**: No per-Pokemon scale adjustments needed
 
 **Implementation**:
 ```lua
--- Suggested model scale calculation
-local baseModelScale = 0.2  -- 20% of original model size
+-- Sprite.lua:1496-1508
+local baseModelScale = 0.1  -- Fixed scale for all Pokemon models
 local spriteScale = sd.scale or 1.0  -- From GifData
 local finalScale = baseModelScale * spriteScale
 
@@ -104,15 +104,17 @@ if self.alpha then
     finalScale = finalScale * dataChanges.alpha.size  -- 1.25x for alpha
 end
 
+-- Position at exact center (no offsets)
 self.model3D:ScaleTo(finalScale)
+self.model3D:MoveTo(posPart.Position)  -- Centered on _User/_Foe
 ```
 
-### Per-Pokemon Adjustments
-Some Pokémon may need custom scales:
-- **Small Pokémon** (Joltik, Flabébé): 0.1-0.15
-- **Medium Pokémon** (Pikachu, Eevee): 0.15-0.25 (recommended default)
-- **Large Pokémon** (Wailord, Eternatus): 0.3-0.5
-- **Gigantamax**: 2.0-4.0x (handled by dataChanges.dynamax)
+### Model Positioning
+
+**Centered positioning** (no sprite offsets):
+- **Old**: `posPart.Position + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)`
+- **New**: `posPart.Position` (exact center)
+- **Result**: Models appear smack dab in the middle of _User/_Foe parts
 
 ## Additional Fixes Needed
 

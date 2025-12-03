@@ -1492,9 +1492,8 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 					local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
 
 					-- Calculate scale for 3D model
-					-- Base scale: 0.2 (20% of original) to match typical sprite size of ~4 studs
-					-- Most Roblox models are ~15-20 studs, so 0.2 * 20 = 4 studs
-					local baseModelScale = 0.2  -- Default for medium-sized Pokemon
+					-- Base scale: 0.1 (10% of original) - fixed scale for all models
+					local baseModelScale = 0.1  -- Fixed scale for all Pokemon models
 					local spriteScale = sd.scale or 1.0  -- From GifData
 					local finalScale = baseModelScale * spriteScale
 
@@ -1505,7 +1504,8 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 					-- Validate and position model
 					if self.model3D.PrimaryPart then
 						self.model3D:ScaleTo(finalScale)
-						self.model3D:MoveTo(posPart.Position + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0))
+						-- Position model at exact center of _User/_Foe part (no offsets)
+						self.model3D:MoveTo(posPart.Position)
 
 						-- Create model animator using sprite data from GifData
 						self.modelAnimator = ModelAnimator.new(self.model3D, sd)
