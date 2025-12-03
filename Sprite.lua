@@ -208,13 +208,52 @@ end
 -- Get position for both 2D and 3D sprites
 function Sprite:getPosition()
 	if self.use3D and self.model3D and self.model3D.PrimaryPart then
-		return self.model3D.PrimaryPart.Position
+		-- For 3D models, return the visual center (bounding box center), not the pivot
+		-- This ensures hit animations and effects target the visible Pokemon
+		local bbCFrame, bbSize = self.model3D:GetBoundingBox()
+		return bbCFrame.Position
 	elseif self.part then
 		return self.part.Position
 	else
 		-- Fallback to battle coordinate frame
 		local cf = self.battle and self.battle['CoordinateFrame'..self.siden]
 		return cf and cf.p or Vector3.new(0, 0, 0)
+	end
+end
+
+-- Get size for both 2D and 3D sprites
+function Sprite:getSize()
+	if self.use3D and self.model3D and self.model3D.PrimaryPart then
+		-- For 3D models, return bounding box size
+		local bbCFrame, bbSize = self.model3D:GetBoundingBox()
+		return bbSize
+	elseif self.part then
+		return self.part.Size
+	else
+		-- Fallback size
+		return Vector3.new(2, 3, 0.2)
+	end
+end
+
+-- Get part-like object for both 2D and 3D sprites (for compatibility)
+function Sprite:getPart()
+	if self.use3D and self.model3D and self.model3D.PrimaryPart then
+		-- Return a part-like table for 3D models
+		return {
+			Position = self:getPosition(),
+			Size = self:getSize(),
+			CFrame = CFrame.new(self:getPosition())
+		}
+	elseif self.part then
+		return self.part
+	else
+		-- Fallback part-like object
+		local pos = (self.battle and self.battle['CoordinateFrame'..self.siden].p) or Vector3.new(0, 0, 0)
+		return {
+			Position = pos,
+			Size = Vector3.new(2, 3, 0.2),
+			CFrame = CFrame.new(pos)
+		}
 	end
 end
 
@@ -1503,14 +1542,53 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 
 					-- Validate and position model
 					if self.model3D.PrimaryPart then
+						-- Scale the model first
 						self.model3D:ScaleTo(finalScale)
-						-- Position model at exact center of _User/_Foe part (no offsets)
-						self.model3D:MoveTo(posPart.Position)
+
+						-- Calculate pivot offset correction to handle models with misaligned pivots
+						-- Get the bounding box to find the visual center of the model
+						local bbCFrame, bbSize = self.model3D:GetBoundingBox()
+						local visualCenter = bbCFrame.Position
+						local pivotPosition = self.model3D.PrimaryPart.Position
+
+						-- Calculate offset from pivot to visual center (after scaling)
+						local pivotOffset = visualCenter - pivotPosition
+
+						-- Move the pivot such that the visual center ends up at the target position
+						-- We subtract the offset because MoveTo() positions the pivot, not the visual center
+						local targetPosition = posPart.Position - pivotOffset
+						self.model3D:MoveTo(targetPosition)
+
+						print(string.format("[3D BATTLES] Positioned %s - Pivot offset: (%.2f, %.2f, %.2f)",
+							self.pokemon.species, pivotOffset.X, pivotOffset.Y, pivotOffset.Z))
 
 						-- Create model animator using sprite data from GifData
 						self.modelAnimator = ModelAnimator.new(self.model3D, sd)
 						self.modelAnimator:Play()
 						print("[3D BATTLES] 3D model loaded and animating! Scale:", finalScale)
+
+						-- Create a backwards compatibility .part property for existing code
+						-- This allows legacy code that accesses sprite.part to work with 3D models
+						-- Use a metatable to make it dynamic (properties update when accessed)
+						if not self.part then
+							local sprite = self
+							self.part = setmetatable({}, {
+								__index = function(t, k)
+									if k == "Position" then
+										return sprite:getPosition()
+									elseif k == "Size" then
+										return sprite:getSize()
+									elseif k == "CFrame" then
+										return CFrame.new(sprite:getPosition())
+									elseif k == "Parent" then
+										return sprite.battle and sprite.battle.scene or workspace
+									else
+										-- Fallback to getting the value from the actual part-like object
+										return sprite:getPart()[k]
+									end
+								end
+							})
+						end
 					else
 						warn("[3D BATTLES] Model has no PrimaryPart:", self.pokemon.species, "- falling back to 2D")
 						self.use3D = false
@@ -1697,7 +1775,8 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 		-- Get position from either 2D part or 3D model
 		local targetPos, targetSize
 		if self.use3D and self.model3D and self.model3D.PrimaryPart then
-			targetPos = self.model3D.PrimaryPart.Position
+			-- Use visual center for pokeball targeting
+			targetPos = self:getPosition()
 			targetSize = self.model3D:GetExtentsSize().Y
 		elseif self.part then
 			targetPos = self.part.Position

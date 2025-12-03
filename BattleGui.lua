@@ -350,7 +350,7 @@ return function(_p)--local _p = require(script.Parent)
 		end)
 	end
 	function BattleGui:animBoost(poke, good)
-		local p = poke.sprite.part
+		local p = poke.sprite:getPart()  -- Get part-like object for both 2D and 3D
 		local dir = good and 1 or -1
 		Utilities.sound(good and 301970798 or 301970736, .3, nil, 5)
 		spawn(function()

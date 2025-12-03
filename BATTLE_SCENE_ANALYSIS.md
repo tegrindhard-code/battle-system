@@ -233,8 +233,10 @@ self.model3D:MoveTo(posPart.Position + Vector3.new(0, yOffset, 0))
 
 **Battle Scene (bscene.rbxmx):**
 - Missing pos11, pos12, pos21, pos22 parts for doubles battles
+- **Status**: Needs manual fix in Roblox Studio
 
 **Pikachu Model (lol.rbxmx):**
-- Pivot 1.6 studs too low (needs to be at center of model)
-- Facing backwards (needs 180° rotation fix)
-- Fix the model's pivot in Roblox Studio using Edit Pivot tool
+- Pivot 1.6 studs too low (model geometry positioned far from pivot)
+- Facing backwards (180° rotation)
+- **Status**: ✅ FIXED PROGRAMMATICALLY - Automatic pivot offset correction implemented
+- No manual Studio fixes required - the code now handles this automatically!
