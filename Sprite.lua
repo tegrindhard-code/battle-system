@@ -1542,30 +1542,34 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 
 					-- Validate and position model
 					if self.model3D.PrimaryPart then
-						-- Scale the model first
+						-- Scale the model FIRST to the correct size
+						print(string.format("[3D BATTLES] Scaling %s to %.3f", self.pokemon.species, finalScale))
 						self.model3D:ScaleTo(finalScale)
 
 						-- Calculate pivot offset correction to handle models with misaligned pivots
-						-- Get the bounding box to find the visual center of the model
+						-- Get the bounding box to find the visual center of the model (after scaling)
 						local bbCFrame, bbSize = self.model3D:GetBoundingBox()
 						local visualCenter = bbCFrame.Position
 						local pivotPosition = self.model3D.PrimaryPart.Position
 
-						-- Calculate offset from pivot to visual center (after scaling)
+						-- Calculate offset from pivot to visual center
 						local pivotOffset = visualCenter - pivotPosition
 
-						-- Move the pivot such that the visual center ends up at the target position
-						-- We subtract the offset because MoveTo() positions the pivot, not the visual center
-						local targetPosition = posPart.Position - pivotOffset
-						self.model3D:MoveTo(targetPosition)
+						print(string.format("[3D BATTLES] Bounding box size: (%.2f, %.2f, %.2f)", bbSize.X, bbSize.Y, bbSize.Z))
+						print(string.format("[3D BATTLES] Visual center: (%.2f, %.2f, %.2f)", visualCenter.X, visualCenter.Y, visualCenter.Z))
+						print(string.format("[3D BATTLES] Pivot position: (%.2f, %.2f, %.2f)", pivotPosition.X, pivotPosition.Y, pivotPosition.Z))
+						print(string.format("[3D BATTLES] Pivot offset: (%.2f, %.2f, %.2f)", pivotOffset.X, pivotOffset.Y, pivotOffset.Z))
 
-						print(string.format("[3D BATTLES] Positioned %s - Pivot offset: (%.2f, %.2f, %.2f)",
-							self.pokemon.species, pivotOffset.X, pivotOffset.Y, pivotOffset.Z))
+						-- Move the model so visual center ends up at target position
+						-- MoveTo positions the PrimaryPart, so we offset by the pivot offset
+						local targetPivotPos = posPart.Position - pivotOffset
+						self.model3D:MoveTo(targetPivotPos)
 
-						-- Create model animator using sprite data from GifData
+						-- Create model animator AFTER positioning
+						-- This records the correctly positioned and scaled part transforms
 						self.modelAnimator = ModelAnimator.new(self.model3D, sd)
 						self.modelAnimator:Play()
-						print("[3D BATTLES] 3D model loaded and animating! Scale:", finalScale)
+						print("[3D BATTLES] 3D model animation started")
 
 						-- Create a backwards compatibility .part property for existing code
 						-- This allows legacy code that accesses sprite.part to work with 3D models
