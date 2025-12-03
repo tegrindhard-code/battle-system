@@ -195,14 +195,36 @@ All parts: Transparency=1, Anchored=true, CanCollide=false
 
 See `BATTLE_SCENE_ANALYSIS.md` for complete details.
 
+## Pikachu Model Pivot Issue (lol.rbxmx)
+
+**Status**: ❌ CRITICAL - Model pivot positioned incorrectly
+
+### Problem
+The Pikachu model has its pivot at the wrong position, causing it to appear underground/offset.
+
+**Current Pivot:** (4.67, **0.29**, -1.97) - Too low by **1.6 studs**
+**Expected:** Should be centered at Pokemon's center of mass (~Y=1.9)
+
+### Issues
+1. **Y-position too low:** Pivot at ground level instead of center
+2. **Facing backwards:** 180° rotation (R00=-1, R22=-1)
+3. **Tiny size:** RootPart only 0.0035 studs
+
+### Fix Required
+Use Roblox Studio's "Edit Pivot" tool (Alt+P) to move the model's pivot to the center of Pikachu's body.
+
+See `BATTLE_SCENE_ANALYSIS.md` for detailed fix instructions.
+
 ## Next Steps
 
-1. **CRITICAL**: Add pos11, pos12, pos21, pos22 to battle scene in Roblox Studio
-2. **Immediate**: Fix BattleGui:303 statbar nil check ✅ (FIXED)
-3. **High Priority**: Test that client has loaded latest code (31020b6)
-4. **Medium Priority**: Test doubles battles with new position parts
-5. **Low Priority**: Test all special animations (Mega, Gigantamax, etc.)
-6. **Enhancement**: Add per-species scale overrides in modelsData
+1. **CRITICAL**: Fix Pikachu model pivot in Roblox Studio (Alt+P, move to center)
+2. **CRITICAL**: Add pos11, pos12, pos21, pos22 to battle scene in Roblox Studio
+3. **Immediate**: Fix BattleGui:303 statbar nil check ✅ (FIXED)
+4. **High Priority**: Test that client has loaded latest code (31020b6)
+5. **High Priority**: Test 3D battles with corrected Pikachu pivot
+6. **Medium Priority**: Test doubles battles with new position parts
+7. **Low Priority**: Test all special animations (Mega, Gigantamax, etc.)
+8. **Enhancement**: Add per-species scale overrides in modelsData
 
 ## Code Reload Required
 

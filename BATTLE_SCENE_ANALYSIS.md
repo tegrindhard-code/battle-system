@@ -111,3 +111,110 @@ Singles battles will continue to work with just _User/_Foe, but doubles battles 
 ## Fix Required
 
 The bscene.rbxmx file needs to be updated in Roblox Studio to include the four missing position parts (pos11, pos12, pos21, pos22) with the recommended positioning and properties above.
+
+---
+
+# Pikachu Model Pivot Issue (lol.rbxmx)
+
+## Problem: Model Pivot Way Off
+
+The Pikachu model in `lol.rbxmx` has incorrect pivot positioning that will cause it to appear in the wrong location during battles.
+
+### Current Pivot Position
+- **PrimaryPart:** "RootPart"
+- **Position:** (4.67, 0.29, -1.97)
+- **Rotation:** 180° around Y-axis (facing backwards)
+- **Size:** Tiny (0.0035 × 0.0035 × 0.0017 studs)
+
+### Expected Position (_User reference)
+- **Position:** (5, 1.9, -2)
+
+### Offset Analysis
+| Axis | Model Pivot | _User Target | Offset |
+|------|-------------|--------------|--------|
+| X    | 4.67        | 5.0          | -0.33  |
+| **Y**| **0.29**    | **1.9**      | **-1.61** ⚠️ |
+| Z    | -1.97       | -2.0         | +0.03  |
+
+### Critical Issues
+
+1. **Y-Position Too Low (-1.61 studs)**
+   - Model pivot is at ground level (Y=0.29)
+   - Should be at center of Pokemon (Y≈1.9)
+   - Result: Pikachu will appear **underground** or very low
+
+2. **Facing Backwards (180° rotation)**
+   - Rotation matrix shows R00=-1, R22=-1
+   - Pokemon will face away from opponent
+   - Needs to face opponent (towards +Z)
+
+3. **Tiny Size**
+   - RootPart is only 0.0035 studs
+   - Sprite.lua will apply 0.1 scale to this
+   - Final size will be microscopic
+
+### Root Cause
+
+This looks like a model exported from Blender where:
+- The armature root/origin was placed at world origin (0,0,0)
+- The actual mesh geometry is positioned elsewhere
+- Roblox uses the RootPart position as the pivot
+
+### Fix in Roblox Studio
+
+**Option 1: Move Model Pivot (Recommended)**
+1. Open lol.rbxmx in Roblox Studio
+2. Select the "Pikachu" model
+3. Use "Edit Pivot" tool (Alt+P)
+4. Move pivot to center of model visually
+5. Should be roughly at Pikachu's center of mass (chest/belly area)
+6. Save the model
+
+**Option 2: Adjust in Blender Before Export**
+1. In Blender, position the armature root at Pokemon's center
+2. Apply all transforms (Ctrl+A → All Transforms)
+3. Ensure "origin to geometry" is centered
+4. Re-export using textureconverter.py
+5. Import to Roblox with correct pivot
+
+### Expected Correct Pivot
+
+For a Pokemon model that's properly centered:
+- **Y-position:** Should be at model's vertical center (not ground)
+- **Rotation:** Should face +Z direction (towards opponent)
+- **Visual check:** When MoveTo() is called, Pokemon appears centered at the target position
+
+### Testing in Game
+
+After fixing pivot:
+```lua
+-- In Sprite.lua, this should center the model properly
+self.model3D:MoveTo(posPart.Position)
+-- If pivot is correct, model appears centered on _User/_Foe
+-- If pivot is wrong, model appears offset or underground
+```
+
+### Workaround in Code (NOT RECOMMENDED)
+
+Could add offset in Sprite.lua, but this is a **bad solution**:
+```lua
+-- BAD: Model-specific hardcoded offset
+local yOffset = 1.6  -- Compensate for low pivot
+self.model3D:MoveTo(posPart.Position + Vector3.new(0, yOffset, 0))
+```
+
+**Why this is bad:**
+- Requires per-model offset data
+- Doesn't fix rotation issue
+- Makes all models harder to manage
+- Proper pivot is the correct solution
+
+## Summary
+
+**Battle Scene (bscene.rbxmx):**
+- Missing pos11, pos12, pos21, pos22 parts for doubles battles
+
+**Pikachu Model (lol.rbxmx):**
+- Pivot 1.6 studs too low (needs to be at center of model)
+- Facing backwards (needs 180° rotation fix)
+- Fix the model's pivot in Roblox Studio using Edit Pivot tool
