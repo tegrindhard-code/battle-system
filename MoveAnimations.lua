@@ -33,14 +33,16 @@ return function(_p)
 	local randomPoint = Random.new()
 	local function targetPoint(pokemon, dist)
 		local sprite = pokemon.sprite or pokemon
-		return sprite.cf * Vector3.new(0, sprite.part.Size.Y/2, (dist or 1) * (sprite.siden==1 and 1 or -1))
+		local part = sprite.getPart and sprite:getPart() or sprite.part  -- Handle both 2D and 3D
+		return sprite.cf * Vector3.new(0, part.Size.Y/2, (dist or 1) * (sprite.siden==1 and 1 or -1))
 	end
 
 	local function absorb(pokemon, target, amount, color)
 		local from = targetPoint(pokemon)
 		local to = targetPoint(target)
 		local dif = from-to
-		local cf = target.sprite.part.CFrame
+		local targetPart = target.sprite.getPart and target.sprite:getPart() or target.sprite.part  -- Handle both 2D and 3D
+		local cf = targetPart.CFrame
 		cf = cf-cf.p
 		for i = 1, (amount or 6) do
 			local a = math.random()*6.3
@@ -194,14 +196,14 @@ return function(_p)
 
 	local function shield(pokemon, color)
 		local sprite = pokemon.sprite
-		local part = sprite.part
+		local part = sprite.getPart and sprite:getPart() or sprite.part  -- Handle both 2D and 3D
 		local s = create 'Part' {
 			Anchored = true,
 			CanCollide = false,
 			Transparency = .3,
 			Reflectance = .4,
 			BrickColor = BrickColor.new(color or 'Alder'),
-			Parent = part.Parent,
+			Parent = sprite.battle and sprite.battle.scene or workspace,  -- Parent to battle scene
 
 			create 'CylinderMesh' {Scale = Vector3.new(1, 0.01, 1)}
 		}
@@ -224,27 +226,29 @@ return function(_p)
 		local size
 		local scale = .1
 		local mscale = scale * 2
+		-- Get part for both 2D and 3D sprites
+		local targetPart = target.sprite.getPart and target.sprite:getPart() or target.sprite.part
 		if qty == 3 then
 			for i = 1, 3 do
 				local p = storage.Models.Misc.SlashEffect:Clone()
 				size = p.Size * 4
-				parts[p] = target.sprite.part.CFrame * CFrame.new(0, 0, -1) * CFrame.new(Vector3.new(.6, .6, 0)*(i-2))
+				parts[p] = targetPart.CFrame * CFrame.new(0, 0, -1) * CFrame.new(Vector3.new(.6, .6, 0)*(i-2))
 				p.BrickColor = BrickColor.new(color or 'White')
 				p.Parent = workspace
 			end
 		elseif qty == 2 then
 			local p = storage.Models.Misc.SlashEffect:Clone()
 			size = p.Size * 4
-			parts[p] = target.sprite.part.CFrame * CFrame.new(0, 0, -1)
+			parts[p] = targetPart.CFrame * CFrame.new(0, 0, -1)
 			p.BrickColor = BrickColor.new(color or 'White')
 			p.Parent = workspace
 			local p2 = p:Clone()
-			parts[p2] = target.sprite.part.CFrame * CFrame.new(0, 0, -1) * CFrame.Angles(0, 0, -math.pi/2)
+			parts[p2] = targetPart.CFrame * CFrame.new(0, 0, -1) * CFrame.Angles(0, 0, -math.pi/2)
 			p2.Parent = workspace
 		else
 			local p = storage.Models.Misc.SlashEffect:Clone()
 			size = p.Size * 4
-			parts[p] = target.sprite.part.CFrame * CFrame.new(0, 0, -1)
+			parts[p] = targetPart.CFrame * CFrame.new(0, 0, -1)
 			p.BrickColor = BrickColor.new(color or 'White')
 			p.Parent = workspace
 		end
@@ -262,8 +266,8 @@ return function(_p)
 
 	local function tackle(pokemon, target)
 		local sprite = pokemon.sprite
-		local s = sprite.part.Position
-		local e = target.sprite.part.Position
+		local s = sprite:getPosition()  -- Use getPosition for both 2D and 3D
+		local e = target.sprite:getPosition()  -- Use getPosition for both 2D and 3D
 		local dir = ((e-s)*Vector3.new(1,0,1)).unit
 		Tween(.1, nil, function(a)
 			sprite.offset = dir*2*a
