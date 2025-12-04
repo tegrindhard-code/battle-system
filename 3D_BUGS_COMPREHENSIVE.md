@@ -396,10 +396,10 @@ Implement 3D rotation using CFrame rotation for PrimaryPart.
 
 ## Summary Statistics
 
-**Total Bugs Found:** 18
+**Total Bugs Found:** 20
 
 **By Severity:**
-- CRITICAL: 4 (Mega Evolution, Gmax/Dmax, Z-Moves, Transform)
+- CRITICAL: 6 (Mega Evolution, Gmax/Dmax, Z-Moves, Transform, Model Scaling, Metatable Methods)
 - HIGH: 3 (Substitute, Status Glow, Move Targeting)
 - MEDIUM: 4 (Breakout, Sparkles, Aura, Mixed Mode)
 - LOW: 7 (Minor visual/performance issues)
@@ -408,29 +408,157 @@ Implement 3D rotation using CFrame rotation for PrimaryPart.
 - Animation System: 7 bugs
 - Visual Effects: 5 bugs
 - Form Changes: 3 bugs
+- Scaling/Positioning: 2 bugs (NEW)
 - Performance: 1 bug
 - Architecture: 2 bugs
 
 **Estimated Fix Effort:**
-- **Quick Fixes (< 1 hour):** Bugs #8, #9, #10, #11, #13
-- **Medium Fixes (1-4 hours):** Bugs #5, #6, #14, #15, #16, #17, #18
+- **Quick Fixes (< 1 hour):** Bugs #8, #9, #10, #11, #13, #20
+- **Medium Fixes (1-4 hours):** Bugs #5, #6, #14, #15, #16, #17, #18, #19
 - **Major Refactors (4-8 hours):** Bugs #1, #2, #3, #4, #7
 
 **Priority Order for Fixes:**
-1. Bug #1 (animation nil checks) - Prevents most crashes
-2. Bug #2 (Gmax/Dmax) - Major feature
-3. Bug #3 (Z-Moves) - Major feature
-4. Bug #4 (Transform) - Common ability
-5. Bug #6 (Status effects) - Quality of life
-6. Bug #7 (Move animations) - Extensive testing needed
-7. All others - Polish and edge cases
+1. **Bug #19 (Model scaling)** - BLOCKS ALL 3D FUNCTIONALITY
+2. **Bug #20 (Metatable methods)** - Causes crashes throughout codebase
+3. Bug #1 (animation nil checks) - Prevents most crashes
+4. Bug #2 (Gmax/Dmax) - Major feature
+5. Bug #3 (Z-Moves) - Major feature
+6. Bug #4 (Transform) - Common ability
+7. Bug #6 (Status effects) - Quality of life
+8. Bug #7 (Move animations) - Extensive testing needed
+9. All others - Polish and edge cases
+
+---
+
+### 19. **Model Appears Massive and Mispositioned**
+**Severity:** CRITICAL
+**Location:** `Sprite.lua:1542-1573`, Model storage/import
+**Impact:** 3D models appear giant (200+ studs) and positioned far from battlefield
+
+**Problem:**
+Original models in storage are incorrectly sized (~2000 studs tall for Pikachu). Even at 0.1 base scale, they remain enormous.
+
+**Evidence from Debug Logs:**
+```
+[3D BATTLES] Scaling Pikachu to 0.100
+[3D BATTLES] Bounding box size: (204.80, 168.48, 159.46)  ← 204 studs tall!
+[3D BATTLES] Visual center: (396.47, -103.37, -258.40)    ← Far from battlefield
+```
+
+**Calculation:**
+- Bounding box after 0.1 scale: 204.8 studs
+- Original model size: 204.8 ÷ 0.1 = **2048 studs**
+- Expected size: ~3.84 studs (96px sprite ÷ 25)
+- Required scale: 3.84 ÷ 2048 = **0.00187** (not 0.1!)
+
+**Root Cause:**
+Models were imported/created at wrong scale in storage. The 0.1 base scale assumes models are ~38 studs tall, but actual models are 2000+ studs.
+
+**Fix Required:**
+Either:
+1. **Re-export models** at correct size (~38 studs for average Pokemon)
+2. **Calculate dynamic scale** based on bounding box: `scale = targetSize / originalBoundingBox.Y`
+3. **Use per-Pokemon scale overrides** in modelsData.lua
+
+**Recommended Fix:**
+```lua
+-- Line 1542 - Dynamic scaling approach
+local originalBB = self.model3D:GetBoundingBox()
+local _, originalSize = originalBB
+local targetHeight = (sd.fHeight / 25) * (sd.scale or 1.0)  -- Match 2D sprite size
+local baseModelScale = targetHeight / originalSize.Y
+
+if self.alpha then
+    baseModelScale = baseModelScale * dataChanges.alpha.size
+end
+
+self.model3D:ScaleTo(baseModelScale)
+```
+
+---
+
+### 20. **Metatable Proxy Doesn't Support Instance Methods**
+**Severity:** CRITICAL
+**Location:** `Sprite.lua:1748, 1586-1601`
+**Impact:** Any code calling Instance methods on `sprite.part` crashes for 3D models
+
+**Problem:**
+The metatable proxy created for 3D models handles property access but not method calls.
+
+**Code:**
+```lua
+-- Line 1748 - Crashes for 3D
+if self.part and self.part:FindFirstChild('ParticleEmitter') then
+    self.part:FindFirstChild('ParticleEmitter'):Destroy()
+end
+
+-- Lines 1586-1601 - Metatable proxy
+self.part = setmetatable({}, {
+    __index = function(t, k)
+        if k == "Position" then return sprite:getPosition()
+        elseif k == "Size" then return sprite:getSize()
+        -- ...
+        else
+            return sprite:getPart()[k]  -- Returns plain table, not Instance!
+        end
+    end
+})
+```
+
+**Why It Crashes:**
+1. For properties like `Position`, metatable intercepts and returns correct value ✓
+2. For methods like `:FindFirstChild()`, metatable fallback calls `getPart()[k]`
+3. `getPart()` returns a plain Lua table: `{Position=..., Size=..., CFrame=...}`
+4. Plain tables don't have Instance methods like `:FindFirstChild()`
+5. Error: "attempt to call missing method 'FindFirstChild' of table"
+
+**Other Affected Methods:**
+Any code calling Instance methods on `sprite.part`:
+- `:FindFirstChild()` - Line 1748, 1749
+- `:WaitForChild()`
+- `:GetChildren()`
+- `:Destroy()` (on sprite.part itself)
+
+**Fix Required:**
+Add method support to metatable or use conditional checks:
+
+**Option 1 - Add nil checks:**
+```lua
+if self.part and not self.use3D and self.part:FindFirstChild('ParticleEmitter') then
+    self.part:FindFirstChild('ParticleEmitter'):Destroy()
+end
+```
+
+**Option 2 - Return PrimaryPart for method calls:**
+```lua
+self.part = setmetatable({}, {
+    __index = function(t, k)
+        if k == "Position" then return sprite:getPosition()
+        elseif k == "Size" then return sprite:getSize()
+        -- ... other properties
+        elseif type(sprite.model3D.PrimaryPart[k]) == "function" then
+            return sprite.model3D.PrimaryPart[k]  -- Return actual Instance method
+        else
+            return sprite:getPart()[k]
+        end
+    end
+})
+```
+
+**Immediate Fix:**
+Change line 1748 to:
+```lua
+if self.part and type(self.part) ~= "table" and self.part:FindFirstChild('ParticleEmitter') then
+```
 
 ---
 
 ## Recommended Next Steps
 
-1. **Immediate:** Add nil checks for `self.animation` before ALL accesses
-2. **High Priority:** Test every special transformation (Mega, Dmax, Gmax, Z-Move)
-3. **Testing:** Create comprehensive test suite for 3D battles
-4. **Documentation:** Document which features work/don't work in 3D mode
-5. **Long Term:** Consider creating 3D-specific animation system instead of trying to match 2D behaviors
+1. **CRITICAL:** Fix Bug #19 - Model scaling (prevents 3D from working at all)
+2. **CRITICAL:** Fix Bug #20 - Metatable method calls (prevents many features)
+3. **Immediate:** Add nil checks for `self.animation` before ALL accesses (Bug #1)
+4. **High Priority:** Test every special transformation (Mega, Dmax, Gmax, Z-Move)
+5. **Testing:** Create comprehensive test suite for 3D battles
+6. **Documentation:** Document which features work/don't work in 3D mode
+7. **Long Term:** Consider creating 3D-specific animation system instead of trying to match 2D behaviors

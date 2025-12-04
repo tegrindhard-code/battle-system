@@ -1538,20 +1538,27 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 					self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0)
 
 					-- Calculate scale for 3D model
-					-- Base scale: 0.1 (10% of original) - fixed scale for all models
-					local baseModelScale = 0.1  -- Fixed scale for all Pokemon models
-					local spriteScale = sd.scale or 1.0  -- From GifData
-					local finalScale = baseModelScale * spriteScale
+					-- Dynamic scaling: Calculate based on original model size to match sprite dimensions
+					-- Target height is based on sprite data (fHeight in pixels / 25 pixels per stud)
+					local targetHeight = (sd.fHeight / 25) * (sd.scale or 1.0)
+
+					-- Get the ORIGINAL bounding box size before any scaling
+					local _, originalSize = self.model3D:GetBoundingBox()
+
+					-- Calculate scale factor: targetHeight / originalHeight
+					local baseModelScale = targetHeight / originalSize.Y
 
 					if self.alpha then
-						finalScale = finalScale * dataChanges.alpha.size  -- 1.25x for alpha
+						baseModelScale = baseModelScale * dataChanges.alpha.size  -- 1.25x for alpha
 					end
 
 					-- Validate and position model
 					if self.model3D.PrimaryPart then
 						-- Scale the model FIRST to the correct size
-						print(string.format("[3D BATTLES] Scaling %s to %.3f", self.pokemon.species, finalScale))
-						self.model3D:ScaleTo(finalScale)
+						print(string.format("[3D BATTLES] Original model size: (%.2f, %.2f, %.2f)", originalSize.X, originalSize.Y, originalSize.Z))
+						print(string.format("[3D BATTLES] Target height: %.2f studs", targetHeight))
+						print(string.format("[3D BATTLES] Scaling %s to %.6f", self.pokemon.species, baseModelScale))
+						self.model3D:ScaleTo(baseModelScale)
 
 						-- Calculate pivot offset correction to handle models with misaligned pivots
 						-- Get the bounding box to find the visual center of the model (after scaling)
@@ -1745,7 +1752,9 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	local illusionCheck = pokemon.baseSpecies == "Zoroark"
 	pokemon.revealed = not illusionCheck
 	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-	if self.part and self.part:FindFirstChild('ParticleEmitter') then
+	-- For 3D models, self.part is a metatable proxy table, not a real Instance
+	-- Skip Instance method calls for 3D models (Bug #20 fix)
+	if self.part and not self.use3D and self.part:FindFirstChild('ParticleEmitter') then
 		self.part:FindFirstChild('ParticleEmitter'):Destroy()
 	end
 
