@@ -1538,27 +1538,40 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 					self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0)
 
 					-- Calculate scale for 3D model
-					-- Dynamic scaling: Calculate based on original model size to match sprite dimensions
-					-- Target height is based on sprite data (fHeight in pixels / 25 pixels per stud)
-					local targetHeight = (sd.fHeight / 25) * (sd.scale or 1.0)
+					-- Check if model uses a Scale instance (modern Roblox scaling)
+					local scaleInstance = self.model3D:FindFirstChildOfClass("Scale")
+					local baseModelScale
 
-					-- Get the ORIGINAL bounding box size before any scaling
-					local _, originalSize = self.model3D:GetBoundingBox()
+					if scaleInstance then
+						-- Modern Roblox models with Scale instance
+						print("[3D BATTLES] Using Scale instance for", self.pokemon.species)
+						local targetHeight = (sd.fHeight / 25) * (sd.scale or 1.0)
+						local _, originalSize = self.model3D:GetBoundingBox()
+						baseModelScale = targetHeight / originalSize.Y
 
-					-- Calculate scale factor: targetHeight / originalHeight
-					local baseModelScale = targetHeight / originalSize.Y
+						if self.alpha then
+							baseModelScale = baseModelScale * dataChanges.alpha.size
+						end
 
-					if self.alpha then
-						baseModelScale = baseModelScale * dataChanges.alpha.size  -- 1.25x for alpha
+						print(string.format("[3D BATTLES] Setting Scale.Scale to %.6f", baseModelScale))
+						scaleInstance.Scale = baseModelScale
+					else
+						-- Legacy scaling with ScaleTo() - use fixed base scale from MODEL_CONVERTER_COMPARISON.md
+						print("[3D BATTLES] Using legacy ScaleTo() for", self.pokemon.species)
+						baseModelScale = 0.2  -- 20% of imported model (standard from converter)
+						local spriteScale = sd.scale or 1.0  -- From GifData
+						local finalScale = baseModelScale * spriteScale
+
+						if self.alpha then
+							finalScale = finalScale * dataChanges.alpha.size
+						end
+
+						print(string.format("[3D BATTLES] Scaling %s to %.6f", self.pokemon.species, finalScale))
+						self.model3D:ScaleTo(finalScale)
 					end
 
 					-- Validate and position model
 					if self.model3D.PrimaryPart then
-						-- Scale the model FIRST to the correct size
-						print(string.format("[3D BATTLES] Original model size: (%.2f, %.2f, %.2f)", originalSize.X, originalSize.Y, originalSize.Z))
-						print(string.format("[3D BATTLES] Target height: %.2f studs", targetHeight))
-						print(string.format("[3D BATTLES] Scaling %s to %.6f", self.pokemon.species, baseModelScale))
-						self.model3D:ScaleTo(baseModelScale)
 
 						-- Calculate pivot offset correction to handle models with misaligned pivots
 						-- Get the bounding box to find the visual center of the model (after scaling)
