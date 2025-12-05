@@ -1153,7 +1153,6 @@ function Sprite:renderNewSpriteData(item, illusion)
 			self.pokemon.revealed = true
 		end
 	end
-	end
 end
 function Sprite:animTransform(targetPokemon, spriteForme)
 	if not self.oldSpriteData then
