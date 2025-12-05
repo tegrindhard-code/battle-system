@@ -1100,59 +1100,59 @@ end
 function Sprite:renderNewSpriteData(item, illusion)
 	-- 2D Sprite rendering path
 	if self.animation then
-			local wasPlaying = not self.animation.paused
-			self.animation:destroy()
+		local wasPlaying = not self.animation.paused
+		self.animation:destroy()
 
-			local sd, part = self.spriteData, self.part
-			if self.slot then
-				local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..self.slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
-				self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
-				local scale
-				if sd.scale then
-					scale = sd.scale
-				else
-					scale = 1
-				end
-				local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
-				if self.alpha then
-					size = size * dataChanges.alpha.size--1.25
-				end
-				if self.isDyna then
-					size = size * dataChanges.dynamax.size
-				elseif self.isRaid then
-					size = size * dataChanges.dynamax.size2
-				elseif self.isGmax then
-					size = size * dataChanges.dynamax.size3
-				end
-				part.Size = size
-				--	if _p.PlayerData.isDate == 'aprilfools' then
-				--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
-				--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0) * CFrame.Angles(0, math.rad(180), 0)
-				--else
-				part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
-				--end
-				part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
+		local sd, part = self.spriteData, self.part
+		if self.slot then
+			local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..self.slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
+			self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
+			local scale
+			if sd.scale then
+				scale = sd.scale
+			else
+				scale = 1
 			end
-			--if self.volatiles['dynamax'] then
-			--	part.Size.X = part.Size.X * 2
-			--	part.Size.Y = part.Size.Y * 2
-			--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
+			local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
+			if self.alpha then
+				size = size * dataChanges.alpha.size--1.25
+			end
+			if self.isDyna then
+				size = size * dataChanges.dynamax.size
+			elseif self.isRaid then
+				size = size * dataChanges.dynamax.size2
+			elseif self.isGmax then
+				size = size * dataChanges.dynamax.size3
+			end
+			part.Size = size
+			--	if _p.PlayerData.isDate == 'aprilfools' then
+			--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
+			--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0) * CFrame.Angles(0, math.rad(180), 0)
+			--else
+			part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
 			--end
-			local a = _p.AnimatedSprite:new(sd)
-			a.spriteLabel.Parent = part.Gui
-			if _p.PlayerData.isDate == 'aprilfools' then
-				a.spriteLabel.Rotation = 180
-			end
-			if item then
-				a:PlayOnce(true)
-			elseif wasPlaying then
-				a:Play()
-			end
-			self.animation = a
-			if illusion then
-				self.pokemon.revealed = true
-			end
+			part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
 		end
+		--if self.volatiles['dynamax'] then
+		--	part.Size.X = part.Size.X * 2
+		--	part.Size.Y = part.Size.Y * 2
+		--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
+		--end
+		local a = _p.AnimatedSprite:new(sd)
+		a.spriteLabel.Parent = part.Gui
+		if _p.PlayerData.isDate == 'aprilfools' then
+			a.spriteLabel.Rotation = 180
+		end
+		if item then
+			a:PlayOnce(true)
+		elseif wasPlaying then
+			a:Play()
+		end
+		self.animation = a
+		if illusion then
+			self.pokemon.revealed = true
+		end
+	end
 	end
 end
 function Sprite:animTransform(targetPokemon, spriteForme)
