@@ -1219,6 +1219,7 @@ return function(Battle)
 				-- Handle Terastallization animation
 				local poke = self:getPokemon(args[2])
 				local teraType = args[3]
+				poke.sprite:animTerastallize(teraType)
 				addAction(poke:getName() .. " Terastallized into the " .. teraType .. " type!")
 			elseif arg1 == '-zmove' then 
 				--'-zmove', pokemon, target, zMove, move

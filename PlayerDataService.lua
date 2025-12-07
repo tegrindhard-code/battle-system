@@ -288,6 +288,7 @@ PlayerData = Utilities.class({
 	safariSteps = 500,
 	currentHoverboard = '',
 	favoritedItems = {},
+	teraOrbCharge = 100, -- Tera Orb charge percentage (0-100)
 	captureChain = {
 		poke = '',
 		chain = 0
@@ -1040,6 +1041,9 @@ function PlayerData:getPartyPokeBalls(noHeal)
 		else
 			self:heal()
 		end
+
+		-- Charge Tera Orb to 100% when healing at PokeCenter
+		self:setTeraOrbCharge(100, true)
 	end
 
 	local balls = {}
@@ -2769,6 +2773,21 @@ function PlayerData:addBP(amount, showGui)
 	self.bp = math.min(self.bp + amount, MAX_BP)
 	if showGui then
 		_f.Network:post('bpAwarded', self.player, amount, self.bp)
+	end
+end
+
+function PlayerData:setTeraOrbCharge(newCharge, sendMessage)
+	local oldCharge = self.teraOrbCharge or 100
+	newCharge = math.max(0, math.min(100, newCharge)) -- Clamp between 0-100
+
+	if oldCharge == newCharge then return end
+
+	self.teraOrbCharge = newCharge
+	_f.Network:post('PDChanged', self.player, 'teraOrbCharge', self.teraOrbCharge)
+
+	-- Send message to player if requested and charge changed
+	if sendMessage then
+		_f.Network:post('ShowTeraOrbChargeMessage', self.player, newCharge)
 	end
 end
 

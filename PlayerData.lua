@@ -22,6 +22,7 @@ return function(_p)
 		expShareOn = false,
 		defeatedTrainers = '',
 		safariSteps = 500,
+		teraOrbCharge = 100, -- Tera Orb charge percentage
 		firstNonEggLevel = 1, -- remember us!!!
 		firstNonEggAbility = ''
 	}
@@ -101,6 +102,13 @@ return function(_p)
 				gui:destroy()
 			end)
 		end)
+	end)
+
+	_p.Network:bindEvent('ShowTeraOrbChargeMessage', function(charge)
+		local chat = _p.NPCChat
+		if chat then
+			chat:say('Your Tera Orb is now ' .. charge .. '% charged!')
+		end
 	end)
 
 	_p.Network:bindEvent('ItemProductPurchased', function(itemName, itemIcon)
