@@ -174,6 +174,16 @@ return function(Battle)
 		--if self:getMove(toId(zMove)).Exclusive then move = self:getMove(toId(zMove)) end
 		self:useMove(move, pokemon, target, sourceEffect, zMove)
 		self:singleEvent('AfterMove', move, nil, pokemon, target, move)
+
+		-- Drain 5% Tera Orb charge if Pokemon is Terastallized and used a move
+		if pokemon.isTerastallized then
+			local playerData = self:getPlayerDataForPokemon(pokemon)
+			if playerData then
+				local newCharge = (playerData.teraOrbCharge or 100) - 5
+				playerData:setTeraOrbCharge(newCharge, false) -- Don't send NPCChat message
+				self:add('-teracharge', pokemon, newCharge) -- Send battle message instead
+			end
+		end
 	end
 	function Battle:useMove(move, pokemon, target, sourceEffect, zMove)
 		if not sourceEffect and self.effect.id then sourceEffect = self.effect end
@@ -873,6 +883,19 @@ return function(Battle)
 		end
 		return true
 	end
+
+	-- Helper function to get PlayerData for a Pokemon
+	function Battle:getPlayerDataForPokemon(pokemon)
+		local player = pokemon.side.id == 'p1' and self.listeningPlayers[1] or self.listeningPlayers[2]
+		if player then
+			local PlayerDataService = _f.PlayerDataService
+			if PlayerDataService and PlayerDataService.PlayerDataByPlayer then
+				return PlayerDataService.PlayerDataByPlayer[player]
+			end
+		end
+		return nil
+	end
+
 	-- Terastallization functions
 	function Battle:canTerastallize(pokemon)
 		-- Check if Pokemon has a Tera type
@@ -884,10 +907,27 @@ return function(Battle)
 		-- Check if this Pokemon already used Terastallization in battle
 		if pokemon.usedTerastallization then return false end
 
+		-- Check if player has Tera Orb with sufficient charge (at least 10%)
+		local playerData = self:getPlayerDataForPokemon(pokemon)
+		if playerData then
+			local teraOrbCharge = playerData.teraOrbCharge or 0
+			if teraOrbCharge < 10 then
+				return false
+			end
+		end
+
 		return pokemon.teraType
 	end
 
 	function Battle:runTerastallize(pokemon)
+		-- Drain 10% from Tera Orb charge
+		local playerData = self:getPlayerDataForPokemon(pokemon)
+		if playerData then
+			local newCharge = (playerData.teraOrbCharge or 100) - 10
+			playerData:setTeraOrbCharge(newCharge, false) -- Don't send NPCChat message
+			self:add('-teracharge', pokemon, newCharge) -- Send battle message instead
+		end
+
 		-- Store original types for STAB calculation
 		pokemon.originalTypes = pokemon:getTypes(true)
 

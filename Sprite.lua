@@ -912,6 +912,224 @@ function Sprite:animMegaEvolve(megaEvolutionSpriteData, color1, color2, color3)
 	end
 
 end
+
+function Sprite:animTerastallize(teraType)
+	if self.battle.fastForward then
+		return
+	end
+
+	local disabledGuis = {}
+	for _, side in pairs(self.battle.sides) do
+		for _, active in pairs(side.active) do
+			pcall(function()
+				if active.statbar.main.Visible then
+					pcall(function()
+						active.statbar:update()
+					end)
+					active.statbar.main.Visible = false
+					table.insert(disabledGuis, active.statbar.main)
+				end
+			end)
+		end
+	end
+
+	-- Crystallization colors - crystal white with type-colored energy
+	local crystalColor = BrickColor.new('Institutional white')
+	local typeColor = BrickColor.new('Cyan') -- Default cyan, could map teraType to color
+
+	local inAirBefore = self.spriteData.inAir or 0
+	local cam = workspace.CurrentCamera
+	local camBefore = cam.CFrame
+	local part = self.part
+
+	spawn(function() _p.MusicManager:fadeToVolume(true, .65, 1) end)
+	Utilities.sound(486262895, nil, nil, 10) -- Same sound as mega evolution
+
+	spawn(function() -- Crystal sparkle particles
+		local twopi = math.pi*2
+		local rand = math.random
+		local cos, sin = math.cos, math.sin
+		local freq = 4.5 -- More frequent for crystallization
+		local absorbDuration = 1.5
+		local st = tick()
+		while tick()-st < 3.5 do
+			local color = typeColor.Color
+			spawn(function()
+				local p = create 'Part' {
+					Transparency = 1.0,
+					Anchored = true,
+					CanCollide = false,
+					Size = Vector3.new(.2, .2, .2),
+					Parent = workspace,
+				}
+				local bbg = create 'BillboardGui' {
+					Adornee = p,
+					Size = UDim2.new(.5, 0, .5, 0),
+					Parent = p,
+					create 'ImageLabel' {
+						BackgroundTransparency = 1.0,
+						Image = 'rbxassetid://478035099',
+						ImageColor3 = color,
+						Size = UDim2.new(1.0, 0, 1.0, 0),
+					},
+					create 'ImageLabel' {
+						BackgroundTransparency = 1.0,
+						Image = 'rbxassetid://478035064',
+						Size = UDim2.new(1.0, 0, 1.0, 0),
+						ZIndex = 2,
+					}
+				}
+				local h, a = rand()*twopi, (rand()-.5)*2
+				local dir = Vector3.new(cos(h)*cos(a), sin(a), sin(h)*cos(a))
+				Tween(absorbDuration, nil, function(a)
+					local o = 1-a
+					p.CFrame = part.CFrame + dir*4*o
+					local s = .375 + .125*math.sin(a*10)
+					if a < .2 then
+						s = s * a * 5
+					end
+					bbg.Size = UDim2.new(s, 0, s, 0)
+				end)
+				p:Destroy()
+			end)
+			wait(1/freq)
+		end
+	end)
+
+	local sLabel = self.animation.spriteLabel
+	local camGoalFocus = self.cf.p + Vector3.new(0, .25*18/2-inAirBefore, 0)
+	local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector*Vector3.new(12, 6, 12), camGoalFocus)
+	local lerp = select(2, Utilities.lerpCFrame(camBefore, camGoal))
+	local rst = tick()
+	local function rumble()
+		local et = tick()-rst
+		local mag = .05 -- Lighter rumble for crystallization
+		if et < 1 then
+			mag = mag * et
+		elseif et > 4 then
+			mag = mag * (5-et)
+		end
+		return CFrame.new(0, math.sin(et*50)*mag, 0)
+	end
+
+	Tween(2.5, nil, function(a)
+		cam.CFrame = lerp(a) * rumble()
+		if a > .6 then
+			local aa = 1-(1.67*(a-.6))
+			sLabel.ImageColor3 = Color3.new(aa,aa,aa)
+		end
+	end)
+
+	-- Crystal shell effect
+	local megaEffect = _p.storage.Models.Misc.Mega:Clone()
+	local egg = megaEffect.Egg
+	local scale = .25
+	Utilities.ScaleModel(megaEffect.Base, scale, true)
+	local cf = self.cf * CFrame.Angles(0, math.pi/12, 0) + Vector3.new(0, -.5*scale-inAirBefore, 0)
+	local orb = megaEffect.Orb
+	local innerEffect = megaEffect.InnerEnergy
+	local miniEffect = megaEffect.MiniEnergy
+	local outerEffect = megaEffect.OuterEnergy
+	local topia = megaEffect.TopiaEnergy
+	local fullsize = orb.Size
+
+	innerEffect.EnergyPart.Transparency = 1.0
+	miniEffect.EnergyPart.Transparency = 1.0
+	outerEffect.EnergyPart.Transparency = 1.0
+	topia.EnergyPart.Transparency = 1.0
+	miniEffect.EnergyPart.BrickColor = typeColor
+	innerEffect.EnergyPart.BrickColor = typeColor
+	topia.EnergyPart.BrickColor = typeColor
+	outerEffect.EnergyPart.BrickColor = typeColor
+	MoveModel(megaEffect.Base, cf, true)
+	local ocf = orb.CFrame
+	egg.Parent = nil
+	orb.BrickColor = crystalColor
+	orb.Material = Enum.Material.Glass -- Glass material for crystal effect
+	megaEffect.Parent = self.battle.scene
+
+	Tween(.8, 'easeOutCubic', function(a, t)
+		cam.CFrame = camGoal * rumble()
+		orb.Size = fullsize*a
+		orb.CFrame = ocf
+	end)
+
+	sLabel.Visible = false
+	egg.Parent = megaEffect
+	orb.BrickColor = typeColor
+	orb.Material = Enum.Material.Neon
+
+	local shellOffsets = {}
+	for _, ch in pairs(egg:GetChildren()) do
+		ch.BrickColor = crystalColor
+		ch.Material = Enum.Material.Glass
+		shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.p).unit}
+	end
+
+	local stimer = Utilities.Timing.sineBack(1)
+	local ecfi, ecfo = innerEffect.Hinge.CFrame, outerEffect.Hinge.CFrame
+	Tween(1.5, 'easeInCubic', function(a)
+		cam.CFrame = camGoal * rumble()
+		orb.Size = fullsize*(.95+.2*a)
+		orb.CFrame = ocf
+		for sh, d in pairs(shellOffsets) do
+			sh.CFrame = d[1] + d[2]*.4*a
+		end
+		innerEffect.EnergyPart.Transparency = 1-stimer(a)
+		topia.EnergyPart.Transparency = 1-stimer(a)
+		miniEffect.EnergyPart.Transparency = 1-stimer(a)
+		outerEffect.EnergyPart.Transparency = 1-stimer(a)
+		MoveModel(innerEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
+		MoveModel(topia.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
+		MoveModel(miniEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
+		MoveModel(outerEffect.Hinge, ecfo * CFrame.Angles(-a*5, 0, 0))
+	end)
+
+	cam.CFrame = camGoal
+	sLabel.ImageColor3 = Color3.new(1, 1, 1)
+	sLabel.Visible = true
+
+	Tween(.6, nil, function(a)
+		orb.Size = fullsize*(1.15+a)
+		orb.Transparency = a
+		orb.CFrame = ocf
+		for sh, d in pairs(shellOffsets) do
+			sh.CFrame = d[1] + d[2]*(.4+15*a)
+		end
+		if a > .8 then
+			for sh in pairs(shellOffsets) do
+				sh.Transparency = (a-.8)*5
+			end
+		end
+	end)
+	megaEffect:Destroy()
+
+	wait(.4)
+	lerp = select(2, Utilities.lerpCFrame(cam.CFrame, camBefore))
+	spawn(function() _p.MusicManager:fadeToVolume(true, 1, .8) end)
+	Tween(.8, 'easeOutCubic', function(a)
+		local cf = lerp(a)
+		cam.CFrame = cf
+	end)
+
+	for _, g in pairs(disabledGuis) do
+		pcall(function() g.Visible = true end)
+	end
+
+	for _, side in pairs(self.battle.sides) do
+		for _, active in pairs(side.active) do
+			pcall(function()
+				if active.statbar.main.Visible then
+					pcall(function()
+						active.statbar:update()
+						active.statbar.main:update()
+					end)
+				end
+			end)
+		end
+	end
+end
+
 function Sprite:animThrowBerry(brickColorName)
 	if not self.battle.isSafari then return end
 
