@@ -111,6 +111,12 @@ return function(_p)
 		[825] = 497,
 	}
 
+	-- Custom item icons (individual images instead of sprite sheet)
+	local customItemIcons = {
+		-- Add custom rbxassetid URLs for specific item numbers here
+		-- Example: [itemNum] = 'rbxassetid://12345678',
+	}
+
 	function bag:getItemIcon(item)
 		local icon
 		if type(item)=='number' then
@@ -129,6 +135,21 @@ return function(_p)
 		if ItemIconOffset[icon] then
 			icon = ItemIconOffset[icon]
 		end
+
+		-- Check for custom individual icon
+		if customItemIcons[icon] then
+			local s = 0.9
+			return create 'ImageLabel' {
+				Name = 'ItemIcon',
+				BackgroundTransparency = 1.0,
+				Image = customItemIcons[icon],
+				Size = UDim2.new(s*2/3, 0, s, 0),
+				Position = UDim2.new(0.5-s/3, 0, 0.0, 0),
+				ZIndex = 4,
+			}
+		end
+
+		-- Use sprite sheet for standard icons
 		local s = 0.9
 		return create 'ImageLabel' {
 			Name = 'ItemIcon',

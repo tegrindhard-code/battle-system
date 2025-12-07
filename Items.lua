@@ -3684,6 +3684,16 @@ return {
 			self:boost({spd = 1})
 		end,
 	},
-	
-	
+
+	['teraorb'] = {
+		id = "teraorb",
+		name = "Tera Orb",
+		desc = "A spherical device that enables Pokémon to Terastallize. It requires charging to be used again.",
+		gen = 9,
+		isNonstandard = "Past", -- From Gen 9 Paldea region
+		-- Note: Terastallization mechanics would need to be implemented in the battle engine
+		-- This is a key item that enables the Terastallize transformation
+	},
+
+
 }
