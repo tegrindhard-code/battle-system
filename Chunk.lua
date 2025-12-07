@@ -1066,7 +1066,11 @@ return function(_p)
 			elseif obj.Name:match("^CaveDoor:") then
 				self:hookupCaveDoor(obj)
 			elseif obj.Name == "#Item" then
-				self:hookupItem(obj)
+				-- Skip item #67 (teraorb) - it has custom hookup in Events.lua
+				local oinTag = obj:FindFirstChild('ObtainableItemNumber')
+				if not (oinTag and oinTag.Value == 67) then
+					self:hookupItem(obj)
+				end
 			elseif not ignoreNPCs and obj:IsA("Model") and obj:FindFirstChild("Humanoid") then
 				local npc = _p.NPC:new(obj)
 				if not obj:FindFirstChild("NoAnimate") then npc:Animate() end
