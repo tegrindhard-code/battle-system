@@ -2970,6 +2970,353 @@ return function(_p)--local _p = require(script.Parent)
 					end
 				end
 			end
+
+			-- Teraorb custom hookup (item #67)
+			local teraorbItem = chunk.map:FindFirstChild('#Item')
+			if teraorbItem then
+				local oinTag = teraorbItem:FindFirstChild('ObtainableItemNumber')
+				if oinTag and oinTag.Value == 67 then
+					-- Custom hookup for teraorb with fleurcannon effect
+					local part = teraorbItem:FindFirstChild("Top")
+					local hinge = teraorbItem:FindFirstChild("Hinge")
+					local itemIdObj = teraorbItem:FindFirstChild("ItemId")
+
+					if part and hinge and itemIdObj then
+						local itemId = itemIdObj.Value
+						local db = false
+						local obtainedCache = {}
+
+						part.Touched:connect(function(p)
+							if db or not MasterControl.WalkEnabled or not p
+								or not p:IsDescendantOf(player.Character)
+								or not p.Parent or p.Parent:IsA("Accoutrement") or obtainedCache[itemId] then return end
+
+							db = true
+							MasterControl.WalkEnabled = false
+							MasterControl:Stop()
+							_p.Hoverboard:unequip(true)
+
+							-- Play fleurcannon effect aimed at player's back
+							local char = player.Character
+							local hrp = char and char:FindFirstChild("HumanoidRootPart")
+							if hrp then
+								local storage = game:GetService('ReplicatedStorage')
+								local RunService = game:GetService("RunService")
+								local Misc = storage.Models.Misc
+								local Particles = Misc.Particles
+
+								-- Calculate positions: from item to behind the player
+								local from = part.Position
+								local playerPos = hrp.Position
+								local distance = (playerPos - from)
+								local centerPoint = CFrame.new(from, playerPos) * CFrame.new(0, 0, -1)
+
+								-- Make player turn around (face away from the item)
+								local lookAway = CFrame.new(playerPos, from)
+								hrp.CFrame = CFrame.new(playerPos, from - (from - playerPos).unit * 10)
+
+								-- Rainbow colors for fleurcannon
+								local colors = {
+									Color3.fromRGB(255, 0, 0),
+									Color3.fromRGB(248, 129, 60),
+									Color3.fromRGB(255, 240, 17),
+									Color3.fromRGB(0, 255, 0),
+									Color3.fromRGB(9, 137, 207),
+									Color3.fromRGB(71, 24, 158),
+									Color3.fromRGB(152, 71, 177)
+								}
+
+								local effectScene = create 'Model' { Parent = workspace, Name = "TeraorbEffect" }
+								local parts = {}
+
+								-- Phase 1: Spinning rainbow balls
+								for indexColor, Color in pairs(colors) do
+									local Part = create 'Part' {
+										Anchored = true,
+										CanCollide = false,
+										Shape = "Ball",
+										Size = Vector3.new(0.2, 0.2, 0.2),
+										Color = Color,
+										Material = "Neon",
+										Transparency = 1,
+										CFrame = centerPoint,
+										Parent = effectScene
+									}
+									local Attachment1 = Instance.new("Attachment", Part)
+									Attachment1.Position = Vector3.new(0, 0.1, 0)
+									local Attachment2 = Attachment1:Clone()
+									Attachment2.Position = Vector3.new(0, -0.1, 0)
+									Attachment2.Parent = Part
+									local trail = create 'Trail' {
+										Color = ColorSequence.new(Color),
+										Transparency = NumberSequence.new(0, 1),
+										WidthScale = NumberSequence.new(1, 0),
+										Attachment0 = Attachment1,
+										Attachment1 = Attachment2,
+										Lifetime = 1,
+										LightEmission = 1,
+										Parent = Part
+									}
+									table.insert(parts, {
+										part = Part,
+										pos = indexColor,
+										rot = 2 * math.pi * indexColor / #colors,
+										radius = 0
+									})
+								end
+
+								local partTbl = parts
+								local rotation = 2
+								RunService:BindToRenderStep("teraorb_rainbowblast", Enum.RenderPriority.Camera.Value - 1, function()
+									for _, part in ipairs(partTbl) do
+										part.rot = part.rot + math.rad(rotation)
+										part.part.CFrame = centerPoint * CFrame.new(part.radius * math.cos(part.rot), part.radius * math.sin(part.rot), 0)
+									end
+								end)
+
+								Utilities.Tween(.5, "easeOutCubic", function(a)
+									local radius = 3 * a
+									local Size = 0.1 + 0.4 * a
+									rotation = 5 - 3 * a
+									for _, part in ipairs(partTbl) do
+										part.part.Transparency = 1 - a
+										part.part.Size = Vector3.new(Size, Size, Size)
+										part.radius = radius
+									end
+								end)
+
+								Utilities.Tween(1, "linear", function(a)
+									rotation = 2 + 4 * a
+								end)
+
+								RunService:UnbindFromRenderStep("teraorb_rainbowblast")
+
+								Utilities.Tween(.05, "linear", function(a)
+									local radius = 3 - 2.5 * a
+									for _, part in ipairs(partTbl) do
+										part.radius = radius
+										part.part.CFrame = centerPoint * CFrame.new(part.radius * math.cos(part.rot), part.radius * math.sin(part.rot), 0)
+									end
+								end)
+
+								for partIndexed = #partTbl, 1, -1 do
+									partTbl[partIndexed].part:Destroy()
+									table.remove(partTbl, partIndexed)
+								end
+								partTbl = {}
+								rotation = 2
+
+								-- Phase 2: The blast
+								local Attachment3 = Instance.new("Attachment", workspace.Terrain)
+								Attachment3.WorldCFrame = centerPoint + distance
+								local blastPart = Particles.Blast:Clone()
+								blastPart.Color = ColorSequence.new(Color3.fromRGB(255, 255, 255))
+								blastPart.Size = NumberSequence.new({
+									NumberSequenceKeypoint.new(0, 1),
+									NumberSequenceKeypoint.new(0.1, 10),
+									NumberSequenceKeypoint.new(1, 10)
+								})
+								blastPart.Lifetime = NumberRange.new(1)
+								blastPart.Transparency = NumberSequence.new(0, 1)
+								blastPart.RotSpeed = NumberRange.new(180)
+								blastPart.Enabled = false
+								blastPart.Parent = Attachment3
+
+								for index, color in pairs(colors) do
+									local halfSpiral = Misc.HalfSpiral:Clone()
+									halfSpiral.Color = color
+									halfSpiral.Size = Vector3.new(1, 1, 1)
+									halfSpiral.CFrame = centerPoint * CFrame.Angles(math.pi / 2, index * math.pi / 4, 0)
+									halfSpiral.Parent = effectScene
+									local sparks = Particles.SparkV2:Clone()
+									sparks.Color = ColorSequence.new(color)
+									sparks.Speed = NumberRange.new(20, 30)
+									sparks.Size = NumberSequence.new(0.25, 0.1)
+									sparks.Enabled = false
+									sparks.Acceleration = Vector3.new(0, 0, 0)
+									sparks.Transparency = NumberSequence.new(0, 1)
+									sparks.Parent = Attachment3
+									table.insert(partTbl, {
+										part = halfSpiral,
+										pos = index,
+										rot = index * math.pi / 4,
+										particle = sparks
+									})
+								end
+
+								local NeonBall = create 'Part' {
+									Anchored = true,
+									CanCollide = false,
+									Material = "Neon",
+									Color = Color3.fromRGB(255, 255, 255),
+									Size = Vector3.new(1, 1, 1),
+									CFrame = centerPoint,
+									Shape = "Ball",
+									Parent = effectScene
+								}
+
+								local cp2 = centerPoint
+								RunService:BindToRenderStep("teraorb_rainbowblast2", Enum.RenderPriority.Camera.Value - 1, function()
+									for _, part in ipairs(partTbl) do
+										part.rot = part.rot + math.rad(rotation)
+										part.part.CFrame = cp2 * CFrame.Angles(math.pi / 2, part.rot, 0)
+									end
+								end)
+
+								local size = 1
+								spawn(function()
+									for unitIndex = 1, 7 do
+										local thinRing = Misc.ThinRing:Clone()
+										thinRing.Color = Color3.fromRGB(255, 255, 255)
+										thinRing.CFrame = (centerPoint + distance * unitIndex / 7) * CFrame.Angles(math.pi / 2, 0, 0)
+										thinRing.Size = Vector3.new(size, 0.1, size)
+										thinRing.Parent = effectScene
+										local sizeTo6 = 5 + size
+										Utilities.Tween(.1, "linear", function(a)
+											thinRing.Size = Vector3.new(sizeTo6 + sizeTo6 * a, 0.1, sizeTo6 + sizeTo6 * a)
+										end)
+										delay(.1, function() thinRing:Destroy() end)
+										wait()
+									end
+								end)
+
+								local Attachment4 = Instance.new("Attachment", workspace.Terrain)
+								Attachment4.WorldCFrame = centerPoint
+								local clonedBlastPrt = blastPart:Clone()
+								clonedBlastPrt.Parent = Attachment4
+								clonedBlastPrt:Emit(1)
+								local magnitude = distance.magnitude
+
+								Utilities.Tween(.1, "linear", function(a)
+									cp2 = centerPoint + distance * a / 2
+									rotation = 3 + 10 * a
+									size = 1 + 5 * a
+									NeonBall.Size = Vector3.new(size, size, size)
+									for _, part in ipairs(partTbl) do
+										part.part.Size = Vector3.new(size - 0.5, magnitude * a, size - 0.5)
+									end
+								end)
+
+								-- Impact effects at player position
+								local clonedNeonBall = NeonBall:Clone()
+								clonedNeonBall.CFrame = centerPoint + distance
+								clonedNeonBall.Size = Vector3.new(3, 3, 3)
+								clonedNeonBall.Parent = effectScene
+
+								local clonedThingRing = Misc.ThinRing:Clone()
+								clonedThingRing.Color = Color3.fromRGB(255, 255, 255)
+								clonedThingRing.Size = Vector3.new(3, 0.1, 3)
+								clonedThingRing.Parent = effectScene
+
+								local clonedHitEffect = Misc.HitEffect1:Clone()
+								clonedHitEffect.Size = Vector3.new(6, 1, 6)
+								clonedHitEffect.Color = Color3.fromRGB(255, 255, 255)
+								clonedHitEffect.Parent = effectScene
+
+								local ThingRing3 = clonedThingRing:Clone()
+								ThingRing3.Parent = effectScene
+
+								local NeonBall3 = clonedNeonBall:Clone()
+								NeonBall3.Shape = "Cylinder"
+								NeonBall3.CFrame = (centerPoint + distance / 2) * CFrame.Angles(math.pi / 2, 0, math.pi / 2)
+								NeonBall3.Size = Vector3.new(magnitude + size / 2, 0.5, 0.5)
+								NeonBall3.Parent = effectScene
+
+								for _, part in pairs(partTbl) do
+									part.particle:Emit(20)
+									part.particle.Enabled = true
+								end
+
+								spawn(function()
+									Utilities.Tween(.2, "linear", function(a)
+										local Size = 3 + 7 * a
+										clonedNeonBall.Size = Vector3.new(Size, Size, Size)
+									end)
+
+									blastPart.Lifetime = NumberRange.new(1.5)
+									blastPart.Transparency = NumberSequence.new(0, 1)
+									blastPart.Size = NumberSequence.new(10, 30)
+
+									spawn(function()
+										for unitEmit = 1, 10 do
+											blastPart:Emit(1)
+											wait()
+										end
+									end)
+
+									delay(1, function()
+										for _, part in pairs(partTbl) do
+											part.particle.Enabled = false
+										end
+									end)
+
+									Utilities.Tween(1.5, "easeInOutCubic", function(a)
+										local Size = 5 + 40 * a
+										clonedThingRing.Size = Vector3.new(Size, 0.5, Size)
+										ThingRing3.Size = Vector3.new(Size * 1.25, 0.5, Size * 1.25)
+										clonedThingRing.Transparency = a
+										ThingRing3.Transparency = a
+										local Size2 = 10 + 15 * a
+										clonedNeonBall.Size = Vector3.new(Size2, Size2, Size2)
+										clonedHitEffect.Size = Vector3.new(6 + (Size - 11), 1 + 2 * a, 6 + (Size - 11))
+										clonedHitEffect.Transparency = a
+										clonedNeonBall.Transparency = a
+										NeonBall.Transparency = a
+										NeonBall3.Transparency = 1 - a
+										for _, part in pairs(partTbl) do
+											part.part.Size = Vector3.new(6 - 6 * a, magnitude, 6 - 6 * a)
+										end
+									end)
+
+									for _, part in pairs(partTbl) do
+										part.part.Transparency = 1
+									end
+
+									RunService:UnbindFromRenderStep("teraorb_rainbowblast2")
+
+									Utilities.Tween(.5, "linear", function(a)
+										NeonBall3.Transparency = a
+										NeonBall3.Size = Vector3.new(magnitude + size / 2, 0.5 - 0.5 * a, 0.5 - 0.5 * a)
+									end)
+
+									-- Cleanup
+									game.Debris:AddItem(Attachment3, 1)
+									Attachment4:Destroy()
+									effectScene:Destroy()
+								end)
+
+								wait(2) -- Wait for effect to complete
+							end
+
+							-- Now proceed with normal item obtain
+							obtainedCache[itemId] = true
+
+							local itemName, done
+							Utilities.fastSpawn(function()
+								itemName = _p.Network:get("PDS","obtainItem",itemId)
+								done = true
+							end)
+
+							local chat = _p.NPCChat
+							while not done do wait() end
+
+							if itemName then
+								chat:say(_p.PlayerData.trainerName .. " found " .. Utilities.aOrAn(itemName) .. "!")
+							else
+								chat:say("An error occurred.")
+							end
+
+							teraorbItem:Destroy()
+
+							if itemName then
+								chat:say(_p.PlayerData.trainerName .. " put the " .. itemName .. " in the Bag.")
+							end
+
+							MasterControl.WalkEnabled = true
+						end)
+					end
+				end
+			end
 		end,
 
 		onLoad_chunk6 = function(chunk)
