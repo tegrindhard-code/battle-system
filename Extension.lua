@@ -180,7 +180,8 @@ return function(Battle)
 			local playerData = self:getPlayerDataForPokemon(pokemon)
 			if playerData then
 				local newCharge = (playerData.teraOrbCharge or 100) - 5
-				playerData:setTeraOrbCharge(newCharge, true)
+				playerData:setTeraOrbCharge(newCharge, false) -- Don't send NPCChat message
+				self:add('-teracharge', pokemon, newCharge) -- Send battle message instead
 			end
 		end
 	end
@@ -923,7 +924,8 @@ return function(Battle)
 		local playerData = self:getPlayerDataForPokemon(pokemon)
 		if playerData then
 			local newCharge = (playerData.teraOrbCharge or 100) - 10
-			playerData:setTeraOrbCharge(newCharge, true)
+			playerData:setTeraOrbCharge(newCharge, false) -- Don't send NPCChat message
+			self:add('-teracharge', pokemon, newCharge) -- Send battle message instead
 		end
 
 		-- Store original types for STAB calculation
