@@ -7,7 +7,6 @@ return function(_p)
 	end
 
 	--local _p = require(script.Parent.Parent)--storage.Plugins)
-  
 	local Utilities = _p.Utilities
 	local Tween, MoveModel = Utilities.Tween, Utilities.MoveModel
 	local create = Utilities.Create
@@ -1098,9 +1097,6 @@ return function(_p)
 				end)
 			end
 		end
-
-		-- Add crystallization overlay to the sprite
-		self:addCrystallization()
 	end
 
 	function Sprite:animThrowBerry(brickColorName)
@@ -1358,185 +1354,98 @@ return function(_p)
 		self:updateSpriteData()
 		self:renderNewSpriteData()
 	end
-end
--- substitute
-function Sprite:animSub()
-	if self.sub then return end
-	local subModel = storage.Models.Misc.Substitute:Clone()
-	subModel.Parent = self.battle.scene
-	local subPos = self.cf * CFrame.new(0, self.part.Size.Y/2, 1.5 * (self.siden==1 and 1 or -1))
-	subModel:PivotTo(subPos)
-	self.sub = subModel
-end
-function Sprite:animSubFade()
-	if not self.sub then return end
-	local subModel = self.sub
-	Tween(1, "easeInOutCubic", function(a)
-		for _, part in pairs(subModel:GetChildren()) do
-			if part:IsA("Part") or part:IsA("BasePart") then
-				part.Transparency = a
-			end
+	function Sprite:removeTransform(species)
+		if self.oldSpriteData then
+			self.spriteData = self.oldSpriteData
+			--		self.forme = ?
+			self.oldSpriteData = nil
+			self:renderNewSpriteData()
 		end
-	end)
-	subModel:Destroy()
-	self.sub = nil
-end
-function Sprite:removeSub()
-	if not self.sub then return end
-	local subModel = self.sub
-	subModel:Destroy()
-	self.sub = nil
-end
-
--- Terastallization crystallization overlay
-function Sprite:addCrystallization()
-	if self.crystalOverlay then return end
-	if not self.part or not self.part.Gui then return end
-
-	-- Create container for multiple crystal layers
-	local container = create 'Frame' {
-		Name = 'CrystalContainer',
-		BackgroundTransparency = 1.0,
-		Size = UDim2.new(1, 0, 1, 0),
-		Position = UDim2.new(0, 0, 0, 0),
-		ZIndex = 10,
-		Parent = self.part.Gui
-	}
-
-	-- Layer 1: Geometric crystal texture (main effect)
-	local crystalTexture = create 'ImageLabel' {
-		Name = 'CrystalTexture',
-		BackgroundTransparency = 1.0,
-		Image = 'rbxassetid://122672884871533', -- Geometric blue crystals
-		ImageColor3 = Color3.fromRGB(180, 220, 255), -- Light blue tint
-		ImageTransparency = 0.25, -- Semi-transparent to see Pokemon underneath
-		Size = UDim2.new(1, 0, 1, 0),
-		Position = UDim2.new(0, 0, 0, 0),
-		ScaleType = Enum.ScaleType.Tile,
-		TileSize = UDim2.new(0.5, 0, 0.5, 0), -- Repeating pattern
-		ZIndex = 10,
-		Parent = container
-	}
-
-	-- Layer 2: Sparkle/glow overlay
-	local sparkleOverlay = create 'ImageLabel' {
-		Name = 'SparkleOverlay',
-		BackgroundTransparency = 1.0,
-		Image = 'rbxassetid://6490035158', -- Star sparkle
-		ImageColor3 = Color3.fromRGB(255, 255, 255),
-		ImageTransparency = 0.5,
-		Size = UDim2.new(1.2, 0, 1.2, 0),
-		Position = UDim2.new(-0.1, 0, -0.1, 0),
-		ZIndex = 11,
-		Parent = container
-	}
-
-	self.crystalOverlay = container
-
-	-- Animate sparkle pulsing
-	spawn(function()
-		while self.crystalOverlay do
-			Tween(2, 'easeInOutSine', function(a)
-				if sparkleOverlay and sparkleOverlay.Parent then
-					sparkleOverlay.ImageTransparency = 0.5 + 0.3 * math.sin(a * math.pi * 2)
-					sparkleOverlay.Rotation = a * 360 -- Slow rotation
+	end
+	-- substitute
+	function Sprite:animSub()
+		if self.sub then return end
+		local subModel = storage.Models.Misc.Substitute:Clone()
+		subModel.Parent = self.battle.scene
+		local subPos = self.cf * CFrame.new(0, self.part.Size.Y/2, 1.5 * (self.siden==1 and 1 or -1))
+		subModel:PivotTo(subPos)
+		self.sub = subModel
+	end
+	function Sprite:animSubFade()
+		if not self.sub then return end
+		local subModel = self.sub
+		Tween(1, "easeInOutCubic", function(a)
+			for _, part in pairs(subModel:GetChildren()) do
+				if part:IsA("Part") or part:IsA("BasePart") then
+					part.Transparency = a
 				end
-			end)
-			wait(0.05)
-		end
-	end)
-
-	-- Subtle crystal shimmer
-	spawn(function()
-		while self.crystalOverlay do
-			Tween(1.5, 'easeInOutSine', function(a)
-				if crystalTexture and crystalTexture.Parent then
-					crystalTexture.ImageTransparency = 0.25 + 0.1 * math.sin(a * math.pi * 2)
-				end
-			end)
-			wait(0.05)
-		end
-	end)
-end
-
-function Sprite:removeCrystallization()
-	if not self.crystalOverlay then return end
-
-	local container = self.crystalOverlay
-	self.crystalOverlay = nil
-
-	-- Fade out all children
-	local children = container:GetChildren()
-	Tween(0.5, 'easeOutCubic', function(a)
-		for _, child in pairs(children) do
-			if child:IsA('ImageLabel') then
-				child.ImageTransparency = child.ImageTransparency + (1 - child.ImageTransparency) * a
 			end
-		end
-	end)
+		end)
+		subModel:Destroy()
+		self.sub = nil
+	end
+	function Sprite:removeSub()
+		if not self.sub then return end
+		local subModel = self.sub
+		subModel:Destroy()
+		self.sub = nil
+	end
+	-- move
+	function Sprite:beforeMove()
+		local pokemon = self.pokemon
+		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
+	end
+	function Sprite:animateAttack()
+		local pokemon = self.pokemon
+		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
+		pcall(function()
+			self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), spriteId..'-Attack')
+			self:renderNewSpriteData(true)
+			self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), 'Marshadow')
+			self:renderNewSpriteData()    
+		end)
+	end
+	function Sprite:afterMove()
 
-	delay(0.5, function()
-		if container then
-			container:Destroy()
-		end
-	end)
-end
-
--- move
-function Sprite:beforeMove()
-	local pokemon = self.pokemon
-	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-end
-function Sprite:animateAttack()
-	local pokemon = self.pokemon
-	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-	pcall(function()
-		self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), spriteId..'-Attack')
-		self:renderNewSpriteData(true)
-		self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), 'Marshadow')
-		self:renderNewSpriteData()    
-	end)
-end
-function Sprite:afterMove()
-
-end
-function Sprite:animReset()
-	self.offset = Vector3.new()
-	pcall(function() self.animation.spriteLabel.ImageTransparency = 0.0 end)
-end
--- send in / out
-local stampEmitter = {
-	function(stamp, cf) -- fountain
-		local sheetId = stamp.sheetId
-		local s = stamp.n-1
-		local imageRectSize = Vector2.new(200, 200)
-		local imageRectOffset = Vector2.new(200*(s%5), 200*math.floor(s/5))
-		local rainbow = stamp.rainbow and true or false
-		local imageColor3 = stamp.color3
-		local accel = 30
-		local pSpread = 2
-		local aSpread = 40
-		local roffset = math.random(6)
-		for i = 1, 6 do
-			local c0 = cf * CFrame.new((pSpread*7/6)/2-pSpread/6*i, -.7, -.5)
-			local t0 = math.rad((aSpread*7/6)/2-aSpread/6*i)
-			local vx = 10*math.sin(t0)
-			local vy = 10*math.cos(t0)*1.2
-			_p.Particles:new {
-				Image = sheetId,
-				Color = rainbow and Color3.fromHSV(((i+roffset)%6)/6, 1, 1) or imageColor3,
-				ImageRectSize = imageRectSize,
-				ImageRectOffset = imageRectOffset,
-				Acceleration = false,
-				Lifetime = .7,
-				OnUpdate = function(a, gui)
-					local t = a*.7
-					gui.CFrame = c0 * CFrame.new(vx*t, vy*t-.5*accel*t*t, 0)
-					local s = .6+1*a
-					gui.BillboardGui.Size = UDim2.new(s, 0, s, 0)
-					gui.BillboardGui.ImageLabel.Rotation = -vx*30*t
-					if a > .8 then
-						gui.BillboardGui.ImageLabel.ImageTransparency = (a-.8)*5
+	end
+	function Sprite:animReset()
+		self.offset = Vector3.new()
+		pcall(function() self.animation.spriteLabel.ImageTransparency = 0.0 end)
+	end
+	-- send in / out
+	local stampEmitter = {
+		function(stamp, cf) -- fountain
+			local sheetId = stamp.sheetId
+			local s = stamp.n-1
+			local imageRectSize = Vector2.new(200, 200)
+			local imageRectOffset = Vector2.new(200*(s%5), 200*math.floor(s/5))
+			local rainbow = stamp.rainbow and true or false
+			local imageColor3 = stamp.color3
+			local accel = 30
+			local pSpread = 2
+			local aSpread = 40
+			local roffset = math.random(6)
+			for i = 1, 6 do
+				local c0 = cf * CFrame.new((pSpread*7/6)/2-pSpread/6*i, -.7, -.5)
+				local t0 = math.rad((aSpread*7/6)/2-aSpread/6*i)
+				local vx = 10*math.sin(t0)
+				local vy = 10*math.cos(t0)*1.2
+				_p.Particles:new {
+					Image = sheetId,
+					Color = rainbow and Color3.fromHSV(((i+roffset)%6)/6, 1, 1) or imageColor3,
+					ImageRectSize = imageRectSize,
+					ImageRectOffset = imageRectOffset,
+					Acceleration = false,
+					Lifetime = .7,
+					OnUpdate = function(a, gui)
+						local t = a*.7
+						gui.CFrame = c0 * CFrame.new(vx*t, vy*t-.5*accel*t*t, 0)
+						local s = .6+1*a
+						gui.BillboardGui.Size = UDim2.new(s, 0, s, 0)
+						gui.BillboardGui.ImageLabel.Rotation = -vx*30*t
+						if a > .8 then
+							gui.BillboardGui.ImageLabel.ImageTransparency = (a-.8)*5
+						end
 					end
 				}
 			end
@@ -2062,9 +1971,6 @@ local stampEmitter = {
 	end
 
 	function Sprite:animUnsummon()
-		-- Remove crystallization overlay if present
-		self:removeCrystallization()
-
 		if self.battle.fastForward then
 			self.animation.spriteLabel.Visible = false
 			self.animation:Pause()
@@ -2173,9 +2079,6 @@ local stampEmitter = {
 		--	part.CFrame = cf
 	end
 	function Sprite:animFaint()
-		-- Remove crystallization overlay if present
-		self:removeCrystallization()
-
 		if not self.battle.fastForward then
 			self:playCry(0.75)
 		end
