@@ -907,6 +907,9 @@ return function(Battle)
 		-- Check if this Pokemon already used Terastallization in battle
 		if pokemon.usedTerastallization then return false end
 
+		-- Check if Pokemon is holding a Tera Orb
+		if pokemon.item ~= 'teraorb' then return false end
+
 		-- Check if player has Tera Orb with sufficient charge (at least 10%)
 		local playerData = self:getPlayerDataForPokemon(pokemon)
 		if playerData then
@@ -946,14 +949,6 @@ return function(Battle)
 
 		-- Update type display (silent to avoid duplicate message)
 		self:add('-start', pokemon, 'typechange', pokemon.teraType, '[silent]')
-
-		-- Prevent other Pokemon on the team from Terastallizing
-		for _, ally in pairs(pokemon.side.pokemon) do
-			if ally ~= pokemon and not ally.usedTerastallization then
-				-- Keep their Tera type but mark as unable to use it this battle
-				ally.canTerastallizeThisBattle = false
-			end
-		end
 
 		return true
 	end

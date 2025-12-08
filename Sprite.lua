@@ -1131,6 +1131,9 @@ function Sprite:animTerastallize(teraType)
 			end)
 		end
 	end
+
+	-- Add crystallization overlay to the sprite
+	self:addCrystallization()
 end
 
 function Sprite:animThrowBerry(brickColorName)
@@ -1424,6 +1427,60 @@ function Sprite:removeSub()
 	subModel:Destroy()
 	self.sub = nil
 end
+
+-- Terastallization crystallization overlay
+function Sprite:addCrystallization()
+	if self.crystalOverlay then return end
+	if not self.part or not self.part.Gui then return end
+
+	-- Create a crystallization overlay ImageLabel
+	local overlay = create 'ImageLabel' {
+		Name = 'CrystalOverlay',
+		BackgroundTransparency = 1.0,
+		Image = 'rbxassetid://478035099', -- Using sparkle particle as crystal effect
+		ImageColor3 = Color3.fromRGB(200, 230, 255), -- Light blue-white crystal color
+		ImageTransparency = 0.3,
+		Size = UDim2.new(1.2, 0, 1.2, 0), -- Slightly larger than sprite
+		Position = UDim2.new(-0.1, 0, -0.1, 0), -- Centered on sprite
+		ZIndex = 10, -- Above the sprite
+		Parent = self.part.Gui
+	}
+
+	self.crystalOverlay = overlay
+
+	-- Add sparkle animation
+	spawn(function()
+		while self.crystalOverlay do
+			Tween(1.5, 'easeInOutSine', function(a)
+				if self.crystalOverlay then
+					self.crystalOverlay.ImageTransparency = 0.3 + 0.2 * math.sin(a * math.pi * 2)
+				end
+			end)
+			wait(0.05)
+		end
+	end)
+end
+
+function Sprite:removeCrystallization()
+	if not self.crystalOverlay then return end
+
+	local overlay = self.crystalOverlay
+	self.crystalOverlay = nil
+
+	-- Fade out the overlay
+	Tween(0.5, 'easeOutCubic', function(a)
+		if overlay then
+			overlay.ImageTransparency = 0.3 + 0.7 * a
+		end
+	end)
+
+	delay(0.5, function()
+		if overlay then
+			overlay:Destroy()
+		end
+	end)
+end
+
 -- move
 function Sprite:beforeMove()
 	local pokemon = self.pokemon
@@ -2006,6 +2063,9 @@ function Sprite:animSummon(slot, msgFn, isSecondary)
 	wait(.4)
 end
 function Sprite:animUnsummon()
+	-- Remove crystallization overlay if present
+	self:removeCrystallization()
+
 	if self.battle.fastForward then
 		self.animation.spriteLabel.Visible = false
 		self.animation:Pause()
@@ -2114,6 +2174,9 @@ function Sprite:animDragOut()
 	--	part.CFrame = cf
 end
 function Sprite:animFaint()
+	-- Remove crystallization overlay if present
+	self:removeCrystallization()
+
 	if not self.battle.fastForward then
 		self:playCry(0.75)
 	end
