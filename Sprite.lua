@@ -1098,6 +1098,9 @@ return function(_p)
 				end)
 			end
 		end
+
+		-- Add crystallization overlay to the sprite
+		self:addCrystallization()
 	end
 
 	function Sprite:animThrowBerry(brickColorName)
@@ -2059,6 +2062,9 @@ local stampEmitter = {
 	end
 
 	function Sprite:animUnsummon()
+		-- Remove crystallization overlay if present
+		self:removeCrystallization()
+
 		if self.battle.fastForward then
 			self.animation.spriteLabel.Visible = false
 			self.animation:Pause()
@@ -2167,6 +2173,9 @@ local stampEmitter = {
 		--	part.CFrame = cf
 	end
 	function Sprite:animFaint()
+		-- Remove crystallization overlay if present
+		self:removeCrystallization()
+
 		if not self.battle.fastForward then
 			self:playCry(0.75)
 		end
