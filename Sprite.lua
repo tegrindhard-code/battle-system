@@ -1001,13 +1001,39 @@ return function(_p)
 			return CFrame.new(0, math.sin(et*50)*mag, 0)
 		end
 
-		Tween(2.5, nil, function(a)
-			cam.CFrame = lerp(a) * rumble()
-			if a > .6 then
-				local aa = 1-(1.67*(a-.6))
-				sLabel.ImageColor3 = Color3.new(aa,aa,aa)
-			end
-		end)
+	-- Crystal shell effect
+	local megaEffect = _p.storage.Models.Misc.Mega:Clone()
+	local egg = megaEffect.Egg
+	local scale = .25
+	Utilities.ScaleModel(megaEffect.Base, scale, true)
+	local cf = self.cf * CFrame.Angles(0, math.pi/12, 0) + Vector3.new(0, -.5*scale-inAirBefore, 0)
+	local orb = megaEffect.Orb
+	local innerEffect = megaEffect:FindFirstChild('InnerEnergy')
+	local outerEffect = megaEffect:FindFirstChild('OuterEnergy')
+	local fullsize = orb.Size
+
+	-- Set transparency and colors for effects that exist
+	if innerEffect then
+		innerEffect.EnergyPart.Transparency = 1.0
+		innerEffect.EnergyPart.BrickColor = typeColor
+	end
+	if outerEffect then
+		outerEffect.EnergyPart.Transparency = 1.0
+		outerEffect.EnergyPart.BrickColor = typeColor
+	end
+
+	MoveModel(megaEffect.Base, cf, true)
+	local ocf = orb.CFrame
+	egg.Parent = nil
+	orb.BrickColor = crystalColor
+	orb.Material = Enum.Material.Glass -- Glass material for crystal effect
+	megaEffect.Parent = self.battle.scene
+
+	Tween(.8, 'easeOutCubic', function(a, t)
+		cam.CFrame = camGoal * rumble()
+		orb.Size = fullsize*a
+		orb.CFrame = ocf
+	end)
 
 		-- Crystal shell effect
 		local megaEffect = _p.storage.Models.Misc.Mega:Clone()
@@ -1048,12 +1074,31 @@ return function(_p)
 		orb.BrickColor = typeColor
 		orb.Material = Enum.Material.Neon
 
-		local shellOffsets = {}
-		for _, ch in pairs(egg:GetChildren()) do
-			ch.BrickColor = crystalColor
-			ch.Material = Enum.Material.Glass
-			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.p).unit}
+	local stimer = Utilities.Timing.sineBack(1)
+	local ecfi, ecfo
+	if innerEffect then ecfi = innerEffect.Hinge.CFrame end
+	if outerEffect then ecfo = outerEffect.Hinge.CFrame end
+
+	Tween(1.5, 'easeInCubic', function(a)
+		cam.CFrame = camGoal * rumble()
+		orb.Size = fullsize*(.95+.2*a)
+		orb.CFrame = ocf
+		for sh, d in pairs(shellOffsets) do
+			sh.CFrame = d[1] + d[2]*.4*a
 		end
+		if innerEffect then
+			innerEffect.EnergyPart.Transparency = 1-stimer(a)
+			MoveModel(innerEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
+		end
+		if outerEffect then
+			outerEffect.EnergyPart.Transparency = 1-stimer(a)
+			MoveModel(outerEffect.Hinge, ecfo * CFrame.Angles(-a*5, 0, 0))
+		end
+	end)
+
+	cam.CFrame = camGoal
+	sLabel.ImageColor3 = Color3.new(1, 1, 1)
+	sLabel.Visible = true
 
 		local stimer = Utilities.Timing.sineBack(1)
 		local ecfi, ecfo = innerEffect.Hinge.CFrame, outerEffect.Hinge.CFrame
