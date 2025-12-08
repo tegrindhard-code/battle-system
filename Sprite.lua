@@ -1134,17 +1134,16 @@ return function(_p)
 				for sh in pairs(shellOffsets) do
 					sh.Transparency = (a-.8)*5
 				end
-			end
-		end)
-		megaEffect:Destroy()
+			end)
+		end
+	end
 
-		wait(.4)
-		lerp = select(2, Utilities.lerpCFrame(cam.CFrame, camBefore))
-		spawn(function() _p.MusicManager:fadeToVolume(true, 1, .8) end)
-		Tween(.8, 'easeOutCubic', function(a)
-			local cf = lerp(a)
-			cam.CFrame = cf
-		end)
+	-- Add crystallization overlay to the sprite
+	self:addCrystallization()
+end
+
+function Sprite:animThrowBerry(brickColorName)
+	if not self.battle.isSafari then return end
 
 		for _, g in pairs(disabledGuis) do
 			pcall(function() g.Visible = true end)
@@ -1445,32 +1444,87 @@ return function(_p)
 					part.Transparency = a
 				end
 			end
-		end)
-		subModel:Destroy()
-		self.sub = nil
-	end
-	function Sprite:removeSub()
-		if not self.sub then return end
-		local subModel = self.sub
-		subModel:Destroy()
-		self.sub = nil
-	end
-	-- move
-	function Sprite:beforeMove()
-		local pokemon = self.pokemon
-		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-	end
-	function Sprite:animateAttack()
-		local pokemon = self.pokemon
-		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-		pcall(function()
-			self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), spriteId..'-Attack')
-			self:renderNewSpriteData(true)
-			self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), 'Marshadow')
-			self:renderNewSpriteData()    
-		end)
-	end
-	function Sprite:afterMove()
+		end
+	end)
+	subModel:Destroy()
+	self.sub = nil
+end
+function Sprite:removeSub()
+	if not self.sub then return end
+	local subModel = self.sub
+	subModel:Destroy()
+	self.sub = nil
+end
+
+-- Terastallization crystallization overlay
+function Sprite:addCrystallization()
+	if self.crystalOverlay then return end
+	if not self.part or not self.part.Gui then return end
+
+	-- Create a crystallization overlay ImageLabel
+	local overlay = create 'ImageLabel' {
+		Name = 'CrystalOverlay',
+		BackgroundTransparency = 1.0,
+		Image = 'rbxassetid://478035099', -- Using sparkle particle as crystal effect
+		ImageColor3 = Color3.fromRGB(200, 230, 255), -- Light blue-white crystal color
+		ImageTransparency = 0.3,
+		Size = UDim2.new(1.2, 0, 1.2, 0), -- Slightly larger than sprite
+		Position = UDim2.new(-0.1, 0, -0.1, 0), -- Centered on sprite
+		ZIndex = 10, -- Above the sprite
+		Parent = self.part.Gui
+	}
+
+	self.crystalOverlay = overlay
+
+	-- Add sparkle animation
+	spawn(function()
+		while self.crystalOverlay do
+			Tween(1.5, 'easeInOutSine', function(a)
+				if self.crystalOverlay then
+					self.crystalOverlay.ImageTransparency = 0.3 + 0.2 * math.sin(a * math.pi * 2)
+				end
+			end)
+			wait(0.05)
+		end
+	end)
+end
+
+function Sprite:removeCrystallization()
+	if not self.crystalOverlay then return end
+
+	local overlay = self.crystalOverlay
+	self.crystalOverlay = nil
+
+	-- Fade out the overlay
+	Tween(0.5, 'easeOutCubic', function(a)
+		if overlay then
+			overlay.ImageTransparency = 0.3 + 0.7 * a
+		end
+	end)
+
+	delay(0.5, function()
+		if overlay then
+			overlay:Destroy()
+		end
+	end)
+end
+
+-- move
+function Sprite:beforeMove()
+	local pokemon = self.pokemon
+	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
+end
+function Sprite:animateAttack()
+	local pokemon = self.pokemon
+	local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
+	pcall(function()
+		self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), spriteId..'-Attack')
+		self:renderNewSpriteData(true)
+		self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), 'Marshadow')
+		self:renderNewSpriteData()    
+	end)
+end
+function Sprite:afterMove()
 
 	end
 	function Sprite:animReset()
@@ -2036,6 +2090,9 @@ if customSparkle or self.pokemon.shiny then -- shiny sparkle
 wait(.4)
 end
 function Sprite:animUnsummon()
+	-- Remove crystallization overlay if present
+	self:removeCrystallization()
+
 	if self.battle.fastForward then
 		self.animation.spriteLabel.Visible = false
 		self.animation:Pause()
@@ -2144,6 +2201,9 @@ function Sprite:animDragOut()
 	--	part.CFrame = cf
 end
 function Sprite:animFaint()
+	-- Remove crystallization overlay if present
+	self:removeCrystallization()
+
 	if not self.battle.fastForward then
 		self:playCry(0.75)
 	end
