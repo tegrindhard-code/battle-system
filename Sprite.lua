@@ -1027,20 +1027,20 @@ function Sprite:animTerastallize(teraType)
 	Utilities.ScaleModel(megaEffect.Base, scale, true)
 	local cf = self.cf * CFrame.Angles(0, math.pi/12, 0) + Vector3.new(0, -.5*scale-inAirBefore, 0)
 	local orb = megaEffect.Orb
-	local innerEffect = megaEffect.InnerEnergy
-	local miniEffect = megaEffect.MiniEnergy
-	local outerEffect = megaEffect.OuterEnergy
-	local topia = megaEffect.TopiaEnergy
+	local innerEffect = megaEffect:FindFirstChild('InnerEnergy')
+	local outerEffect = megaEffect:FindFirstChild('OuterEnergy')
 	local fullsize = orb.Size
 
-	innerEffect.EnergyPart.Transparency = 1.0
-	miniEffect.EnergyPart.Transparency = 1.0
-	outerEffect.EnergyPart.Transparency = 1.0
-	topia.EnergyPart.Transparency = 1.0
-	miniEffect.EnergyPart.BrickColor = typeColor
-	innerEffect.EnergyPart.BrickColor = typeColor
-	topia.EnergyPart.BrickColor = typeColor
-	outerEffect.EnergyPart.BrickColor = typeColor
+	-- Set transparency and colors for effects that exist
+	if innerEffect then
+		innerEffect.EnergyPart.Transparency = 1.0
+		innerEffect.EnergyPart.BrickColor = typeColor
+	end
+	if outerEffect then
+		outerEffect.EnergyPart.Transparency = 1.0
+		outerEffect.EnergyPart.BrickColor = typeColor
+	end
+
 	MoveModel(megaEffect.Base, cf, true)
 	local ocf = orb.CFrame
 	egg.Parent = nil
@@ -1067,7 +1067,10 @@ function Sprite:animTerastallize(teraType)
 	end
 
 	local stimer = Utilities.Timing.sineBack(1)
-	local ecfi, ecfo = innerEffect.Hinge.CFrame, outerEffect.Hinge.CFrame
+	local ecfi, ecfo
+	if innerEffect then ecfi = innerEffect.Hinge.CFrame end
+	if outerEffect then ecfo = outerEffect.Hinge.CFrame end
+
 	Tween(1.5, 'easeInCubic', function(a)
 		cam.CFrame = camGoal * rumble()
 		orb.Size = fullsize*(.95+.2*a)
@@ -1075,14 +1078,14 @@ function Sprite:animTerastallize(teraType)
 		for sh, d in pairs(shellOffsets) do
 			sh.CFrame = d[1] + d[2]*.4*a
 		end
-		innerEffect.EnergyPart.Transparency = 1-stimer(a)
-		topia.EnergyPart.Transparency = 1-stimer(a)
-		miniEffect.EnergyPart.Transparency = 1-stimer(a)
-		outerEffect.EnergyPart.Transparency = 1-stimer(a)
-		MoveModel(innerEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
-		MoveModel(topia.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
-		MoveModel(miniEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
-		MoveModel(outerEffect.Hinge, ecfo * CFrame.Angles(-a*5, 0, 0))
+		if innerEffect then
+			innerEffect.EnergyPart.Transparency = 1-stimer(a)
+			MoveModel(innerEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
+		end
+		if outerEffect then
+			outerEffect.EnergyPart.Transparency = 1-stimer(a)
+			MoveModel(outerEffect.Hinge, ecfo * CFrame.Angles(-a*5, 0, 0))
+		end
 	end)
 
 	cam.CFrame = camGoal
