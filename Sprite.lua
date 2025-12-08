@@ -1097,6 +1097,9 @@ return function(_p)
 				end)
 			end
 		end
+
+		-- Add crystallization overlay to the sprite
+		self:addCrystallization()
 	end
 
 	function Sprite:animThrowBerry(brickColorName)
@@ -1390,6 +1393,101 @@ return function(_p)
 		subModel:Destroy()
 		self.sub = nil
 	end
+
+	-- Terastallization crystallization overlay
+	function Sprite:addCrystallization()
+		if self.crystalOverlay then return end
+		if not self.part or not self.part.Gui then return end
+
+		-- Create container for multiple crystal layers
+		local container = create 'Frame' {
+			Name = 'CrystalContainer',
+			BackgroundTransparency = 1.0,
+			Size = UDim2.new(1, 0, 1, 0),
+			Position = UDim2.new(0, 0, 0, 0),
+			ZIndex = 10,
+			Parent = self.part.Gui
+		}
+
+		-- Layer 1: Geometric crystal texture (main effect)
+		local crystalTexture = create 'ImageLabel' {
+			Name = 'CrystalTexture',
+			BackgroundTransparency = 1.0,
+			Image = 'rbxassetid://122672884871533', -- Geometric blue crystals
+			ImageColor3 = Color3.fromRGB(180, 220, 255), -- Light blue tint
+			ImageTransparency = 0.25, -- Semi-transparent to see Pokemon underneath
+			Size = UDim2.new(1, 0, 1, 0),
+			Position = UDim2.new(0, 0, 0, 0),
+			ScaleType = Enum.ScaleType.Tile,
+			TileSize = UDim2.new(0.5, 0, 0.5, 0), -- Repeating pattern
+			ZIndex = 10,
+			Parent = container
+		}
+
+		-- Layer 2: Sparkle/glow overlay
+		local sparkleOverlay = create 'ImageLabel' {
+			Name = 'SparkleOverlay',
+			BackgroundTransparency = 1.0,
+			Image = 'rbxassetid://6490035158', -- Star sparkle
+			ImageColor3 = Color3.fromRGB(255, 255, 255),
+			ImageTransparency = 0.5,
+			Size = UDim2.new(1.2, 0, 1.2, 0),
+			Position = UDim2.new(-0.1, 0, -0.1, 0),
+			ZIndex = 11,
+			Parent = container
+		}
+
+		self.crystalOverlay = container
+
+		-- Animate sparkle pulsing
+		spawn(function()
+			while self.crystalOverlay do
+				Tween(2, 'easeInOutSine', function(a)
+					if sparkleOverlay and sparkleOverlay.Parent then
+						sparkleOverlay.ImageTransparency = 0.5 + 0.3 * math.sin(a * math.pi * 2)
+						sparkleOverlay.Rotation = a * 360 -- Slow rotation
+					end
+				end)
+				wait(0.05)
+			end
+		end)
+
+		-- Subtle crystal shimmer
+		spawn(function()
+			while self.crystalOverlay do
+				Tween(1.5, 'easeInOutSine', function(a)
+					if crystalTexture and crystalTexture.Parent then
+						crystalTexture.ImageTransparency = 0.25 + 0.1 * math.sin(a * math.pi * 2)
+					end
+				end)
+				wait(0.05)
+			end
+		end)
+	end
+
+	function Sprite:removeCrystallization()
+		if not self.crystalOverlay then return end
+
+		local container = self.crystalOverlay
+		self.crystalOverlay = nil
+
+		-- Fade out all children
+		local children = container:GetChildren()
+		Tween(0.5, 'easeOutCubic', function(a)
+			for _, child in pairs(children) do
+				if child:IsA('ImageLabel') then
+					child.ImageTransparency = child.ImageTransparency + (1 - child.ImageTransparency) * a
+				end
+			end
+		end)
+
+		delay(0.5, function()
+			if container then
+				container:Destroy()
+			end
+		end)
+	end
+
 	-- move
 	function Sprite:beforeMove()
 		local pokemon = self.pokemon
@@ -1971,6 +2069,9 @@ return function(_p)
 	end
 
 	function Sprite:animUnsummon()
+		-- Remove crystallization overlay if present
+		self:removeCrystallization()
+
 		if self.battle.fastForward then
 			self.animation.spriteLabel.Visible = false
 			self.animation:Pause()
@@ -2079,6 +2180,9 @@ return function(_p)
 		--	part.CFrame = cf
 	end
 	function Sprite:animFaint()
+		-- Remove crystallization overlay if present
+		self:removeCrystallization()
+
 		if not self.battle.fastForward then
 			self:playCry(0.75)
 		end
