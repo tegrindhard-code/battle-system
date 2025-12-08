@@ -2172,7 +2172,7 @@ end
 function PlayerData:tossItem(itemId, amount) 
 	if not itemId or type(itemId) ~= 'string' or not amount or type(amount) ~= 'number' or amount < 1 then return false end
 	local item = _f.Database.ItemById[itemId]
-	if not item or not item.bagCategory or item.bagCategory > 4 or itemId == 'masterball' or item.zMove then return false end -- check whether it can be tossed
+	if not item or not item.bagCategory or item.bagCategory > 4 or itemId == 'masterball' or itemId == 'teraorb' or item.zMove then return false end -- check whether it can be tossed
 	if not self:incrementBagItem(item.num, -amount) then return false end
 	return true
 end

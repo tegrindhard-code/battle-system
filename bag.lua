@@ -463,7 +463,7 @@ return function(_p)
 			self.selectionUse.Visible      = item.tm or usableItems[item.id]~=nil or item.canUse
 			self.selectionGive.Visible     = pouch and pouch < 5 
 			--		self.selectionRegister.Visible = pouch == 5 and (usableItems[item.id]~=nil or item.canUse) -- TODO: make `Register` a thing
-			self.selectionToss.Visible     = pouch and pouch < 5 and item.id ~= 'masterball'
+			self.selectionToss.Visible     = pouch and pouch < 5 and item.id ~= 'masterball' and item.id ~= 'teraorb'
 		end
 		if item.desc then
 			write(item.desc) {
