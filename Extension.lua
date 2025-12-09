@@ -177,13 +177,20 @@ return function(Battle)
 
 		if pokemon.isTerastallized then
 			local playerData = self:getPlayerDataForPokemon(pokemon)
+			print("[TERA DEBUG] Move used while terastallized by", pokemon.name)
+			print("[TERA DEBUG] playerData:", playerData)
 			if playerData then
+				print("[TERA DEBUG] Current charge before move:", playerData.teraOrbCharge)
 				local newCharge = (playerData.teraOrbCharge or 100) - 5
+				print("[TERA DEBUG] New charge after -5%:", newCharge)
 				playerData:setTeraOrbCharge(newCharge, false)
 				self:add('-teracharge', pokemon, newCharge)
 				if newCharge <= 0 then
+					print("[TERA DEBUG] Charge reached 0, unterastallizing")
 					self:add('-unterastallize', pokemon)
 				end
+			else
+				print("[TERA DEBUG] No playerData found for move drain!")
 			end
 		end
 	end
@@ -927,10 +934,16 @@ return function(Battle)
 	function Battle:runTerastallize(pokemon)
 		-- Drain 10% from Tera Orb charge
 		local playerData = self:getPlayerDataForPokemon(pokemon)
+		print("[TERA DEBUG] runTerastallize called for", pokemon.name)
+		print("[TERA DEBUG] playerData:", playerData)
 		if playerData then
+			print("[TERA DEBUG] Current charge:", playerData.teraOrbCharge)
 			local newCharge = (playerData.teraOrbCharge or 100) - 10
+			print("[TERA DEBUG] New charge after -10%:", newCharge)
 			playerData:setTeraOrbCharge(newCharge, false) -- Don't send NPCChat message
 			self:add('-teracharge', pokemon, newCharge) -- Send battle message instead
+		else
+			print("[TERA DEBUG] No playerData found!")
 		end
 
 		-- Store original types for STAB calculation

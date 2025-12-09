@@ -1224,58 +1224,58 @@ return function(_p)
 	end
 	function Sprite:addCrystallization()
 		if self.crystalOverlay then return end
-		if not self.part or not self.part.Gui then return end
+		if not self.part or not self.part.Gui or not self.animation or not self.animation.spriteLabel then return end
+		local spriteLabel = self.animation.spriteLabel
+		self.originalImageColor = spriteLabel.ImageColor3
 		local container = create 'Frame' {
 			Name = 'CrystalContainer',
 			BackgroundTransparency = 1.0,
-			Size = UDim2.new(1, 0, 1, 0),
-			Position = UDim2.new(0, 0, 0, 0),
-			ZIndex = 10,
+			Size = UDim2.new(1.5, 0, 1.5, 0),
+			Position = UDim2.new(-0.25, 0, -0.25, 0),
+			ZIndex = 9,
 			Parent = self.part.Gui
 		}
-		local crystalTexture = create 'ImageLabel' {
-			Name = 'CrystalTexture',
-			BackgroundTransparency = 1.0,
-			Image = 'rbxassetid://122672884871533', 
-			ImageColor3 = Color3.fromRGB(180, 220, 255), 
-			ImageTransparency = 0.25, 
-			Size = UDim2.new(1, 0, 1, 0),
-			Position = UDim2.new(0, 0, 0, 0),
-			ScaleType = Enum.ScaleType.Tile,
-			TileSize = UDim2.new(0.5, 0, 0.5, 0), 
-			ZIndex = 10,
-			Parent = container
-		}
-		local sparkleOverlay = create 'ImageLabel' {
-			Name = 'SparkleOverlay',
-			BackgroundTransparency = 1.0,
-			Image = 'rbxassetid://6490035158', 
-			ImageColor3 = Color3.fromRGB(255, 255, 255),
-			ImageTransparency = 0.5,
-			Size = UDim2.new(1.2, 0, 1.2, 0),
-			Position = UDim2.new(-0.1, 0, -0.1, 0),
-			ZIndex = 11,
-			Parent = container
-		}
+		local sparkles = {}
+		for i = 1, 8 do
+			local angle = (i / 8) * math.pi * 2
+			local sparkle = create 'ImageLabel' {
+				Name = 'Sparkle' .. i,
+				BackgroundTransparency = 1.0,
+				Image = 'rbxassetid://6490035158',
+				ImageColor3 = Color3.fromRGB(255, 255, 255),
+				ImageTransparency = 0.3,
+				Size = UDim2.new(0.15, 0, 0.15, 0),
+				Position = UDim2.new(0.5, 0, 0.5, 0),
+				AnchorPoint = Vector2.new(0.5, 0.5),
+				ZIndex = 9,
+				Parent = container
+			}
+			sparkles[i] = {sparkle = sparkle, angle = angle}
+		end
 		self.crystalOverlay = container
+		self.crystalSparkles = sparkles
 		spawn(function()
+			local time = 0
 			while self.crystalOverlay do
-				Tween(2, 'easeInOutSine', function(a)
-					if sparkleOverlay and sparkleOverlay.Parent then
-						sparkleOverlay.ImageTransparency = 0.5 + 0.3 * math.sin(a * math.pi * 2)
-						sparkleOverlay.Rotation = a * 360 
-					end
-				end)
-				wait(0.05)
-			end
-		end)
-		spawn(function()
-			while self.crystalOverlay do
-				Tween(1.5, 'easeInOutSine', function(a)
-					if crystalTexture and crystalTexture.Parent then
-						crystalTexture.ImageTransparency = 0.25 + 0.1 * math.sin(a * math.pi * 2)
-					end
-				end)
+				time = time + 0.05
+				spriteLabel.ImageColor3 = Color3.fromRGB(
+					math.min(255, self.originalImageColor.R * 255 + 80 + 20 * math.sin(time * 3)),
+					math.min(255, self.originalImageColor.G * 255 + 80 + 20 * math.sin(time * 3)),
+					math.min(255, self.originalImageColor.B * 255 + 100 + 30 * math.sin(time * 3))
+				)
+				for i, data in pairs(sparkles) do
+					local sparkle = data.sparkle
+					local baseAngle = data.angle + time * 0.5
+					local radius = 0.4 + 0.05 * math.sin(time * 2 + i)
+					sparkle.Position = UDim2.new(
+						0.5 + math.cos(baseAngle) * radius,
+						0,
+						0.5 + math.sin(baseAngle) * radius,
+						0
+					)
+					sparkle.ImageTransparency = 0.3 + 0.4 * math.abs(math.sin(time * 3 + i))
+					sparkle.Rotation = baseAngle * 57.2958
+				end
 				wait(0.05)
 			end
 		end)
@@ -1284,15 +1284,21 @@ return function(_p)
 		if not self.crystalOverlay then return end
 		local container = self.crystalOverlay
 		self.crystalOverlay = nil
-		local children = container:GetChildren()
-		Tween(0.5, 'easeOutCubic', function(a)
-			for _, child in pairs(children) do
-				if child:IsA('ImageLabel') then
-					child.ImageTransparency = child.ImageTransparency + (1 - child.ImageTransparency) * a
+		self.crystalSparkles = nil
+		if self.animation and self.animation.spriteLabel and self.originalImageColor then
+			self.animation.spriteLabel.ImageColor3 = self.originalImageColor
+			self.originalImageColor = nil
+		end
+		if self.crystalSparkles then
+			for _, data in pairs(self.crystalSparkles) do
+				if data.sparkle then
+					Tween(0.3, 'easeOutCubic', function(a)
+						data.sparkle.ImageTransparency = 0.3 + (0.7 * a)
+					end)
 				end
 			end
-		end)
-		delay(0.5, function()
+		end
+		delay(0.3, function()
 			if container then
 				container:Destroy()
 			end
