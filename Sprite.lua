@@ -41,11 +41,11 @@ return function(_p)
 				return
 			end
 			local cam = workspace.CurrentCamera
-			local lv = (cam.Focus.p - cam.CFrame.p).unit * xzPlane
+			local lv = (cam.Focus.Position - cam.CFrame.Position).unit * xzPlane
 			for _, s in pairs(Sprites) do
 				local part = s.part
 				if part then
-					local p = s.cf.p + v3(0, part.Size.y/2, 0) + s.offset
+					local p = s.cf.Position + v3(0, part.Size.y/2, 0) + s.offset
 					part.CFrame = cframe(p, p - lv)
 				end
 			end
@@ -94,7 +94,7 @@ return function(_p)
 		end
 		local cam = workspace.CurrentCamera
 		local camBefore = cam.CFrame
-		local camGoalFocus = self.cf.p + Vector3.new(0, 2.25, 0)
+		local camGoalFocus = self.cf.Position + Vector3.new(0, 2.25, 0)
 		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector * Vector3.new(12, 6, 12), camGoalFocus) + (offset or Vector3.new())
 		Tween(1.2, "easeOutCubic", function(a)
 			cam.CFrame = camBefore:lerp(camGoal, a)
@@ -126,7 +126,7 @@ return function(_p)
 		end
 		local cam = workspace.CurrentCamera
 		local camBefore = cam.CFrame
-		local camGoalFocus = self.cf.p + Vector3.new(0, 2.25, 0)
+		local camGoalFocus = self.cf.Position + Vector3.new(0, 2.25, 0)
 		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector * Vector3.new(12, 6, 12), camGoalFocus) + (offset or Vector3.new())
 		Utilities.pTween(cam, "CFrame", camGoal, 1.2, "easeOutCubic", nil, function()
 			if callback then
@@ -154,7 +154,7 @@ return function(_p)
 			return self.part.Position
 		else
 			local cf = self.battle and self.battle['CoordinateFrame'..self.siden]
-			return cf and cf.p or Vector3.new(0, 0, 0)
+			return cf and cf.Position or Vector3.new(0, 0, 0)
 		end
 	end
 	function Sprite:getSize()
@@ -168,7 +168,7 @@ return function(_p)
 		if self.part then
 			return self.part
 		else
-			local pos = (self.battle and self.battle['CoordinateFrame'..self.siden].p) or Vector3.new(0, 0, 0)
+			local pos = (self.battle and self.battle['CoordinateFrame'..self.siden].Position) or Vector3.new(0, 0, 0)
 			return {
 				Position = pos,
 				Size = Vector3.new(2, 3, 0.2),
@@ -269,7 +269,7 @@ return function(_p)
 		zfield.Parent = workspace
 		sprite.cf = CFrame.new(zp) + Vector3.new(0, main.Size.Y / 2, 0)
 		local trainer = self:getTrainer()
-		local cp = zfield.PlayerPos.Position + Vector3.new(0, zfield.PlayerPos.Size.Y / 2 + (
+		local cp = zfield.PlayerPos.Position + Vector3.new(0, zfield.PlayerPos.Size.Y / 2 + 1.7999999999999998, 0)
 		local tcf = CFrame.new(cp, Vector3.new(zp.X, cp.Y, zp.Z))
 		trainer.Root.CFrame = tcf
 		trainer.BodyPosition.Position = tcf.Position
@@ -553,7 +553,7 @@ return function(_p)
 		end)
 		local _, ambientStartSat, ambientStartVal = Color3.new(ambientBefore)
 		local sLabel = self.animation.spriteLabel
-		local camGoalFocus = self.cf.p + Vector3.new(0, .25*18/2-inAirBefore, 0)
+		local camGoalFocus = self.cf.Position + Vector3.new(0, .25*18/2-inAirBefore, 0)
 		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector*Vector3.new(12, 6, 12), camGoalFocus)
 		local lerp = select(2, Utilities.lerpCFrame(camBefore, camGoal))
 		local rst = tick()
@@ -581,7 +581,7 @@ return function(_p)
 		local egg = megaEffect.Egg
 		local scale = .25
 		Utilities.ScaleModel(megaEffect.Base, scale, true)
-		local cf = self.cf * CFrame.Angles(0, math.pi/12
+		local cf = self.cf * CFrame.Angles(0, math.pi/12, 0) + Vector3.new(0, -.5*scale-inAirBefore, 0)
 		local orb = megaEffect.Orb
 		local innerEffect = megaEffect.InnerEnergy
 		local outerEffect = megaEffect.OuterEnergy
@@ -613,7 +613,7 @@ return function(_p)
 		local shellOffsets = {}
 		for _, ch in pairs(egg:GetChildren()) do
 			ch.BrickColor = color1
-			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.p).unit}
+			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.Position).unit}
 		end
 		local stimer = Utilities.Timing.sineBack(1)
 		local ecfi, ecfo = innerEffect.Hinge.CFrame, outerEffect.Hinge.CFrame
@@ -756,7 +756,7 @@ return function(_p)
 			end
 		end)
 		local sLabel = self.animation.spriteLabel
-		local camGoalFocus = self.cf.p + Vector3.new(0, .25*18/2-inAirBefore, 0)
+		local camGoalFocus = self.cf.Position + Vector3.new(0, .25*18/2-inAirBefore, 0)
 		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector*Vector3.new(12, 6, 12), camGoalFocus)
 		local lerp = select(2, Utilities.lerpCFrame(camBefore, camGoal))
 		local rst = tick()
@@ -813,7 +813,7 @@ return function(_p)
 		for _, ch in pairs(egg:GetChildren()) do
 			ch.BrickColor = crystalColor
 			ch.Material = Enum.Material.Glass
-			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.p).unit}
+			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.Position).unit}
 		end
 		local stimer = Utilities.Timing.sineBack(1)
 		local ecfi, ecfo
@@ -892,7 +892,7 @@ return function(_p)
 		spawn(function() _p.MusicManager:fadeToVolume(true, .65, 1) end)
 		Utilities.sound(486262895, nil, nil, 10)
 		local sLabel = self.animation.spriteLabel
-		local camGoalFocus = self.cf.p + Vector3.new(0, .25*18/2-inAirBefore, 0)
+		local camGoalFocus = self.cf.Position + Vector3.new(0, .25*18/2-inAirBefore, 0)
 		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector*Vector3.new(12, 6, 12), camGoalFocus)
 		local lerp = select(2, Utilities.lerpCFrame(camBefore, camGoal))
 		Tween(1.5, nil, function(a)
@@ -928,8 +928,8 @@ return function(_p)
 			ch.BrickColor = BrickColor.new('Institutional white')
 			ch.Material = Enum.Material.Glass
 			ch.Transparency = 0
-			ch.CFrame = ocf + (ch.Position - ocf.p).unit * .4
-			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.p).unit}
+			ch.CFrame = ocf + (ch.Position - ocf.Position).unit * .4
+			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.Position).unit}
 		end
 		egg.Parent = megaEffect
 		wait(0.3)
@@ -963,7 +963,7 @@ return function(_p)
 		end
 		berry.Parent = self.battle.scene
 		local main = berry.Main
-		local p2 = self.battle.CoordinateFrame2 + (self.battle.CoordinateFrame1.p - self.battle.CoordinateFrame2.p).unit * 2 + Vector3.new(0, 0.1, 0)
+		local p2 = self.battle.CoordinateFrame2 + (self.battle.CoordinateFrame1.Position - self.battle.CoordinateFrame2.Position).unit * 2 + Vector3.new(0, 0.1, 0)
 		local rarm, gripOffset, holdDur
 		local trainer = self.battle.playerModelObj
 		rarm = trainer.Model:FindFirstChild("Right Arm") or trainer.Model:FindFirstChild("RightHand")
@@ -1004,8 +1004,8 @@ return function(_p)
 		local pokeball = (storage.Models.Pokeballs:FindFirstChild(ballId) or storage.Models.pokeball):Clone()
 		pokeball.Parent = self.battle.scene
 		local p2 = (self.battle.CoordinateFrame1 + Vector3.new(0, self.part.Size.Y, 0)) * CFrame.new(0, 0, .25)
-		p2 = p2 + (self.battle.CoordinateFrame2.p-self.battle.CoordinateFrame1.p)
-		local p1 = p2 + (self.battle.CoordinateFrame1.p-self.battle.CoordinateFrame2.p)*1.5 + Vector3.new(0, -self.part.Size.Y+4, 0)
+		p2 = p2 + (self.battle.CoordinateFrame2.Position-self.battle.CoordinateFrame1.Position)
+		local p1 = p2 + (self.battle.CoordinateFrame1.Position-self.battle.CoordinateFrame2.Position)*1.5 + Vector3.new(0, -self.part.Size.Y+4, 0)
 		delay(.5, function()
 			Utilities.sound(300394723, nil, nil, 10)
 			Tween(.4, 'easeOutCubic', function(a)
@@ -1052,7 +1052,7 @@ return function(_p)
 			end)
 		else
 			Tween(1, 'easeOutCubic', function(a)
-				MoveModel(pokeball.Main, (p1+(p2.p-p1.p)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*6.8, 0, 0), true)
+				MoveModel(pokeball.Main, (p1+(p2.Position-p1.Position)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*6.8, 0, 0), true)
 			end)
 		end	
 		Tween(.2, nil, function(a)
@@ -1069,7 +1069,7 @@ return function(_p)
 			wait(.1)
 		end
 		Tween(.2*self.part.Size.Y, 'easeInQuad', function(a)
-			local pos = cf.p - Vector3.new(0, (self.part.Size.Y-pokeball.Main.Size.Y/2)*a, 0)
+			local pos = cf.Position - Vector3.new(0, (self.part.Size.Y-pokeball.Main.Size.Y/2)*a, 0)
 			local look = (cf.lookVector*Vector3.new(1, 1-a, 1)).unit
 			MoveModel(pokeball.Main, CFrame.new(pos, pos+look), true)
 		end)
@@ -1098,7 +1098,7 @@ return function(_p)
 			Utilities.sound(300394776, nil, nil, 5)
 			for i = 1, 12 do
 				_p.Particles:new {
-					Position = cf.p,
+					Position = cf.Position,
 					Velocity = Vector3.new(0, 5, 0),
 					VelocityVariation = 30,
 					Acceleration = Vector3.new(0, -5, 0),
@@ -1438,7 +1438,7 @@ return function(_p)
 					ImageRectSize = imageRectSize,
 					ImageRectOffset = imageRectOffset,
 					Position = cf * Vector3.new(math.cos(theta)*r, math.sin(theta)*r, -.5),
-					Velocity = (cf-cf.p) * Vector3.new(math.cos(theta)*v, math.sin(theta)*v, 0),
+					Velocity = (cf-cf.Position) * Vector3.new(math.cos(theta)*v, math.sin(theta)*v, 0),
 					Acceleration = false,
 					Lifetime = .7,
 					OnUpdate = function(a, gui)
@@ -1674,10 +1674,10 @@ return function(_p)
 				targetPos = self.part.Position
 				targetSize = self.part.Size.Y
 			else
-				targetPos = cf.p
+				targetPos = cf.Position
 				targetSize = 5
 			end
-			p2 = (cf - cf.p + targetPos + Vector3.new(0, targetSize/2, 0)) * CFrame.new(0, 0, .25)
+			p2 = (cf - cf.Position + targetPos + Vector3.new(0, targetSize/2, 0)) * CFrame.new(0, 0, .25)
 		end
 		local p1 = p2 * CFrame.new(0, 0, 4)
 		local speed = 1
@@ -1778,7 +1778,7 @@ return function(_p)
 						gType = 'water'
 					end
 					for i, p in pairs(values[gType]) do
-						if (pdata.weightkg < p[1] and pdata.weightkg > p[2]) or i == #values then
+						if (pdata.weightkg < p[1] and pdata.weightkg > p[2]) or i == #values[gType] then
 							shakeValue = p[4]
 							Utilities.sound(p[3])
 							shake(shakeValue, .3)
@@ -1798,7 +1798,7 @@ return function(_p)
 					else
 						cf = CFrame.new(pos)
 					end
-					cf = cf-cf.p+pos
+					cf = cf-cf.Position+pos
 					pcall(function() stampEmitter[stamp.style](stamp, cf) end)
 					wait(.1)
 				end
@@ -1869,7 +1869,7 @@ return function(_p)
 			end)
 		else 
 			Tween(1/speed, 'easeOutCubic', function(a)
-				MoveModel(pokeball.Main, (p1+(p2.p-p1.p)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
+				MoveModel(pokeball.Main, (p1+(p2.Position-p1.Position)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
 			end)
 		end
 		delay(1/speed, function() 
@@ -1889,9 +1889,9 @@ return function(_p)
 			self.animation:Pause()
 			return
 		end
-		local pos = (self.part.CFrame*CFrame.new(0, -self.part.Size.Y/2+1, 0)).p
+		local pos = (self.part.CFrame*CFrame.new(0, -self.part.Size.Y/2+1, 0)).Position
 		local cf = self.battle['CoordinateFrame'..self.siden]
-		cf = cf - cf.p + pos
+		cf = cf - cf.Position + pos
 		local part = create 'Part' {
 			Transparency = 1.0,
 			Anchored = true,
@@ -1939,7 +1939,7 @@ return function(_p)
 				lastp = a
 				_p.Particles:new {
 					Image = 6604459090,
-					Position = cf.p,
+					Position = cf.Position,
 					Size = .25+.5*math.random(),
 					Velocity = Vector3.new(0, 1+7*math.random(), 0),
 					VelocityVariation = 10,
@@ -2031,9 +2031,9 @@ return function(_p)
 			self.animation:Pause()
 			return
 		end
-		local pos = (self.part.CFrame * CFrame.new(0, -self.part.Size.Y/2+1, 0)).p
+		local pos = (self.part.CFrame * CFrame.new(0, -self.part.Size.Y/2+1, 0)).Position
 		local cf = self.battle["CoordinateFrame"..self.siden]
-		cf = cf - cf.p + pos
+		cf = cf - cf.Position + pos
 		local part = create("Part")({
 			Transparency = 1.0,
 			Anchored = true,
@@ -2073,7 +2073,7 @@ return function(_p)
 				lastP = a
 				_p.Particles:new({
 					Image = 6604459090,
-					Position = cf.p,
+					Position = cf.Position,
 					Size = .25+.5*math.random(),
 					Velocity = Vector3.new(0, 1+7*math.random(), 0),
 					VelocityVariation = 10,
@@ -2119,7 +2119,7 @@ return function(_p)
 		gigantamaxball.Parent = self.battle.scene
 		do
 			local cf = self.battle['CoordinateFrame'..self.siden]
-			p2 = (cf - cf.p + self.part.Position + Vector3.new(0, self.part.Size.Y/2, 0)) * CFrame.new(0, 0, .25)
+			p2 = (cf - cf.Position + self.part.Position + Vector3.new(0, self.part.Size.Y/2, 0)) * CFrame.new(0, 0, .25)
 		end
 		p1 = p2 * CFrame.new(0, 0, 4)
 		task.delay(.8 / speed, function()
@@ -2159,7 +2159,7 @@ return function(_p)
 			end)
 		end)
 		Utilities.Tween(1 / speed, "easeOutCubic", function(a)
-			Utilities.MoveModel(gigantamaxball.Main, (p1+(p2.p-p1.p)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
+			Utilities.MoveModel(gigantamaxball.Main, (p1+(p2.Position-p1.Position)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
 		end)
 		task.delay(1 / speed, function()
 			gigantamaxball:Destroy()
@@ -2185,9 +2185,9 @@ return function(_p)
 			self.animation:Pause()
 			return
 		end
-		local pos = (self.part.CFrame * CFrame.new(0, -self.part.Size.Y/2+1, 0)).p
+		local pos = (self.part.CFrame * CFrame.new(0, -self.part.Size.Y/2+1, 0)).Position
 		local cf = self.battle["CoordinateFrame"..self.siden]
-		cf = cf - cf.p + pos
+		cf = cf - cf.Position + pos
 		local part = create("Part")({
 			Transparency = 1.0,
 			Anchored = true,
@@ -2227,7 +2227,7 @@ return function(_p)
 				lastP = a
 				_p.Particles:new({
 					Image = 6604459090,
-					Position = cf.p,
+					Position = cf.Position,
 					Size = .25+.5*math.random(),
 					Velocity = Vector3.new(0, 1+7*math.random(), 0),
 					VelocityVariation = 10,
@@ -2273,7 +2273,7 @@ return function(_p)
 		gigantamaxball.Parent = self.battle.scene
 		do
 			local cf = self.battle['CoordinateFrame'..self.siden]
-			p2 = (cf - cf.p + self.part.Position + Vector3.new(0, self.part.Size.Y/2, 0)) * CFrame.new(0, 0, .25)
+			p2 = (cf - cf.Position + self.part.Position + Vector3.new(0, self.part.Size.Y/2, 0)) * CFrame.new(0, 0, .25)
 		end
 		p1 = p2 * CFrame.new(0, 0, 4)
 		task.delay(.8 / speed, function()
@@ -2313,7 +2313,7 @@ return function(_p)
 			end)
 		end)
 		Utilities.Tween(1 / speed, "easeOutCubic", function(a)
-			Utilities.MoveModel(gigantamaxball.Main, (p1+(p2.p-p1.p)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
+			Utilities.MoveModel(gigantamaxball.Main, (p1+(p2.Position-p1.Position)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
 		end)
 		task.delay(1 / speed, function()
 			gigantamaxball:Destroy()
