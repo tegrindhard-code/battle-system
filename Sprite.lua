@@ -783,13 +783,17 @@ return function(_p)
 		Utilities.ScaleModel(megaEffect.Base, scale, true)
 		local cf = self.cf * CFrame.Angles(0, math.pi/12, 0) + Vector3.new(0, -.5*scale-inAirBefore, 0)
 		local orb = megaEffect.Orb
-		local innerEffect = megaEffect.InnerEnergy
-		local outerEffect = megaEffect.OuterEnergy
+		local innerEffect = megaEffect:FindFirstChild('InnerEnergy')
+		local outerEffect = megaEffect:FindFirstChild('OuterEnergy')
 		local fullsize = orb.Size
-		innerEffect.EnergyPart.Transparency = 1.0
-		outerEffect.EnergyPart.Transparency = 1.0
-		innerEffect.EnergyPart.BrickColor = typeColor
-		outerEffect.EnergyPart.BrickColor = typeColor
+		if innerEffect then
+			innerEffect.EnergyPart.Transparency = 1.0
+			innerEffect.EnergyPart.BrickColor = typeColor
+		end
+		if outerEffect then
+			outerEffect.EnergyPart.Transparency = 1.0
+			outerEffect.EnergyPart.BrickColor = typeColor
+		end
 		MoveModel(megaEffect.Base, cf, true)
 		local ocf = orb.CFrame
 		egg.Parent = nil
@@ -812,7 +816,11 @@ return function(_p)
 			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.p).unit}
 		end
 		local stimer = Utilities.Timing.sineBack(1)
-		local ecfi, ecfo = innerEffect.Hinge.CFrame, outerEffect.Hinge.CFrame
+		local ecfi, ecfo
+		if innerEffect and outerEffect then
+			ecfi = innerEffect.Hinge.CFrame
+			ecfo = outerEffect.Hinge.CFrame
+		end
 		Tween(1.5, 'easeInCubic', function(a)
 			cam.CFrame = camGoal * rumble()
 			orb.Size = fullsize*(.95+.2*a)
@@ -820,10 +828,14 @@ return function(_p)
 			for sh, d in pairs(shellOffsets) do
 				sh.CFrame = d[1] + d[2]*.4*a
 			end
-			innerEffect.EnergyPart.Transparency = 1-stimer(a)
-			outerEffect.EnergyPart.Transparency = 1-stimer(a)
-			MoveModel(innerEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
-			MoveModel(outerEffect.Hinge, ecfo * CFrame.Angles(-a*5, 0, 0))
+			if innerEffect then
+				innerEffect.EnergyPart.Transparency = 1-stimer(a)
+				MoveModel(innerEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
+			end
+			if outerEffect then
+				outerEffect.EnergyPart.Transparency = 1-stimer(a)
+				MoveModel(outerEffect.Hinge, ecfo * CFrame.Angles(-a*5, 0, 0))
+			end
 		end)
 		cam.CFrame = camGoal
 		sLabel.ImageColor3 = Color3.new(1, 1, 1)

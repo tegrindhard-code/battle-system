@@ -633,7 +633,8 @@ function BattlePokemon:getRequestData() -- for pokemon in request.active (for re
 	if self.teamn then data.teamn = self.teamn end
 	if self.canMegaEvo then data.canMegaEvo = true end
 	if self.canZMove then data.canZMove = self.canZMove end
-	if self.teraType and not self.isTerastallized then data.canTerastallize = self.teraType end
+	local canTera = self.battle:canTerastallize(self)
+	if canTera then data.canTerastallize = canTera end
 	if isLastActive then
 		if self.maybeDisabled then
 			data.maybeDisabled = true
