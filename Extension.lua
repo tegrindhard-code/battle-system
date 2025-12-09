@@ -175,7 +175,7 @@ return function(Battle)
 		self:useMove(move, pokemon, target, sourceEffect, zMove)
 		self:singleEvent('AfterMove', move, nil, pokemon, target, move)
 
-		if pokemon.isTerastallized then
+		if pokemon.isTerastallized and _f.PlayerDataService then
 			local playerData = self:getPlayerDataForPokemon(pokemon)
 			print("[TERA DEBUG] Move used while terastallized by", pokemon.name)
 			print("[TERA DEBUG] playerData:", playerData)
