@@ -175,13 +175,15 @@ return function(Battle)
 		self:useMove(move, pokemon, target, sourceEffect, zMove)
 		self:singleEvent('AfterMove', move, nil, pokemon, target, move)
 
-		-- Drain 5% Tera Orb charge if Pokemon is Terastallized and used a move
 		if pokemon.isTerastallized then
 			local playerData = self:getPlayerDataForPokemon(pokemon)
 			if playerData then
 				local newCharge = (playerData.teraOrbCharge or 100) - 5
-				playerData:setTeraOrbCharge(newCharge, false) -- Don't send NPCChat message
-				self:add('-teracharge', pokemon, newCharge) -- Send battle message instead
+				playerData:setTeraOrbCharge(newCharge, false)
+				self:add('-teracharge', pokemon, newCharge)
+				if newCharge <= 0 then
+					self:add('-unterastallize', pokemon)
+				end
 			end
 		end
 	end

@@ -5,12 +5,9 @@ return function(_p)
 		class = util.class
 		null = util.null
 	end
-
-	--local _p = require(script.Parent.Parent)--storage.Plugins)
 	local Utilities = _p.Utilities
 	local Tween, MoveModel = Utilities.Tween, Utilities.MoveModel
 	local create = Utilities.Create
-
 	local dataChanges = {
 		alpha = {
 			size = 1.25,
@@ -21,13 +18,12 @@ return function(_p)
 			weight = 1.2
 		},
 		dynamax = {
-			size = 2, --weight doesn't change 
+			size = 2, 
 			size2 = 4,
 			size3 = 1.3
 		}
 	}
 	local Sprites = {}
-
 	local runService = game:GetService('RunService')
 	local Tools = require(script.Parent.Tools)
 	local stepped = runService.RenderStepped
@@ -55,7 +51,6 @@ return function(_p)
 			end
 		end)
 	end
-
 	local function hideAll(...)
 		for _, model in pairs({...}) do
 			for _, ch in pairs(model:GetChildren()) do
@@ -65,31 +60,24 @@ return function(_p)
 			end
 		end
 	end
-
 	local Sprite = class({
 		className = 'BattleSprite',
-
 		forme = '',
 		offset = Vector3.new(),
-
 	}, function(self, pokemon, battle, siden)
 		self.pokemon = pokemon
 		self.battle = battle
 		self.siden = siden
-
 		self.isBackSprite = siden == 1
 		self.isDyna = false
 		self.isGmax = false
 		self.isRaid = false
 		self.alpha = false
 		self.sub = nil
-
 		self:updateSpriteData()
 		self.duringMove = false
-
 		table.insert(Sprites, self)
 		bind()
-
 		return self
 	end)
 	function Sprite:closeup(offset)
@@ -140,8 +128,6 @@ return function(_p)
 		local camBefore = cam.CFrame
 		local camGoalFocus = self.cf.p + Vector3.new(0, 2.25, 0)
 		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector * Vector3.new(12, 6, 12), camGoalFocus) + (offset or Vector3.new())
-
-		-- WHO TF FORGOT THIS??? From Infrared
 		Utilities.pTween(cam, "CFrame", camGoal, 1.2, "easeOutCubic", nil, function()
 			if callback then
 				callback()
@@ -163,7 +149,6 @@ return function(_p)
 		end
 		self.spriteData = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..(self.isBackSprite and '_BACK' or '_FRONT'), spriteId, pokemon.gender=='F')
 	end
-
 	function Sprite:getPosition()
 		if self.part then
 			return self.part.Position
@@ -172,7 +157,6 @@ return function(_p)
 			return cf and cf.p or Vector3.new(0, 0, 0)
 		end
 	end
-
 	function Sprite:getSize()
 		if self.part then
 			return self.part.Size
@@ -180,7 +164,6 @@ return function(_p)
 			return Vector3.new(2, 3, 0.2)
 		end
 	end
-
 	function Sprite:getPart()
 		if self.part then
 			return self.part
@@ -193,7 +176,6 @@ return function(_p)
 			}
 		end
 	end
-
 	local mobile = Utilities.isTouchDevice()
 	function Sprite:playCry(pitch, cry, volume, speed)
 		pitch = pitch or 1.0
@@ -203,7 +185,6 @@ return function(_p)
 				local sound = create 'Sound' {
 					SoundId = 'rbxassetid://'..cry.id,
 					Volume = volume or .4,
-					--				TimePosition = cry.startTime-.05,
 					Pitch = pitch,
 					Parent = Utilities.gui,
 				}
@@ -217,7 +198,6 @@ return function(_p)
 		end
 	end
 	function Sprite:animBackground(data, fieldData, battle)
-
 		local disabledGuis = {}
 		for _, side in pairs(self.battle.sides) do
 			for _, active in pairs(side.active) do
@@ -229,7 +209,6 @@ return function(_p)
 				end)
 			end
 		end
-
 	end
 	function Sprite:getTrainer(slot)
 		slot = slot or self.slot
@@ -288,17 +267,15 @@ return function(_p)
 		Utilities.MoveModel(main, battle.CoordinateFrame1 + Vector3.new(300, 300, 300))
 		local zp = main.Position
 		zfield.Parent = workspace
-		--colour shit
 		sprite.cf = CFrame.new(zp) + Vector3.new(0, main.Size.Y / 2, 0)
 		local trainer = self:getTrainer()
-		local cp = zfield.PlayerPos.Position + Vector3.new(0, zfield.PlayerPos.Size.Y / 2 + (--[[trainer.IsR15 and trainer.Humanoid.HipHeight + trainer.Root.Size.Y / 2 or]] 1.7999999999999998), 0)
+		local cp = zfield.PlayerPos.Position + Vector3.new(0, zfield.PlayerPos.Size.Y / 2 + (
 		local tcf = CFrame.new(cp, Vector3.new(zp.X, cp.Y, zp.Z))
 		trainer.Root.CFrame = tcf
 		trainer.BodyPosition.Position = tcf.Position
 		trainer.BodyGyro.CFrame = tcf
 		local R6 = zfield.R6
 		local R15 = zfield.R15
-		--r6 aura
 		if trainer.Model:FindFirstChild('Head') then
 			R6.Head.Flame.Parent = trainer.Model:FindFirstChild('Head')
 			R6.Head.Flame1.Parent = trainer.Model:FindFirstChild('Head')
@@ -335,7 +312,6 @@ return function(_p)
 			R6['Left Leg'].Glow.Parent = trainer.Model:FindFirstChild('Left Leg')
 			R6['Left Leg'].Specs.Parent = trainer.Model:FindFirstChild('Left Leg')
 		end	
-		--r15 aura
 		if trainer.Model:FindFirstChild('LeftHand') then
 			R15.LeftHand.Flame.Parent = trainer.Model:FindFirstChild('LeftHand')
 			R15.LeftHand.Flame1.Parent = trainer.Model:FindFirstChild('LeftHand')
@@ -449,49 +425,19 @@ return function(_p)
 		local a = b * math.tan(math.rad(fov0 / 2))
 		local inAir = (sprite.spriteData.inAir or 0) * 0.75
 		local xOffset = sprite.spriteData.xOffset or 0
-		cam.CFrame = CFrame.new((cp + dir / b) + Vector3.new(0, 0, 3) , cp) --+ dir * b, cp)--CFrame.new(cp + dir * b, cp)zfield.Playercam.CFrame
-		local animtrack = trainer.ZDance--trainer.Humanoid:LoadAnimation(Utilities.Create("Animation")({
-		--AnimationId = "rbxassetid://" .. _p.animationId[(trainer.IsR15 and "R15_" or "") .. "ZDance"]
-		--}))
-
+		cam.CFrame = CFrame.new((cp + dir / b) + Vector3.new(0, 0, 3) , cp) 
+		local animtrack = trainer.ZDance
 		animtrack:Play(0)
 		wait(3.8)
-
 		Utilities.Tween(0.6, "easeOutQuart", function(alpha)
 			local focus = cp + dif * distance * 0.75 * alpha
 			local bt = b * (1 + 1.5 / alpha)
 			local roll = math.rad(15 * alpha) * sideDirection
-			cam.CFrame = CFrame.new((cp + dir / bt) + Vector3.new(0, 0, 86 * alpha), focus) * CFrame.Angles(0, 0, -roll) + Vector3.new(xOffset, inAir, 0) --	cam.CFrame = CFrame.new(cp + dir * bt, focus) * CFrame.Angles(0, 0, -roll) + Vector3.new(0, inAir, 0)
-
+			cam.CFrame = CFrame.new((cp + dir / bt) + Vector3.new(0, 0, 86 * alpha), focus) * CFrame.Angles(0, 0, -roll) + Vector3.new(xOffset, inAir, 0) 
 			cam.FieldOfView = (2 * math.deg(math.atan(alpha / bt)) + fov0) / 2
 		end)
 		battle:startZPowerGlow(sprite)
 		battle:message(poke:getName() .. " surrounded itself with its Z-Power!")
-		--Custom		
-
-		--local zWrittenWord = write("Light That Burns The Sky")({
-		--	Frame = create("Frame")({
-		--		BackgroundTransparency = 1,
-		--		Size = UDim2.new(1, 0, 0.4, 0),
-		--		Position = UDim2.new(0, 0, 0.3, 0),
-		--		ZIndex = 8,
-		--		Parent = s
-		--	}),
-		--	Scaled = true
-		--})
-		--local zLetters = {}
-		--local zPos = {}
-		--for _, l in pairs(zWrittenWord.Labels) do
-		--	local p = (l.AbsolutePosition.X - s.AbsolutePosition.X) / s.AbsoluteSize.X
-		--	zLetters[l] = p
-		--	zPos[l] = l.Position
-		--end		
-		--for l, p in pairs(zLetters) do
-		--	local o = (a + p) % 1
-		--	l.Position = zPos[l] + UDim2.new(0, 0, 0.2 * ta * math.sin(o * math.pi * 2), 0)
-		--end
-
-		--
 		animtrack:Stop(0)
 		pcall(function()
 			animtrack:Destroy()
@@ -517,133 +463,6 @@ return function(_p)
 				g.Visible = true
 			end)
 		end
-
-
-
-
-
-
-		--		local disabledGuis = {}
-		--		for _, side in pairs(self.battle.sides) do
-		--			for _, active in pairs(side.active) do
-		--				pcall(function()
-		--					if active.statbar.main.Visible then
-		--						active.statbar.main.Visible = false
-		--						table.insert(disabledGuis, active.statbar.main)
-		--					end
-		--				end)
-		--			end
-		--		end
-		--		--Disabled GUI
-		--		local cam = workspace.CurrentCamera
-		--		local camBefore = cam.CFrame
-		--		local camBefore2 = cam.FieldOfView
-
-		--		--Saves current BattleCam position
-		--		spawn(function() _p.MusicManager:fadeToVolume(true, .65, 1) end)
-		--		Utilities.sound(0, nil, nil, 10) --Updated Sound ID
-		--		--Zmove Sound w/dance
-		--		local ZMoveDance = _p.storage.Models.Misc.ZMove:Clone()
-		--		ZMoveDance.Parent = workspace
-
-		--		local playerpos = ZMoveDance.PlayerPos
-		--		local pokepos = ZMoveDance.PokePos
-		--		local pokecam = ZMoveDance.Pokecam
-		--		local playercam = ZMoveDance.Playercam
-		--		local pokemon = self.pokemon
-		--		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-		--		self.slot = slot
-		--		local Currentdata = self.CoordinateFrame2 
-		--		local data  = _p.DataManager:getSprite((pokemon.shiny and '_SHINY' or '')..'_FRONT', spriteId)
-		--		local Currentdata2 = self.spriteData
-		--		--self.spriteData = data
-		--		local og = self.part
-		--		self.part = pokepos
-
-		--		self:updateSpriteData(true)
-		--		self:renderNewSpriteData(pokepos)
-		--		--local a = _p.AnimatedSprite:New(self.spriteData)
-
-
-		--		--a.spriteLabel.Parent = pokepos.Gui 
-		--		--local posPart = pokepos
-		--		--self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(0, data.inAir or 0, 0)
-		--		local scale = data.scale or 1
-		--		--pokepos.Size = Vector3.new(data.fWidth/25*scale, data.fHeight/25*scale, 0.6)
-		--		--pokepos.CFrame = self.cf + Vector3.new(0, pokepos.Size.y/2, 0)
-		--		--pokepos.Gui.CanvasSize = Vector2.new(data.fWidth, data.fHeight)
-		--		--a:Play()
-
-		--		local trainer
-		--		if self.siden == 1 then
-		--			trainer = self.battle.playerModelObj
-		--		else
-		--			trainer = self.battle.trainerModelObj
-		--		end
-		--		local Player = trainer.Model
-		--		trainer.faded = false
-		--		self.CoordinateFrame2 = CFrame.new(playerpos.Position) + Vector3.new(0, -playerpos.Size.Y/2, 0)
-
-		--		Player.Parent = ZMoveDance
-		--		cam.FieldOfView = 70 
-		--		trainer.Root.CFrame = self.CoordinateFrame2 + Vector3.new(0, 3*scale, 0)
-		--		trainer.Root.Anchored = true
-		--		cam.CFrame = playercam.CFrame
-		--		spawn(function() _p.MusicManager:fadeToVolume(true, 1, .8) end)
-		--		trainer.ZDance:Play(.5)
-		--		--AnimationPlay
-		--wait(3)
-		--		--Removal of Dance
-		--		local TweenService = game:GetService("TweenService")
-
-		--		local tweenInfo = TweenInfo.new(
-		--			.7, -- time 
-		--			Enum.EasingStyle.Linear, -- style
-		--			Enum.EasingDirection.Out, -- direction
-		--			0, -- repeat count
-		--			false, -- reverses
-		--			0  	 -- delaytime
-		--		);
-		--		local tween = TweenService:Create(cam, tweenInfo, {CFrame = pokecam.CFrame});
-		--		tween:Play()
-		--		wait(2)
-		--		--Zoom On Poke
-		--		self.spriteData = Currentdata2
-		--		self.offset = Vector3.new()
-		--		self.part = og
-		--		--self:updateSpriteData()
-		--		--self:renderNewSpriteData()
-
-		--		cam.CFrame = camBefore
-		--		cam.FieldOfView = camBefore2
-		--		--self.animation.spriteLabel.Parent = og
-		--		--self:updateSpriteData()
-		--		--self:renderNewSpriteData(og)
-		--		--local b = _p.AnimatedSprite:New(self.spriteData)
-
-
-		--		--b.spriteLabel.Parent = og
-		--		--local posPart = pokepos
-		--		--self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(0, data.inAir or 0, 0)
-		--		--local scale = data.scale or 1
-		--		--pokepos.Size = Vector3.new(data.fWidth/25*scale, data.fHeight/25*scale, 0.6)
-		--		--pokepos.CFrame = self.cf + Vector3.new(0, pokepos.Size.y/2, 0)
-		--		--pokepos.Gui.CanvasSize = Vector2.new(data.fWidth, data.fHeight)
-		--		--b:Play()
-
-
-		--		for _, g in pairs(disabledGuis) do
-		--			pcall(function() g.Visible = true end)
-		--		end
-
-		--		Player.Parent = nil
-		--		trainer.faded = true
-		--		trainer.Root.Anchored = false
-		--		ZMoveDance:Destroy()
-
-		--		self.CoordinateFrame2 = Currentdata
-		--		--Removal
-		--		--self.stopZPowerGlow() -- Not Needed
 	end
 	function Sprite:animMegaEvolve(megaEvolutionSpriteData, color1, color2, color3)
 		if self.battle.fastForward then
@@ -652,7 +471,6 @@ return function(_p)
 			self:renderNewSpriteData()
 			return
 		end
-		--	Utilities.print_r(megaEvolutionSpriteData.cry)
 		local disabledGuis = {}
 		for _, side in pairs(self.battle.sides) do
 			for _, active in pairs(side.active) do
@@ -667,22 +485,12 @@ return function(_p)
 				end)
 			end
 		end
-
-		--	local color1, color2, color3 = _p.colorBox1.Text, _p.colorBox2.Text, _p.colorBox3.Text--_p.BrickColor.new('Cyan'), BrickColor.new('Bright orange')
-		--	color1 = BrickColor.new(color1)
-		--	color2 = BrickColor.new(color2)
-		--	if color3 == '' then
-		--		color3 = nil
-		--	else
-		--		color3 = BrickColor.new(color3)
-		--	end
 		color1, color2 = BrickColor.new(color1), BrickColor.new(color2)
 		if color3 == 0 then
 			color3 = color2
 		else
 			color3 = BrickColor.new(color3)
 		end
-
 		_p.DataManager:preloadSprites(megaEvolutionSpriteData)
 		local inAirBefore = self.spriteData.inAir or 0
 		local inAirAfter  = megaEvolutionSpriteData.inAir or 0
@@ -691,22 +499,14 @@ return function(_p)
 		local part = self.part
 		local lighting = game:GetService('Lighting')
 		local ambientBefore = lighting.OutdoorAmbient
-
 		spawn(function() _p.MusicManager:fadeToVolume(true, .65, 1) end)
 		Utilities.sound(486262895, nil, nil, 10)
-
-		spawn(function() -- particles 477984910
+		spawn(function() 
 			local twopi = math.pi*2
 			local rand = math.random
 			local cos, sin = math.cos, math.sin
 			local freq = 3.5
 			local absorbDuration = 2
-			--		spawn(function()
-			--			Tween(2, 'easeInCubic', function(a)
-			----				freq = 2 + 4*a
-			--				absorbDuration = 2-.5*a
-			--			end)
-			--		end)
 			local st = tick()
 			while tick()-st < 4.25 do
 				local color = (color3 or color2).Color
@@ -752,9 +552,8 @@ return function(_p)
 			end
 		end)
 		local _, ambientStartSat, ambientStartVal = Color3.new(ambientBefore)
-		-- goal HSV: 0.016, 1, 0.5
 		local sLabel = self.animation.spriteLabel
-		local camGoalFocus = self.cf.p + Vector3.new(0, .25*18/2-inAirBefore, 0)--part.Position - self.offset - Vector3.new(0, inAirBefore, 0)
+		local camGoalFocus = self.cf.p + Vector3.new(0, .25*18/2-inAirBefore, 0)
 		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector*Vector3.new(12, 6, 12), camGoalFocus)
 		local lerp = select(2, Utilities.lerpCFrame(camBefore, camGoal))
 		local rst = tick()
@@ -770,7 +569,6 @@ return function(_p)
 		end
 		Tween(3, nil, function(a)
 			cam.CFrame = lerp(a) * rumble()
-			--		lighting.OutdoorAmbient = Color3.fromHSV(.016, ambientStartSat+(1-ambientStartSat)*a, ambientStartVal+(.5-ambientStartVal)*a)
 			if a < .5 then
 				local aa = a*2
 				self.offset = Vector3.new(0, -inAirBefore*aa, 0)
@@ -781,14 +579,13 @@ return function(_p)
 		end)
 		local megaEffect = _p.storage.Models.Misc.Mega:Clone()
 		local egg = megaEffect.Egg
-		local scale = .25--part.Size.Y/12
+		local scale = .25
 		Utilities.ScaleModel(megaEffect.Base, scale, true)
-		local cf = self.cf * CFrame.Angles(0, math.pi/12--[[*2*math.random()]], 0) + Vector3.new(0, -.5*scale-inAirBefore, 0)
+		local cf = self.cf * CFrame.Angles(0, math.pi/12
 		local orb = megaEffect.Orb
 		local innerEffect = megaEffect.InnerEnergy
 		local outerEffect = megaEffect.OuterEnergy
 		local fullsize = orb.Size
-		--	orb.PointLight.Range = 0
 		innerEffect.EnergyPart.Transparency = 1.0
 		outerEffect.EnergyPart.Transparency = 1.0
 		innerEffect.EnergyPart.BrickColor = color1
@@ -803,7 +600,6 @@ return function(_p)
 			cam.CFrame = camGoal * rumble()
 			orb.Size = fullsize*a
 			orb.CFrame = ocf
-			--		orb.PointLight.Range = 20*scale*a
 			if t > .5 and t < .8 then
 				local sc = 1-shrinkTimer((t-.5))*.55
 				sLabel.Size = UDim2.new(sc, 0, sc, 0)
@@ -814,10 +610,6 @@ return function(_p)
 		egg.Parent = megaEffect
 		orb.Material = Enum.Material.Neon
 		orb.BrickColor = color2
-		--	Tween(.5, 'easeInCubic', function(a)
-		--		orb.Size = fullsize*(1.05-.1*a)
-		--		orb.CFrame = ocf
-		--	end)
 		local shellOffsets = {}
 		for _, ch in pairs(egg:GetChildren()) do
 			ch.BrickColor = color1
@@ -846,7 +638,7 @@ return function(_p)
 		delay(.25, function()
 			local cry = megaEvolutionSpriteData.cry
 			if cry then
-				if not mobile then waitTime = cry.duration end -- change if mobile gets cries
+				if not mobile then waitTime = cry.duration end 
 				self:playCry(nil, cry, .6)
 			end
 		end)
@@ -864,19 +656,16 @@ return function(_p)
 			end
 		end)
 		megaEffect:Destroy()
-
 		wait(waitTime and (waitTime - .15) or .5)
 		lerp = select(2, Utilities.lerpCFrame(cam.CFrame, camBefore))
 		spawn(function() _p.MusicManager:fadeToVolume(true, 1, .8) end)
 		Tween(.8, 'easeOutCubic', function(a)
 			local cf = lerp(a)
-			cam.CFrame = cf--CFrame.new(cf.p, cf.p+cf.lookVector)
+			cam.CFrame = cf
 		end)
-
 		for _, g in pairs(disabledGuis) do
 			pcall(function() g.Visible = true end)
 		end
-
 		for _, side in pairs(self.battle.sides) do
 			for _, active in pairs(side.active) do
 				pcall(function()
@@ -889,14 +678,11 @@ return function(_p)
 				end)
 			end
 		end
-
 	end
-
 	function Sprite:animTerastallize(teraType)
 		if self.battle.fastForward then
 			return
 		end
-
 		local disabledGuis = {}
 		for _, side in pairs(self.battle.sides) do
 			for _, active in pairs(side.active) do
@@ -911,24 +697,19 @@ return function(_p)
 				end)
 			end
 		end
-
-		-- Crystallization colors - crystal white with type-colored energy
 		local crystalColor = BrickColor.new('Institutional white')
-		local typeColor = BrickColor.new('Cyan') -- Default cyan, could map teraType to color
-
+		local typeColor = BrickColor.new('Cyan') 
 		local inAirBefore = self.spriteData.inAir or 0
 		local cam = workspace.CurrentCamera
 		local camBefore = cam.CFrame
 		local part = self.part
-
 		spawn(function() _p.MusicManager:fadeToVolume(true, .65, 1) end)
-		Utilities.sound(486262895, nil, nil, 10) -- Same sound as mega evolution
-
-		spawn(function() -- Crystal sparkle particles
+		Utilities.sound(486262895, nil, nil, 10) 
+		spawn(function() 
 			local twopi = math.pi*2
 			local rand = math.random
 			local cos, sin = math.cos, math.sin
-			local freq = 4.5 -- More frequent for crystallization
+			local freq = 4.5 
 			local absorbDuration = 1.5
 			local st = tick()
 			while tick()-st < 3.5 do
@@ -974,7 +755,6 @@ return function(_p)
 				wait(1/freq)
 			end
 		end)
-
 		local sLabel = self.animation.spriteLabel
 		local camGoalFocus = self.cf.p + Vector3.new(0, .25*18/2-inAirBefore, 0)
 		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector*Vector3.new(12, 6, 12), camGoalFocus)
@@ -982,7 +762,7 @@ return function(_p)
 		local rst = tick()
 		local function rumble()
 			local et = tick()-rst
-			local mag = .05 -- Lighter rumble for crystallization
+			local mag = .05 
 			if et < 1 then
 				mag = mag * et
 			elseif et > 4 then
@@ -990,7 +770,6 @@ return function(_p)
 			end
 			return CFrame.new(0, math.sin(et*50)*mag, 0)
 		end
-
 		Tween(2.5, nil, function(a)
 			cam.CFrame = lerp(a) * rumble()
 			if a > .6 then
@@ -998,8 +777,6 @@ return function(_p)
 				sLabel.ImageColor3 = Color3.new(aa,aa,aa)
 			end
 		end)
-
-		-- Crystal shell effect
 		local megaEffect = _p.storage.Models.Misc.Mega:Clone()
 		local egg = megaEffect.Egg
 		local scale = .25
@@ -1009,7 +786,6 @@ return function(_p)
 		local innerEffect = megaEffect.InnerEnergy
 		local outerEffect = megaEffect.OuterEnergy
 		local fullsize = orb.Size
-
 		innerEffect.EnergyPart.Transparency = 1.0
 		outerEffect.EnergyPart.Transparency = 1.0
 		innerEffect.EnergyPart.BrickColor = typeColor
@@ -1018,27 +794,23 @@ return function(_p)
 		local ocf = orb.CFrame
 		egg.Parent = nil
 		orb.BrickColor = crystalColor
-		orb.Material = Enum.Material.Glass -- Glass material for crystal effect
+		orb.Material = Enum.Material.Glass 
 		megaEffect.Parent = self.battle.scene
-
 		Tween(.8, 'easeOutCubic', function(a, t)
 			cam.CFrame = camGoal * rumble()
 			orb.Size = fullsize*a
 			orb.CFrame = ocf
 		end)
-
 		sLabel.Visible = false
 		egg.Parent = megaEffect
 		orb.BrickColor = typeColor
 		orb.Material = Enum.Material.Neon
-
 		local shellOffsets = {}
 		for _, ch in pairs(egg:GetChildren()) do
 			ch.BrickColor = crystalColor
 			ch.Material = Enum.Material.Glass
 			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.p).unit}
 		end
-
 		local stimer = Utilities.Timing.sineBack(1)
 		local ecfi, ecfo = innerEffect.Hinge.CFrame, outerEffect.Hinge.CFrame
 		Tween(1.5, 'easeInCubic', function(a)
@@ -1053,11 +825,9 @@ return function(_p)
 			MoveModel(innerEffect.Hinge, ecfi * CFrame.Angles(a*7, 0, 0))
 			MoveModel(outerEffect.Hinge, ecfo * CFrame.Angles(-a*5, 0, 0))
 		end)
-
 		cam.CFrame = camGoal
 		sLabel.ImageColor3 = Color3.new(1, 1, 1)
 		sLabel.Visible = true
-
 		Tween(.6, nil, function(a)
 			orb.Size = fullsize*(1.15+a)
 			orb.Transparency = a
@@ -1072,7 +842,6 @@ return function(_p)
 			end
 		end)
 		megaEffect:Destroy()
-
 		wait(.4)
 		lerp = select(2, Utilities.lerpCFrame(cam.CFrame, camBefore))
 		spawn(function() _p.MusicManager:fadeToVolume(true, 1, .8) end)
@@ -1080,11 +849,9 @@ return function(_p)
 			local cf = lerp(a)
 			cam.CFrame = cf
 		end)
-
 		for _, g in pairs(disabledGuis) do
 			pcall(function() g.Visible = true end)
 		end
-
 		for _, side in pairs(self.battle.sides) do
 			for _, active in pairs(side.active) do
 				pcall(function()
@@ -1097,11 +864,84 @@ return function(_p)
 				end)
 			end
 		end
+		self:addCrystallization()
+		self:addTeraJewel(teraType)
 	end
-
+	function Sprite:animUnterastallize()
+		if self.battle.fastForward then
+			self:removeCrystallization()
+			self:removeTeraJewel()
+			return
+		end
+		local inAirBefore = self.spriteData.inAir or 0
+		local cam = workspace.CurrentCamera
+		local camBefore = cam.CFrame
+		local part = self.part
+		spawn(function() _p.MusicManager:fadeToVolume(true, .65, 1) end)
+		Utilities.sound(486262895, nil, nil, 10)
+		local sLabel = self.animation.spriteLabel
+		local camGoalFocus = self.cf.p + Vector3.new(0, .25*18/2-inAirBefore, 0)
+		local camGoal = CFrame.new(camGoalFocus - camBefore.lookVector*Vector3.new(12, 6, 12), camGoalFocus)
+		local lerp = select(2, Utilities.lerpCFrame(camBefore, camGoal))
+		Tween(1.5, nil, function(a)
+			cam.CFrame = lerp(a)
+		end)
+		local megaEffect = _p.storage.Models.Misc.Mega:Clone()
+		local egg = megaEffect.Egg
+		local scale = .25
+		Utilities.ScaleModel(megaEffect.Base, scale, true)
+		local cf = self.cf * CFrame.Angles(0, math.pi/12, 0) + Vector3.new(0, -.5*scale-inAirBefore, 0)
+		local orb = megaEffect.Orb
+		local innerEffect = megaEffect:FindFirstChild('InnerEnergy')
+		local outerEffect = megaEffect:FindFirstChild('OuterEnergy')
+		local fullsize = orb.Size
+		if innerEffect then
+			innerEffect.EnergyPart.Transparency = 1.0
+			innerEffect.EnergyPart.BrickColor = BrickColor.new('Institutional white')
+		end
+		if outerEffect then
+			outerEffect.EnergyPart.Transparency = 1.0
+			outerEffect.EnergyPart.BrickColor = BrickColor.new('Institutional white')
+		end
+		MoveModel(megaEffect.Base, cf, true)
+		local ocf = orb.CFrame
+		orb.BrickColor = BrickColor.new('Institutional white')
+		orb.Material = Enum.Material.Glass
+		orb.Size = fullsize
+		orb.Transparency = 0
+		megaEffect.Parent = self.battle.scene
+		egg.Parent = nil
+		local shellOffsets = {}
+		for _, ch in pairs(egg:GetChildren()) do
+			ch.BrickColor = BrickColor.new('Institutional white')
+			ch.Material = Enum.Material.Glass
+			ch.Transparency = 0
+			ch.CFrame = ocf + (ch.Position - ocf.p).unit * .4
+			shellOffsets[ch] = {ch.CFrame, (ch.Position - ocf.p).unit}
+		end
+		egg.Parent = megaEffect
+		wait(0.3)
+		Tween(0.8, 'easeInCubic', function(a)
+			orb.Size = fullsize*(1+.3*a)
+			orb.Transparency = a
+			orb.CFrame = ocf
+			for sh, d in pairs(shellOffsets) do
+				sh.CFrame = d[1] + d[2]*(8*a)
+				sh.Transparency = a
+			end
+		end)
+		megaEffect:Destroy()
+		self:removeCrystallization()
+		self:removeTeraJewel()
+		wait(.2)
+		lerp = select(2, Utilities.lerpCFrame(cam.CFrame, camBefore))
+		spawn(function() _p.MusicManager:fadeToVolume(true, 1, .8) end)
+		Tween(.8, 'easeOutCubic', function(a)
+			cam.CFrame = lerp(a)
+		end)
+	end
 	function Sprite:animThrowBerry(brickColorName)
 		if not self.battle.isSafari then return end
-
 		local berry = storage.Models.Berry:Clone()
 		local brickColor = BrickColor.new(brickColorName)
 		for _, p in pairs(berry:GetChildren()) do
@@ -1114,9 +954,6 @@ return function(_p)
 		local p2 = self.battle.CoordinateFrame2 + (self.battle.CoordinateFrame1.p - self.battle.CoordinateFrame2.p).unit * 2 + Vector3.new(0, 0.1, 0)
 		local rarm, gripOffset, holdDur
 		local trainer = self.battle.playerModelObj
-		--pcall(function()
-		--	trainer.Model.HumanoidRootPart.Anchored = true
-		--end)
 		rarm = trainer.Model:FindFirstChild("Right Arm") or trainer.Model:FindFirstChild("RightHand")
 		gripOffset = rarm and rarm.Name == "Right Arm" and 1 or 0.1675
 		holdDur = rarm and rarm.Name == "Right Arm" and 0.55 or 0.45
@@ -1137,13 +974,11 @@ return function(_p)
 		end)
 		return berry
 	end
-
 	function Sprite:animSpriteJump(h, t)
 		local p = self.part
 		local offset = h or .5
 		local oPos = p.Position
 		local upPos = oPos + Vector3.new(0, offset, 0)
-
 		for i = 1, t do
 			Tween(.4/t, nil, function(a)
 				p.Position = oPos + Vector3.new(0, offset*a, 0)
@@ -1283,13 +1118,10 @@ return function(_p)
 			end)
 		end
 	end
-	-- transform
 	function Sprite:renderNewSpriteData(item, illusion)
-		-- 2D Sprite rendering path
 		if self.animation then
 			local wasPlaying = not self.animation.paused
 			self.animation:destroy()
-
 			local sd, part = self.spriteData, self.part
 			if self.slot then
 				local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..self.slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
@@ -1302,7 +1134,7 @@ return function(_p)
 				end
 				local size = Vector3.new(sd.fWidth/25*scale, sd.fHeight/25*scale, 0.6)
 				if self.alpha then
-					size = size * dataChanges.alpha.size--1.25
+					size = size * dataChanges.alpha.size
 				end
 				if self.isDyna then
 					size = size * dataChanges.dynamax.size
@@ -1312,19 +1144,9 @@ return function(_p)
 					size = size * dataChanges.dynamax.size3
 				end
 				part.Size = size
-				--	if _p.PlayerData.isDate == 'aprilfools' then
-				--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
-				--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0) * CFrame.Angles(0, math.rad(180), 0)
-				--else
 				part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
-				--end
 				part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
 			end
-			--if self.volatiles['dynamax'] then
-			--	part.Size.X = part.Size.X * 2
-			--	part.Size.Y = part.Size.Y * 2
-			--	part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
-			--end
 			local a = _p.AnimatedSprite:new(sd)
 			a.spriteLabel.Parent = part.Gui
 			if _p.PlayerData.isDate == 'aprilfools' then
@@ -1357,12 +1179,10 @@ return function(_p)
 	function Sprite:removeTransform(species)
 		if self.oldSpriteData then
 			self.spriteData = self.oldSpriteData
-			--		self.forme = ?
 			self.oldSpriteData = nil
 			self:renderNewSpriteData()
 		end
 	end
-	-- substitute
 	function Sprite:animSub()
 		if self.sub then return end
 		local subModel = storage.Models.Misc.Substitute:Clone()
@@ -1390,7 +1210,145 @@ return function(_p)
 		subModel:Destroy()
 		self.sub = nil
 	end
-	-- move
+	function Sprite:addCrystallization()
+		if self.crystalOverlay then return end
+		if not self.part or not self.part.Gui then return end
+		local container = create 'Frame' {
+			Name = 'CrystalContainer',
+			BackgroundTransparency = 1.0,
+			Size = UDim2.new(1, 0, 1, 0),
+			Position = UDim2.new(0, 0, 0, 0),
+			ZIndex = 10,
+			Parent = self.part.Gui
+		}
+		local crystalTexture = create 'ImageLabel' {
+			Name = 'CrystalTexture',
+			BackgroundTransparency = 1.0,
+			Image = 'rbxassetid://122672884871533', 
+			ImageColor3 = Color3.fromRGB(180, 220, 255), 
+			ImageTransparency = 0.25, 
+			Size = UDim2.new(1, 0, 1, 0),
+			Position = UDim2.new(0, 0, 0, 0),
+			ScaleType = Enum.ScaleType.Tile,
+			TileSize = UDim2.new(0.5, 0, 0.5, 0), 
+			ZIndex = 10,
+			Parent = container
+		}
+		local sparkleOverlay = create 'ImageLabel' {
+			Name = 'SparkleOverlay',
+			BackgroundTransparency = 1.0,
+			Image = 'rbxassetid://6490035158', 
+			ImageColor3 = Color3.fromRGB(255, 255, 255),
+			ImageTransparency = 0.5,
+			Size = UDim2.new(1.2, 0, 1.2, 0),
+			Position = UDim2.new(-0.1, 0, -0.1, 0),
+			ZIndex = 11,
+			Parent = container
+		}
+		self.crystalOverlay = container
+		spawn(function()
+			while self.crystalOverlay do
+				Tween(2, 'easeInOutSine', function(a)
+					if sparkleOverlay and sparkleOverlay.Parent then
+						sparkleOverlay.ImageTransparency = 0.5 + 0.3 * math.sin(a * math.pi * 2)
+						sparkleOverlay.Rotation = a * 360 
+					end
+				end)
+				wait(0.05)
+			end
+		end)
+		spawn(function()
+			while self.crystalOverlay do
+				Tween(1.5, 'easeInOutSine', function(a)
+					if crystalTexture and crystalTexture.Parent then
+						crystalTexture.ImageTransparency = 0.25 + 0.1 * math.sin(a * math.pi * 2)
+					end
+				end)
+				wait(0.05)
+			end
+		end)
+	end
+	function Sprite:removeCrystallization()
+		if not self.crystalOverlay then return end
+		local container = self.crystalOverlay
+		self.crystalOverlay = nil
+		local children = container:GetChildren()
+		Tween(0.5, 'easeOutCubic', function(a)
+			for _, child in pairs(children) do
+				if child:IsA('ImageLabel') then
+					child.ImageTransparency = child.ImageTransparency + (1 - child.ImageTransparency) * a
+				end
+			end
+		end)
+		delay(0.5, function()
+			if container then
+				container:Destroy()
+			end
+		end)
+	end
+	local teraJewelAssets = {
+		Normal = '',
+		Fire = '',
+		Water = '',
+		Grass = '',
+		Electric = '',
+		Ice = '',
+		Fighting = '',
+		Poison = '',
+		Ground = '',
+		Flying = '',
+		Psychic = '',
+		Bug = '',
+		Rock = '',
+		Ghost = '',
+		Dragon = '',
+		Dark = '',
+		Steel = '',
+		Fairy = '',
+	}
+	function Sprite:addTeraJewel(teraType)
+		if self.teraJewel then return end
+		if not self.part or not self.part.Gui then return end
+		if not teraType or not teraJewelAssets[teraType] or teraJewelAssets[teraType] == '' then return end
+		local jewel = create 'ImageLabel' {
+			Name = 'TeraJewel',
+			BackgroundTransparency = 1.0,
+			Image = 'rbxassetid://' .. teraJewelAssets[teraType],
+			Size = UDim2.new(0.4, 0, 0.4, 0), 
+			Position = UDim2.new(0.3, 0, -0.15, 0), 
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			ZIndex = 12, 
+			Parent = self.part.Gui
+		}
+		self.teraJewel = jewel
+		spawn(function()
+			local startPos = jewel.Position
+			while self.teraJewel do
+				Tween(2, 'easeInOutSine', function(a)
+					if self.teraJewel then
+						local offset = math.sin(a * math.pi * 2) * 0.02
+						self.teraJewel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset, startPos.Y.Scale + offset, startPos.Y.Offset)
+					end
+				end)
+				wait(0.05)
+			end
+		end)
+	end
+	function Sprite:removeTeraJewel()
+		if not self.teraJewel then return end
+		local jewel = self.teraJewel
+		self.teraJewel = nil
+		Tween(0.5, 'easeOutCubic', function(a)
+			if jewel then
+				jewel.ImageTransparency = a
+			end
+		end)
+		delay(0.5, function()
+			if jewel then
+				jewel:Destroy()
+			end
+		end)
+	end
 	function Sprite:beforeMove()
 		local pokemon = self.pokemon
 		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
@@ -1406,15 +1364,13 @@ return function(_p)
 		end)
 	end
 	function Sprite:afterMove()
-
 	end
 	function Sprite:animReset()
 		self.offset = Vector3.new()
 		pcall(function() self.animation.spriteLabel.ImageTransparency = 0.0 end)
 	end
-	-- send in / out
 	local stampEmitter = {
-		function(stamp, cf) -- fountain
+		function(stamp, cf) 
 			local sheetId = stamp.sheetId
 			local s = stamp.n-1
 			local imageRectSize = Vector2.new(200, 200)
@@ -1450,7 +1406,7 @@ return function(_p)
 				}
 			end
 		end,
-		function(stamp, cf) -- explode
+		function(stamp, cf) 
 			local sheetId = stamp.sheetId
 			local s = stamp.n-1
 			local imageRectSize = Vector2.new(200, 200)
@@ -1461,8 +1417,8 @@ return function(_p)
 			local offset = math.random()*twoPi
 			for i = 1, 6 do
 				local theta = offset+twoPi/6*i+.13*(math.random()-.5)
-				local v = 5--2+3*math.random()
-				local r = .1--.5+math.random()
+				local v = 5
+				local r = .1
 				local rot = math.deg(theta)-90
 				_p.Particles:new {
 					Image = sheetId,
@@ -1470,11 +1426,9 @@ return function(_p)
 					ImageRectSize = imageRectSize,
 					ImageRectOffset = imageRectOffset,
 					Position = cf * Vector3.new(math.cos(theta)*r, math.sin(theta)*r, -.5),
-					--				Size = 1.3,
 					Velocity = (cf-cf.p) * Vector3.new(math.cos(theta)*v, math.sin(theta)*v, 0),
 					Acceleration = false,
-					--				Rotation = math.deg(theta)-90,
-					Lifetime = .7,--.4,--.2+.3*math.random()
+					Lifetime = .7,
 					OnUpdate = function(a, gui)
 						local s = .8+.8*a
 						gui.BillboardGui.Size = UDim2.new(s, 0, s, 0)
@@ -1486,7 +1440,7 @@ return function(_p)
 				}
 			end
 		end,
-		function(stamp, cf) -- wave
+		function(stamp, cf) 
 			local sheetId = stamp.sheetId
 			local s = stamp.n-1
 			local imageRectSize = Vector2.new(200, 200)
@@ -1497,27 +1451,21 @@ return function(_p)
 			local offset = math.random()*twoPi
 			for i = 1, 6 do
 				local theta = offset+twoPi/6*i+.13*(math.random()-.5)
-				--			local v = 5--2+3*math.random()
-				--			local r = .1--.5+math.random()
 				local rot = math.deg(theta)-90
 				_p.Particles:new {
 					Image = sheetId,
 					Color = rainbow and Color3.fromHSV(i/6, 1, 1) or imageColor3,
 					ImageRectSize = imageRectSize,
 					ImageRectOffset = imageRectOffset,
-					--				Position = cf * Vector3.new(math.cos(theta)*r, math.sin(theta)*r, -.5),
-					--				Size = 1.3,
-					--				Velocity = (cf-cf.p) * Vector3.new(math.cos(theta)*v, math.sin(theta)*v, 0),
 					Acceleration = false,
-					--				Rotation = math.deg(theta)-90,
-					Lifetime = .7,--.4,--.2+.3*math.random()
+					Lifetime = .7,
 					OnUpdate = function(a, gui)
 						local t = theta - .3*math.sin(a*9)
 						local r = .1 + a*.7*5
 						gui.CFrame = cf * CFrame.new(math.cos(t)*r, math.sin(t)*r, -.5)
 						local s = .8+.8*a
 						gui.BillboardGui.Size = UDim2.new(s, 0, s, 0)
-						gui.BillboardGui.ImageLabel.Rotation = rot-90*math.cos(a*9)--+160*(a-.5)
+						gui.BillboardGui.ImageLabel.Rotation = rot-90*math.cos(a*9)
 						if a > .8 then
 							gui.BillboardGui.ImageLabel.ImageTransparency = (a-.8)*5
 						end
@@ -1525,7 +1473,7 @@ return function(_p)
 				}
 			end
 		end,
-		function(stamp, cf) -- spiral
+		function(stamp, cf) 
 			local sheetId = stamp.sheetId
 			local s = stamp.n-1
 			local imageRectSize = Vector2.new(200, 200)
@@ -1536,20 +1484,14 @@ return function(_p)
 			local offset = math.random()*twoPi
 			for i = 1, 6 do
 				local theta = offset+twoPi/6*i+.13*(math.random()-.5)
-				--			local v = 5--2+3*math.random()
-				--			local r = .1--.5+math.random()
 				local rot = math.deg(theta)-90
 				_p.Particles:new {
 					Image = sheetId,
 					Color = rainbow and Color3.fromHSV(i/6, 1, 1) or imageColor3,
 					ImageRectSize = imageRectSize,
 					ImageRectOffset = imageRectOffset,
-					--				Position = cf * Vector3.new(math.cos(theta)*r, math.sin(theta)*r, -.5),
-					--				Size = 1.3,
-					--				Velocity = (cf-cf.p) * Vector3.new(math.cos(theta)*v, math.sin(theta)*v, 0),
 					Acceleration = false,
-					--				Rotation = math.deg(theta)-90,
-					Lifetime = .7,--.4,--.2+.3*math.random()
+					Lifetime = .7,
 					OnUpdate = function(a, gui)
 						local t = theta - 1.7*a
 						local r = .1 + a*.7*5
@@ -1569,8 +1511,6 @@ return function(_p)
 		self.slot = slot
 		while not self.spriteData do runService.RenderStepped:wait() end
 		local sd = self.spriteData
-
-		-- Create 2D part
 		if not self.part then
 			local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
 			self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
@@ -1586,12 +1526,7 @@ return function(_p)
 				size = size * dataChanges.alpha.size
 			end
 			part.Size = size
-			--if _p.PlayerData.isDate == 'aprilfools' then
-			--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
-			--	part.CFrame = (self.cf + Vector3.new(0, part.Size.y/2, 0)) * CFrame.Angles(0, math.rad(180), 0)
-			--else
 			part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
-			--end
 			part.Gui.CanvasSize = Vector2.new(sd.fWidth, sd.fHeight)
 			part.Name = 'Part'
 			part.Parent = self.battle.scene
@@ -1600,15 +1535,8 @@ return function(_p)
 			local posPart = self.battle.scene:FindFirstChild('pos'..self.siden..slot) or self.battle.scene[self.siden == 1 and '_User' or '_Foe']
 			self.cf = posPart.CFrame - Vector3.new(0, posPart.Size.y/2, 0) + Vector3.new(sd.xOffset or 0, sd.inAir or 0, 0)
 			local part = self.part
-			--if _p.PlayerData.isDate == 'aprilfools' then
-			--	self.cf = posPart.CFrame + Vector3.new(0, posPart.Size.y/2, 0)-- + Vector3.new(0, sd.inAir or 0, 0)
-			--	part.CFrame = (self.cf + Vector3.new(0, part.Size.y/2, 0)) * CFrame.Angles(0, math.rad(180), 0)
-			--else
 			part.CFrame = self.cf + Vector3.new(0, part.Size.y/2, 0)
-			--end
 		end
-
-		-- 2D Sprite creation path
 		if not self.animation then
 			local a = _p.AnimatedSprite:new(sd)
 			a.spriteLabel.Visible = false
@@ -1622,17 +1550,12 @@ return function(_p)
 			end
 			self.animation = a
 		end
-
 		self.animation:Play()
-
 		local customSparkle
 		local pokemon = self.pokemon
 		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
 		local pdata = _p.DataManager:getData('Pokedex', pokemon.num)
-
-		--	print(spriteId, pokemon.forme)
 		if self.forme == 'shadow' then
-
 		elseif self.alpha then
 			customSparkle = function()
 				Utilities.sound(569564686, 1.5, nil, 5)
@@ -1684,19 +1607,16 @@ return function(_p)
 				wait(.125)
 			end
 		end
-		--
 		if self.battle.kind == 'wild' and self.siden == 2 then
 			if self.animation then
 				self.animation.spriteLabel.Visible = true
 			end
 			if customSparkle or self.pokemon.shiny then delay(.5, sparkle) end
-
 			return
 		end
 		if self.animation then
 			self.animation:Play()
 		end
-
 		local pokemon = self.pokemon
 		local illusionCheck = pokemon.baseSpecies == "Zoroark"
 		pokemon.revealed = not illusionCheck
@@ -1704,7 +1624,6 @@ return function(_p)
 		if self.part and self.part:FindFirstChild('ParticleEmitter') then
 			self.part:FindFirstChild('ParticleEmitter'):Destroy()
 		end
-
 		local trainer
 		if self.siden == 1 then
 			trainer = self.battle['playerModelObj'..slot] or self.battle.playerModelObj
@@ -1731,7 +1650,6 @@ return function(_p)
 			end
 			return
 		end
-
 		local ballName = 'pokeball'
 		pcall(function() if self.pokemon.pokeball then ballName = _p.Pokemon:getPokeBall(self.pokemon.pokeball) end end)
 		local pokeball = (storage.Models.Pokeballs:FindFirstChild(ballName) or storage.Models.pokeball):Clone()
@@ -1739,23 +1657,20 @@ return function(_p)
 		pokeball.Parent = self.battle.scene
 		local p2; do
 			local cf = self.battle['CoordinateFrame'..self.siden]
-			-- Get position from 2D part
 			local targetPos, targetSize
 			if self.part then
 				targetPos = self.part.Position
 				targetSize = self.part.Size.Y
 			else
-				-- Fallback to coordinate frame position
 				targetPos = cf.p
 				targetSize = 5
 			end
 			p2 = (cf - cf.p + targetPos + Vector3.new(0, targetSize/2, 0)) * CFrame.new(0, 0, .25)
 		end
 		local p1 = p2 * CFrame.new(0, 0, 4)
-
 		local speed = 1
 		local rarm, gripOffset, holdDur
-		if trainer then -- pokeball grows in hand
+		if trainer then 
 			rarm = trainer.Model:FindFirstChild('Right Arm') or trainer.Model:FindFirstChild('RightHand')
 			gripOffset = (rarm.Name=='Right Arm') and 1 or .335/2
 			holdDur    = (rarm.Name=='Right Arm') and .55 or .45
@@ -1770,10 +1685,9 @@ return function(_p)
 					lastScale = newScale
 					MoveModel(main, rarm.CFrame * CFrame.new(0, -(newScale*.5+gripOffset)*trainerScale, 0) * CFrame.Angles(-math.pi/2, 0, 0), true)
 				end)
-				--			wait(.15/speed)
 			end
 		end
-		delay(.8/speed, function() -- cry & ball sounds
+		delay(.8/speed, function() 
 			local v = .2
 			local sound = Utilities.sound(300394663, v, nil, 5)
 			wait(.5/speed)
@@ -1791,19 +1705,16 @@ return function(_p)
 		if msgFn then
 			spawn(msgFn)
 		end
-		delay(.5/speed, function() -- pokeball opening
+		delay(.5/speed, function() 
 			Tween(.4/speed, 'easeOutCubic', function(a)
 				MoveModel(pokeball.top.Hinge,    pokeball.Hinge.CFrame * CFrame.Angles(0, 0, a*-.5))
 				MoveModel(pokeball.bottom.Hinge, pokeball.Hinge.CFrame * CFrame.Angles(0, 0, a*.5 ))
 			end)
 		end)
-
-		delay(.9/speed, function() -- pokemon growing from small / fading in from black
+		delay(.9/speed, function() 
 			if self.alpha then
 				pdata.weightkg = pdata.weightkg * dataChanges.alpha.weight
 			end
-
-			-- Only do 2D sprite animation if in 2D mode
 			if self.animation and self.part then
 				local s = self.animation.spriteLabel
 				s.Visible = true
@@ -1815,11 +1726,9 @@ return function(_p)
 				s.Position = UDim2.new(0, 0, -fallHeight, 0)
 				Tween(.3/speed, 'easeInCubic', function(a)
 					s.Size = UDim2.new(a, 0, a, 0)
-					s.Position = UDim2.new(.5-a/2, 0, -fallHeight*a, 0)--s.Position = UDim2.new(.5-a/2, 0, 0.0, 0)
+					s.Position = UDim2.new(.5-a/2, 0, -fallHeight*a, 0)
 					s.ImageColor3 = Color3.new(a, a, a)
 				end)
-
-				-- Ground landing animation (only for 2D sprites)
 				if not sd.inAir then
 					wait(.2)
 					local CFRAME = workspace.CurrentCamera.CFrame
@@ -1830,8 +1739,6 @@ return function(_p)
 							workspace.CurrentCamera.CFrame = CFRAME * CFrame.new(0, math.cos(t)*r, 0)
 						end)
 					end
-
-
 					Tween(.4, "easeInCubic", function(a)
 						s.Position = UDim2.new(0, 0, -0.5+.5*a, 0)
 					end)
@@ -1868,14 +1775,11 @@ return function(_p)
 					end
 				end
 			end
-
-
 		end)
-		if pokemon.pbs then -- poke ball stamps
+		if pokemon.pbs then 
 			delay(.8/speed, function()
 				for _, stamp in pairs(pokemon.pbs) do
 					local pos = pokeball.Main.Position
-					-- Get CFrame from 2D part
 					local cf
 					if self.part then
 						cf = self.part.CFrame
@@ -1888,7 +1792,7 @@ return function(_p)
 				end
 			end)
 		end
-		delay(.8/speed, function() -- white flash expand effect, ball disappear
+		delay(.8/speed, function() 
 			delay(.25/speed, function()
 				hideAll(pokeball.top, pokeball.bottom)
 				if pokeball:FindFirstChild('Ball') then
@@ -1901,11 +1805,8 @@ return function(_p)
 				pokeball.Main.Transparency = .5+.5*math.abs(1-a*2)
 			end)
 		end)
-
-		-- main ball movement
-		if trainer then -- throw from arm
+		if trainer then 
 			local main = pokeball.Main
-			--		local holdDur = .55
 			if not isSecondary then
 				trainer.ThrowAnimation:Play(nil, nil, speed)
 				local v = create 'BodyVelocity' {
@@ -1954,23 +1855,23 @@ return function(_p)
 			Tween(1/speed, 'easeOutCubic', function(a)
 				MoveModel(main, lerp(a) * CFrame.Angles(-a*7, 0, 0) + Vector3.new(0, math.sin(a*math.pi), 0), true)
 			end)
-		else -- throw from air
+		else 
 			Tween(1/speed, 'easeOutCubic', function(a)
 				MoveModel(pokeball.Main, (p1+(p2.p-p1.p)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
 			end)
 		end
-		--
-		delay(1/speed, function() -- ball cleanup
+		delay(1/speed, function() 
 			pokeball:Destroy()
 		end)
 		wait(.25)
-		if customSparkle or self.pokemon.shiny then -- shiny sparkle
+		if customSparkle or self.pokemon.shiny then 
 			sparkle()
 			wait(.4)
 		end
 	end
-
 	function Sprite:animUnsummon()
+		self:removeCrystallization()
+		self:removeTeraJewel()
 		if self.battle.fastForward then
 			self.animation.spriteLabel.Visible = false
 			self.animation:Pause()
@@ -1979,13 +1880,10 @@ return function(_p)
 		local pos = (self.part.CFrame*CFrame.new(0, -self.part.Size.Y/2+1, 0)).p
 		local cf = self.battle['CoordinateFrame'..self.siden]
 		cf = cf - cf.p + pos
-		--	local p, s = Utilities.extents(pos, 2)
-
 		local part = create 'Part' {
 			Transparency = 1.0,
 			Anchored = true,
 			CanCollide = false,
-			--		FormFactor = Enum.FormFactor.Custom,
 			Size = Vector3.new(.2, .2, .2),
 			CFrame = CFrame.new(pos),
 			Parent = workspace,
@@ -2004,10 +1902,7 @@ return function(_p)
 				Parent = part,
 			}
 		}
-
 		Utilities.sound(300394866, nil, .2, 8)
-
-		-- 2D sprite recall animation
 		local sprite = self.animation.spriteLabel
 		local offset = (self.part.Size.Y-1)/self.part.Size.Y - .5
 		Tween(.5, 'easeInCubic', function(a)
@@ -2021,7 +1916,6 @@ return function(_p)
 		if self.pokemon.shiny then
 			self.part.Aura:destroy()
 		end
-
 		self.animation:Pause()
 		local timerx = Utilities.Timing.easeInCubic(1)
 		local timery = Utilities.Timing.easeOutCubic(1)
@@ -2045,27 +1939,22 @@ return function(_p)
 		part:Destroy()
 	end
 	function Sprite:animDragIn(slot)
-		self:animSummon(slot) --
+		self:animSummon(slot) 
 	end
 	function Sprite:animDragOut()
 		self.pokemon.statbar:slideOffscreen(true)
 		self.pokemon.statbar = nil
-
 		if self.battle.fastForward then
 			self.animation.spriteLabel.Visible = false
 			self.animation:Pause()
 			return
 		end
-
 		local dir = -self.battle['CoordinateFrame'..self.siden].lookVector
-
-		-- 2D sprite drag out
 		local part = self.part
 		local sprite = self.animation.spriteLabel
 		local cf = part.CFrame
 		Utilities.Tween(.5, nil, function(a)
 			self.offset = dir*3*a
-			--		part.CFrame = cf + dir*3*a
 			sprite.ImageTransparency = a
 		end)
 		sprite.Visible = false
@@ -2074,11 +1963,11 @@ return function(_p)
 		if self.pokemon.shiny then
 			self.part.Aura:destroy()
 		end
-
 		self.offset = nil
-		--	part.CFrame = cf
 	end
 	function Sprite:animFaint()
+		self:removeCrystallization()
+		self:removeTeraJewel()
 		if not self.battle.fastForward then
 			self:playCry(0.75)
 		end
@@ -2087,12 +1976,9 @@ return function(_p)
 				self.pokemon.statbar:slideOffscreen(true)
 				self.pokemon.statbar = nil
 			end)
-
-			-- 2D sprite faint animation for wild battles
 			local s = self.animation.spriteLabel
 			local inAir = self.spriteData.inAir or 0
 			local xOffset = self.spriteData.xOffset or 0
-
 			Utilities.Tween(1, 'easeInCubic', function(a)
 				self.offset = Vector3.new(xOffset*a, -inAir * a, 0)
 				local o = 1-a
@@ -2107,7 +1993,6 @@ return function(_p)
 			self:animUnsummon()
 		end
 	end
-
 	function Sprite:Animgmax(Gmax)
 		local pokemon = self.pokemon
 		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
@@ -2123,8 +2008,6 @@ return function(_p)
 			end)	
 		end
 	end
-
-	-- Gigantamax
 	function Sprite:animGMax(poke, battle)
 		self:animGUnsummon()
 		task.wait(.5)
@@ -2136,12 +2019,9 @@ return function(_p)
 			self.animation:Pause()
 			return
 		end
-
 		local pos = (self.part.CFrame * CFrame.new(0, -self.part.Size.Y/2+1, 0)).p
 		local cf = self.battle["CoordinateFrame"..self.siden]
-
 		cf = cf - cf.p + pos
-
 		local part = create("Part")({
 			Transparency = 1.0,
 			Anchored = true,
@@ -2150,38 +2030,30 @@ return function(_p)
 			CFrame = CFrame.new(pos),
 			Parent = workspace
 		})
-
 		local orb = create("ImageLabel")({
 			BackgroundTransparency = 1.0,
 			Image = "rbxassetid://6604459090",
-
 			create("ImageLabel")({
 				BackgroundTransparency = 1.0,
 				Image = "rbxassetid://6604459090",
 				Size = UDim2.new(.5, 0, .5, 0),
 				Position = UDim2.new(.25, 0, .25, 0)
 			}),
-
 			Parent = create("BillboardGui")({
 				Size = UDim2.new(1.5, 0, 1.5, 0),
 				Parent = part
 			}),
 		})
-
 		Utilities.sound(300394866, nil, .2, 8)
-
 		local sprite = self.animation.spriteLabel
 		Utilities.Tween(.5, "easeInCubic", function(a)
 			orb.Size = UDim2.new(a, 0, a, 0)
 			orb.Position = UDim2.new(0.5-a/2, 0, 0.5-a/2, 0)
 		end)
-
 		sprite.Visible = false
-
 		local timerX = Utilities.Timing.easeInCubic(1)
 		local timerY = Utilities.Timing.easeOutCubic(1)
 		local lastP = 0
-
 		Utilities.Tween(.75, nil, function(a)
 			cf = cf + Vector3.new(0, timerY(a)*2, 0) - cf.lookVector*a*4.5
 			part.CFrame = cf
@@ -2205,28 +2077,22 @@ return function(_p)
 		while not self.spriteData do
 			runService.RenderStepped:wait()
 		end
-
 		local spriteData = self.spriteData
-
 		self.animation:Play()
 		local pokemon = self.pokemon
 		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-
 		local speed = 1
 		local trainer
 		local p1, p2
 		local rightArm, gripOffset, holdDur
-
 		self.animation:Play()
 		self.animation.spriteLabel.Visible = false
-
 		pokemon = self.pokemon
 		spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
 		local ParticleEmitter = self.part:FindFirstChild("ParticleEmitter")
 		if ParticleEmitter then
 			ParticleEmitter:Destroy()
 		end
-		--gigantamaxball
 		local gigantamaxball = (storage.Models.Pokeballs:FindFirstChild("dynamaxball")):Clone()
 		local function check(model: Model)
 			for _, part in pairs(model:GetChildren()) do
@@ -2239,72 +2105,53 @@ return function(_p)
 		end
 		check(gigantamaxball)
 		gigantamaxball.Parent = self.battle.scene
-
 		do
 			local cf = self.battle['CoordinateFrame'..self.siden]
 			p2 = (cf - cf.p + self.part.Position + Vector3.new(0, self.part.Size.Y/2, 0)) * CFrame.new(0, 0, .25)
 		end
 		p1 = p2 * CFrame.new(0, 0, 4)
-
-		-- Cry & Ball sounds
 		task.delay(.8 / speed, function()
 			local volume = .2
 			local sound = Utilities.sound(300394663, volume, nil, 6)
-
 			task.wait(.5 / speed)
 			task.delay(.25 / speed, function()
 				self:playCry()
 			end)
-
 			Utilities.Tween(2.5 / speed, nil, function(a)
 				sound.Volume = (1 - a) * volume
 			end)
 		end)
-
-		-- Pokeball opening
 		task.delay(.5 / speed, function()
 			Utilities.Tween(.4 / speed, "easeOutCubic", function(a)
 				Utilities.MoveModel(gigantamaxball.top.Hinge, gigantamaxball.Hinge.CFrame * CFrame.Angles(0, 0, a*-.5))
 				Utilities.MoveModel(gigantamaxball.bottom.Hinge, gigantamaxball.Hinge.CFrame * CFrame.Angles(0, 0, a*-.5))
 			end)
 		end)
-
-		-- Pokemon growing from small / fading in from black
 		task.delay(.9 / speed, function()
 			local spriteLabel = self.animation.spriteLabel
 			spriteLabel.Visible = false
-
 			Utilities.Tween(.3 / speed, "easeInCubic", function(a)
 				spriteLabel.Size = UDim2.new(a, 0, a, 0)
 				spriteLabel.Position = UDim2.new(.5-a/2, 0, 0, 0)
 				spriteLabel.ImageColor3 = Color3.new(a, a, a)
 			end)
 		end)
-
-		-- White flash expand effect, ball dissappear
 		task.delay(.8 / speed, function()
 			task.delay(.25 / speed, function()
 				hideAll(gigantamaxball.top, gigantamaxball.bottom)
 			end)
-
 			Utilities.Tween(.5 / speed, nil, function(a)
 				local s = 5*a
 				gigantamaxball.Main.Mesh.Scale = Vector3.new(s, s, s)
 				gigantamaxball.Main.Transparency = .5+.5*math.abs(1-a*2)
 			end)
 		end)
-
-		-- Main ball movement
 		Utilities.Tween(1 / speed, "easeOutCubic", function(a)
 			Utilities.MoveModel(gigantamaxball.Main, (p1+(p2.p-p1.p)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
 		end)
-
-		-- Ball cleanup
 		task.delay(1 / speed, function()
 			gigantamaxball:Destroy()
 		end)
-
-		-- Render sprite data
 		task.wait(.25)
 		pcall(function()
 			self.spriteData = _p.DataManager:getSprite((pokemon.shiny and "_SHINY" or "")..(self.isBackSprite and "_BACK" or "_FRONT"), spriteId.."-Gmax")
@@ -2312,8 +2159,6 @@ return function(_p)
 		end)
 		self.animation.spriteLabel.Visible = true
 	end
-
-	-- Dynamax
 	function Sprite:animDMax(poke, battle)
 		if storage.Models.Max.Value == 'Gmax' then
 			self:animGMax(poke, battle)
@@ -2321,7 +2166,6 @@ return function(_p)
 		end
 		self:animDUnsummon()
 		task.wait(0.5)
-		--battle:animGMax(battle, poke)
 		self:animDSummon()
 	end
 	function Sprite:animDUnsummon()
@@ -2329,12 +2173,9 @@ return function(_p)
 			self.animation:Pause()
 			return
 		end
-
 		local pos = (self.part.CFrame * CFrame.new(0, -self.part.Size.Y/2+1, 0)).p
 		local cf = self.battle["CoordinateFrame"..self.siden]
-
 		cf = cf - cf.p + pos
-
 		local part = create("Part")({
 			Transparency = 1.0,
 			Anchored = true,
@@ -2343,38 +2184,30 @@ return function(_p)
 			CFrame = CFrame.new(pos),
 			Parent = workspace
 		})
-
 		local orb = create("ImageLabel")({
 			BackgroundTransparency = 1.0,
 			Image = "rbxassetid://6604459090",
-
 			create("ImageLabel")({
 				BackgroundTransparency = 1.0,
 				Image = "rbxassetid://6604459090",
 				Size = UDim2.new(.5, 0, .5, 0),
 				Position = UDim2.new(.25, 0, .25, 0)
 			}),
-
 			Parent = create("BillboardGui")({
 				Size = UDim2.new(1.5, 0, 1.5, 0),
 				Parent = part
 			}),
 		})
-
 		Utilities.sound(300394866, nil, .2, 8)
-
 		local sprite = self.animation.spriteLabel
 		Utilities.Tween(.5, "easeInCubic", function(a)
 			orb.Size = UDim2.new(a, 0, a, 0)
 			orb.Position = UDim2.new(0.5-a/2, 0, 0.5-a/2, 0)
 		end)
-
 		sprite.Visible = false
-
 		local timerX = Utilities.Timing.easeInCubic(1)
 		local timerY = Utilities.Timing.easeOutCubic(1)
 		local lastP = 0
-
 		Utilities.Tween(.75, nil, function(a)
 			cf = cf + Vector3.new(0, timerY(a)*2, 0) - cf.lookVector*a*4.5
 			part.CFrame = cf
@@ -2398,28 +2231,22 @@ return function(_p)
 		while not self.spriteData do
 			runService.RenderStepped:wait()
 		end
-
 		local spriteData = self.spriteData
-
 		self.animation:Play()
 		local pokemon = self.pokemon
 		local spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
-
 		local speed = 1
 		local trainer
 		local p1, p2
 		local rightArm, gripOffset, holdDur
-
 		self.animation:Play()
 		self.animation.spriteLabel.Visible = false
-
 		pokemon = self.pokemon
 		spriteId = pokemon.spriteSpecies or pokemon.species or pokemon.name
 		local ParticleEmitter = self.part:FindFirstChild("ParticleEmitter")
 		if ParticleEmitter then
 			ParticleEmitter:Destroy()
 		end
-		--gigantamaxball
 		local gigantamaxball = (storage.Models.Pokeballs:FindFirstChild("dynamaxball")):Clone()
 		local function check(model: Model)
 			for _, part in pairs(model:GetChildren()) do
@@ -2432,89 +2259,64 @@ return function(_p)
 		end
 		check(gigantamaxball)
 		gigantamaxball.Parent = self.battle.scene
-
 		do
 			local cf = self.battle['CoordinateFrame'..self.siden]
 			p2 = (cf - cf.p + self.part.Position + Vector3.new(0, self.part.Size.Y/2, 0)) * CFrame.new(0, 0, .25)
 		end
 		p1 = p2 * CFrame.new(0, 0, 4)
-
-		-- Cry & Ball sounds
 		task.delay(.8 / speed, function()
 			local volume = .2
 			local sound = Utilities.sound(300394663, volume, nil, 6)
-
 			task.wait(.5 / speed)
 			task.delay(.25 / speed, function()
 				self:playCry()
 			end)
-
 			Utilities.Tween(2.5 / speed, nil, function(a)
 				sound.Volume = (1 - a) * volume
 			end)
 		end)
-
-		-- Pokeball opening
 		task.delay(.5 / speed, function()
 			Utilities.Tween(.4 / speed, "easeOutCubic", function(a)
 				Utilities.MoveModel(gigantamaxball.top.Hinge, gigantamaxball.Hinge.CFrame * CFrame.Angles(0, 0, a*-.5))
 				Utilities.MoveModel(gigantamaxball.bottom.Hinge, gigantamaxball.Hinge.CFrame * CFrame.Angles(0, 0, a*-.5))
 			end)
 		end)
-
-		-- Pokemon growing from small / fading in from black
 		task.delay(.9 / speed, function()
 			local spriteLabel = self.animation.spriteLabel
 			spriteLabel.Visible = false
-
 			Utilities.Tween(.3 / speed, "easeInCubic", function(a)
 				spriteLabel.Size = UDim2.new(a, 0, a, 0)
 				spriteLabel.Position = UDim2.new(.5-a/2, 0, 0, 0)
 				spriteLabel.ImageColor3 = Color3.new(a, a, a)
 			end)
 		end)
-
-		-- White flash expand effect, ball dissappear
 		task.delay(.8 / speed, function()
 			task.delay(.25 / speed, function()
 				hideAll(gigantamaxball.top, gigantamaxball.bottom)
 			end)
-
 			Utilities.Tween(.5 / speed, nil, function(a)
 				local s = 5*a
 				gigantamaxball.Main.Mesh.Scale = Vector3.new(s, s, s)
 				gigantamaxball.Main.Transparency = .5+.5*math.abs(1-a*2)
 			end)
 		end)
-
-		-- Main ball movement
 		Utilities.Tween(1 / speed, "easeOutCubic", function(a)
 			Utilities.MoveModel(gigantamaxball.Main, (p1+(p2.p-p1.p)*a+Vector3.new(0, math.sin(a*math.pi), 0))*CFrame.Angles(-a*7, 0, 0), true)
 		end)
-
-		-- Ball cleanup
 		task.delay(1 / speed, function()
 			gigantamaxball:Destroy()
 		end)
-
 		task.wait(.25)
 		self.animation.spriteLabel.Visible = true
 	end
-
 	function Sprite:delay(time) end
 	function Sprite:selfAnim() end
 	function Sprite:anim() end
-
 	function Sprite:destroy()
-		--	print('sprite::destroy')
 		pcall(function() self.animation:Destroy() end)
-		--	pcall(function() self.testAnimation:Destroy() end)
 		pcall(function() self.part:Destroy() end)
 		self.pokemon = nil
 		self.battle = nil
 		self.spriteData = nil
-
 	end
-
-
 	return Sprite end
