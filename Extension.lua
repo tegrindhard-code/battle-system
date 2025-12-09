@@ -896,11 +896,8 @@ return function(Battle)
 	-- Helper function to get PlayerData for a Pokemon
 	function Battle:getPlayerDataForPokemon(pokemon)
 		local player = self.listeningPlayers[pokemon.side.id]
-		if player then
-			local PlayerDataService = _f.PlayerDataService
-			if PlayerDataService and PlayerDataService.PlayerDataByPlayer then
-				return PlayerDataService.PlayerDataByPlayer[player]
-			end
+		if player and _f.PlayerDataService then
+			return _f.PlayerDataService[player]
 		end
 		return nil
 	end
