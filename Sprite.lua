@@ -1100,6 +1100,9 @@ return function(_p)
 
 		-- Add crystallization overlay to the sprite
 		self:addCrystallization()
+
+		-- Add tera jewel to pokemon's head
+		self:addTeraJewel(teraType)
 	end
 
 	function Sprite:animThrowBerry(brickColorName)
@@ -1484,6 +1487,83 @@ return function(_p)
 		delay(0.5, function()
 			if container then
 				container:Destroy()
+			end
+		end)
+	end
+
+	-- Tera Jewel (crown/gem on pokemon's head)
+	local teraJewelAssets = {
+		-- Type-specific tera jewel images (to be filled with assetids)
+		Normal = '',
+		Fire = '',
+		Water = '',
+		Grass = '',
+		Electric = '',
+		Ice = '',
+		Fighting = '',
+		Poison = '',
+		Ground = '',
+		Flying = '',
+		Psychic = '',
+		Bug = '',
+		Rock = '',
+		Ghost = '',
+		Dragon = '',
+		Dark = '',
+		Steel = '',
+		Fairy = '',
+	}
+
+	function Sprite:addTeraJewel(teraType)
+		if self.teraJewel then return end
+		if not self.part or not self.part.Gui then return end
+		if not teraType or not teraJewelAssets[teraType] or teraJewelAssets[teraType] == '' then return end
+
+		-- Create tera jewel overlay on pokemon's head
+		local jewel = create 'ImageLabel' {
+			Name = 'TeraJewel',
+			BackgroundTransparency = 1.0,
+			Image = 'rbxassetid://' .. teraJewelAssets[teraType],
+			Size = UDim2.new(0.4, 0, 0.4, 0), -- Jewel size
+			Position = UDim2.new(0.3, 0, -0.15, 0), -- Above head
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			ZIndex = 12, -- Above crystal overlay
+			Parent = self.part.Gui
+		}
+
+		self.teraJewel = jewel
+
+		-- Gentle floating animation
+		spawn(function()
+			local startPos = jewel.Position
+			while self.teraJewel do
+				Tween(2, 'easeInOutSine', function(a)
+					if self.teraJewel then
+						local offset = math.sin(a * math.pi * 2) * 0.02
+						self.teraJewel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset, startPos.Y.Scale + offset, startPos.Y.Offset)
+					end
+				end)
+				wait(0.05)
+			end
+		end)
+	end
+
+	function Sprite:removeTeraJewel()
+		if not self.teraJewel then return end
+
+		local jewel = self.teraJewel
+		self.teraJewel = nil
+
+		-- Fade out the jewel
+		Tween(0.5, 'easeOutCubic', function(a)
+			if jewel then
+				jewel.ImageTransparency = a
+			end
+		end)
+
+		delay(0.5, function()
+			if jewel then
+				jewel:Destroy()
 			end
 		end)
 	end
@@ -2071,6 +2151,7 @@ return function(_p)
 	function Sprite:animUnsummon()
 		-- Remove crystallization overlay if present
 		self:removeCrystallization()
+		self:removeTeraJewel()
 
 		if self.battle.fastForward then
 			self.animation.spriteLabel.Visible = false
@@ -2182,6 +2263,7 @@ return function(_p)
 	function Sprite:animFaint()
 		-- Remove crystallization overlay if present
 		self:removeCrystallization()
+		self:removeTeraJewel()
 
 		if not self.battle.fastForward then
 			self:playCry(0.75)
