@@ -1222,10 +1222,13 @@ return function(Battle)
 				poke.sprite:animTerastallize(teraType)
 				addAction(poke:getName() .. " Terastallized into the " .. teraType .. " type!")
 			elseif arg1 == '-teracharge' then
-				-- Display Tera Orb charge message in battle
 				local poke = self:getPokemon(args[2])
 				local charge = tonumber(args[3])
 				self:message("Your Tera Orb is now " .. charge .. "% charged!")
+			elseif arg1 == '-unterastallize' then
+				local poke = self:getPokemon(args[2])
+				poke.sprite:animUnterastallize()
+				addAction(poke:getName() .. " reverted to normal!")
 			elseif arg1 == '-zmove' then 
 				--'-zmove', pokemon, target, zMove, move
 				if args[3] == 'Rayquaza' then
