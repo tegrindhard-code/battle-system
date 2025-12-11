@@ -739,6 +739,7 @@ return function(Battle)
 				return false
 			end
 		end
+		
 		if moveData.self then
 			local selfRoll
 			if not isSecondary and moveData.self.boosts then selfRoll = math.random(100) end
@@ -893,30 +894,23 @@ return function(Battle)
 		return true
 	end
 
-	-- Helper function to get PlayerData for a Pokemon
 	function Battle:getPlayerDataForPokemon(pokemon)
 		local player = self.listeningPlayers[pokemon.side.id]
 		if player then
-			local PlayerDataService = _f.PlayerDataService
-			if PlayerDataService and PlayerDataService.PlayerDataByPlayer then
-				return PlayerDataService.PlayerDataByPlayer[player]
-			end
+			local PlayerDataService = require(script.Parent.Parent.PlayerDataService).PlayerDataByPlayer
+		
+				return PlayerDataService
+		
 		end
-		return nil
 	end
 
-	-- Terastallization functions
 	function Battle:canTerastallize(pokemon)
-		-- Check if Pokemon has a Tera type
 		if not pokemon.teraType then return false end
 
-		-- Check if already Terastallized
 		if pokemon.isTerastallized then return false end
 
-		-- Check if this Pokemon already used Terastallization in battle
 		if pokemon.usedTerastallization then return false end
 
-		-- Check if Pokemon is holding a Tera Orb
 		if pokemon.item ~= 'teraorb' then return false end
 
 		-- Check if player has Tera Orb with sufficient charge (at least 10%)
@@ -940,8 +934,8 @@ return function(Battle)
 			print("[TERA DEBUG] Current charge:", playerData.teraOrbCharge)
 			local newCharge = (playerData.teraOrbCharge or 100) - 10
 			print("[TERA DEBUG] New charge after -10%:", newCharge)
-			playerData:setTeraOrbCharge(newCharge, false) -- Don't send NPCChat message
-			self:add('-teracharge', pokemon, newCharge) -- Send battle message instead
+			playerData:setTeraOrbCharge(newCharge, false) 
+			self:add('-teracharge', pokemon, newCharge)
 		else
 			print("[TERA DEBUG] No playerData found!")
 		end
