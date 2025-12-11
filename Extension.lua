@@ -897,10 +897,8 @@ return function(Battle)
 	function Battle:getPlayerDataForPokemon(pokemon)
 		local player = self.listeningPlayers[pokemon.side.id]
 		if player then
-			local PlayerDataService = require(script.Parent.Parent.PlayerDataService).PlayerDataByPlayer
-		
-				return PlayerDataService
-		
+			local PlayerDataByPlayer = require(script.Parent.Parent.PlayerDataService)
+			return PlayerDataByPlayer[player]
 		end
 	end
 
