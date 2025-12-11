@@ -153,6 +153,8 @@ local publicFns = {
 	updateSafariSteps     = true,
 	getSafariSteps        = true,
 	setSafariSteps        = true,
+	getTeraOrbCharge      = true,
+	setTeraOrbCharge      = true,
 	getGreenhouseState    = true,
 	giveEkans             = true,
 	birdsitem             = true,
@@ -4677,6 +4679,22 @@ function PlayerData:setSafariSteps(steps)
 	return false
 end
 
+function PlayerData:getTeraOrbCharge()
+	return self.teraOrbCharge or 100
+end
+
+function PlayerData:setTeraOrbCharge(charge, showMessage)
+	if type(charge) == 'number' then
+		self.teraOrbCharge = math.max(0, math.min(100, charge))
+		_f.Network:post('PDChanged', self.player, 'teraOrbCharge', self.teraOrbCharge)
+		if showMessage then
+			_f.Network:post('ShowTeraOrbChargeMessage', self.player, self.teraOrbCharge)
+		end
+		return true
+	end
+	return false
+end
+
 function PlayerData:buySushi()
 	if not self:addMoney(-5000) then return 'nm' end
 	local fortunes = {
@@ -6486,7 +6504,7 @@ do
 		local saveString
 		local buffer = BitBuffer.Create()
 
-		local version = 17
+		local version = 18
 		buffer:WriteUnsigned(6, version)
 
 		--// Name
@@ -6531,6 +6549,9 @@ do
 
 		--// Safari Steps
 		buffer:WriteUnsigned(10, math.min(1023, self.safariSteps or 500))
+
+		--// Tera Orb Charge
+		buffer:WriteUnsigned(7, math.min(100, math.max(0, self.teraOrbCharge or 100)))
 
 		--// Honey & Encounters
 		buffer:WriteUnsigned(12, math.min(4095, self.lastDrifloonEncounterWeek))
@@ -6770,6 +6791,13 @@ do
 		--// Safari Steps
 		if version >= 17 then
 			self.safariSteps = buffer:ReadUnsigned(10)
+		end
+
+		--// Tera Orb Charge
+		if version >= 18 then
+			self.teraOrbCharge = buffer:ReadUnsigned(7)
+		else
+			self.teraOrbCharge = 100  -- Default to full charge for old saves
 		end
 
 		--// Encounters
