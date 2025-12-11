@@ -1331,38 +1331,53 @@ return function(_p)
 			end
 		end)
 	end
+	-- Tera Jewel Asset IDs (add your rbxassetid numbers here)
 	local teraJewelAssets = {
-		Normal = '',
-		Fire = '',
-		Water = '',
-		Grass = '',
-		Electric = '',
-		Ice = '',
-		Fighting = '',
-		Poison = '',
-		Ground = '',
-		Flying = '',
-		Psychic = '',
-		Bug = '',
-		Rock = '',
-		Ghost = '',
-		Dragon = '',
-		Dark = '',
-		Steel = '',
-		Fairy = '',
+		Normal = '',    -- Add asset ID here
+		Fire = '',      -- Add asset ID here
+		Water = '',     -- Add asset ID here
+		Grass = '',     -- Add asset ID here
+		Electric = '',  -- Add asset ID here
+		Ice = '',       -- Add asset ID here
+		Fighting = '',  -- Add asset ID here
+		Poison = '',    -- Add asset ID here
+		Ground = '',    -- Add asset ID here
+		Flying = '',    -- Add asset ID here
+		Psychic = '',   -- Add asset ID here
+		Bug = '',       -- Add asset ID here
+		Rock = '',      -- Add asset ID here
+		Ghost = '',     -- Add asset ID here
+		Dragon = '',    -- Add asset ID here
+		Dark = '',      -- Add asset ID here
+		Steel = '',     -- Add asset ID here
+		Fairy = '',     -- Add asset ID here
 	}
 	function Sprite:addTeraJewel(teraType)
 		if self.teraJewel then return end
-		if not self.part or not self.part.Gui then return end
+		if not self.part or not self.part.Gui or not self.animation or not self.animation.spriteLabel then return end
 		if not teraType or not teraJewelAssets[teraType] or teraJewelAssets[teraType] == '' then return end
+
+		-- Get sprite dimensions to calculate head position
+		local spriteLabel = self.animation.spriteLabel
+		local spriteSize = spriteLabel.ImageRectSize
+		local guiSize = self.part.Gui.AbsoluteSize
+
+		-- Calculate jewel size based on sprite proportions (20% of sprite height)
+		local jewelSizeY = (spriteSize.Y / guiSize.Y) * 0.2
+		local jewelSizeX = jewelSizeY -- Keep it square
+
+		-- Position above the sprite's head (centered X, top 15% of sprite for Y)
+		-- The Y position is negative to place it above, calculated as a percentage of sprite height
+		local headYOffset = -(spriteSize.Y / guiSize.Y) * 0.15
+
 		local jewel = create 'ImageLabel' {
 			Name = 'TeraJewel',
 			BackgroundTransparency = 1.0,
 			Image = 'rbxassetid://' .. teraJewelAssets[teraType],
-			Size = UDim2.new(0.4, 0, 0.4, 0), 
-			Position = UDim2.new(0.3, 0, -0.15, 0), 
+			Size = UDim2.new(jewelSizeX, 0, jewelSizeY, 0),
+			Position = UDim2.new(0.5, 0, headYOffset, 0),
 			AnchorPoint = Vector2.new(0.5, 0.5),
-			ZIndex = 12, 
+			ZIndex = 12,
 			Parent = self.part.Gui
 		}
 		self.teraJewel = jewel

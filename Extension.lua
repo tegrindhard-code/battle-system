@@ -181,13 +181,19 @@ return function(Battle)
 			print("[TERA DEBUG] playerData:", playerData)
 			if playerData then
 				print("[TERA DEBUG] Current charge before move:", playerData.teraOrbCharge)
-				local newCharge = (playerData.teraOrbCharge or 100) - 5
-				print("[TERA DEBUG] New charge after -5%:", newCharge)
-				playerData:setTeraOrbCharge(newCharge, false)
-				self:add('-teracharge', pokemon, newCharge)
-				if newCharge <= 0 then
-					print("[TERA DEBUG] Charge reached 0, unterastallizing")
-					self:add('-unterastallize', pokemon)
+				local currentCharge = playerData.teraOrbCharge or 100
+				if currentCharge <= 5 then
+					-- Not enough charge to drain, unterastallize
+					print("[TERA DEBUG] Not enough charge, unterastallizing")
+					playerData:setTeraOrbCharge(0, false)
+					self:add('-teracharge', pokemon, 0)
+					self:runUnterastallize(pokemon)
+				else
+					-- Drain 5% charge
+					local newCharge = currentCharge - 5
+					print("[TERA DEBUG] New charge after -5%:", newCharge)
+					playerData:setTeraOrbCharge(newCharge, false)
+					self:add('-teracharge', pokemon, newCharge)
 				end
 			else
 				print("[TERA DEBUG] No playerData found for move drain!")
@@ -932,7 +938,7 @@ return function(Battle)
 			print("[TERA DEBUG] Current charge:", playerData.teraOrbCharge)
 			local newCharge = (playerData.teraOrbCharge or 100) - 10
 			print("[TERA DEBUG] New charge after -10%:", newCharge)
-			playerData:setTeraOrbCharge(newCharge, false) 
+			playerData:setTeraOrbCharge(newCharge, false)
 			self:add('-teracharge', pokemon, newCharge)
 		else
 			print("[TERA DEBUG] No playerData found!")
@@ -956,6 +962,30 @@ return function(Battle)
 
 		-- Update type display (silent to avoid duplicate message)
 		self:add('-start', pokemon, 'typechange', pokemon.teraType, '[silent]')
+
+		-- Boost all stats by 3
+		self:boost({atk = 3, def = 3, spa = 3, spd = 3, spe = 3}, pokemon, pokemon, self:getEffect('Terastallization'))
+
+		return true
+	end
+
+	function Battle:runUnterastallize(pokemon)
+		if not pokemon.isTerastallized then return false end
+
+		-- Remove Terastallized state
+		pokemon.isTerastallized = false
+
+		-- Restore original type display
+		local types = pokemon:getTypes(true)
+		self:add('-start', pokemon, 'typechange', table.concat(types, '/'), '[silent]')
+
+		-- Update details
+		pokemon.details = pokemon.template.species .. ', L' .. pokemon.level ..
+			(pokemon.gender == '' and '' or ', ') .. pokemon.gender ..
+			(pokemon.set.shiny and ', shiny' or '')
+
+		-- Announce Unterastallization
+		self:add('-unterastallize', pokemon)
 
 		return true
 	end
