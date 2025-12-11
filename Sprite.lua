@@ -1235,6 +1235,22 @@ return function(_p)
 			ZIndex = 9,
 			Parent = self.part.Gui
 		}
+		-- Add crystal overlay that matches the sprite shape
+		local crystalShape = create 'ImageLabel' {
+			Name = 'CrystalShape',
+			BackgroundTransparency = 1.0,
+			Image = spriteLabel.Image,
+			ImageRectOffset = spriteLabel.ImageRectOffset,
+			ImageRectSize = spriteLabel.ImageRectSize,
+			ImageColor3 = Color3.fromRGB(200, 230, 255),
+			ImageTransparency = 0.3,
+			Size = UDim2.new(0.667, 0, 0.667, 0),  -- Adjusted to match sprite in 1.5x container
+			Position = UDim2.new(0.167, 0, 0.167, 0),  -- Center in 1.5x container
+			AnchorPoint = Vector2.new(0, 0),
+			ZIndex = 8,
+			Parent = container
+		}
+		self.crystalShape = crystalShape
 		local sparkles = {}
 		for i = 1, 8 do
 			local angle = (i / 8) * math.pi * 2
@@ -1263,6 +1279,16 @@ return function(_p)
 					math.min(255, self.originalImageColor.G * 255 + 80 + 20 * math.sin(time * 3)),
 					math.min(255, self.originalImageColor.B * 255 + 100 + 30 * math.sin(time * 3))
 				)
+				-- Animate crystal overlay with pulsing shimmer effect
+				if self.crystalShape then
+					local shimmer = math.sin(time * 4) * 0.1
+					self.crystalShape.ImageTransparency = 0.3 + shimmer
+					self.crystalShape.ImageColor3 = Color3.fromRGB(
+						math.min(255, 200 + 55 * math.sin(time * 3)),
+						math.min(255, 230 + 25 * math.sin(time * 3.5)),
+						255
+					)
+				end
 				for i, data in pairs(sparkles) do
 					local sparkle = data.sparkle
 					local baseAngle = data.angle + time * 0.5
@@ -1285,6 +1311,7 @@ return function(_p)
 		local container = self.crystalOverlay
 		self.crystalOverlay = nil
 		self.crystalSparkles = nil
+		self.crystalShape = nil
 		if self.animation and self.animation.spriteLabel and self.originalImageColor then
 			self.animation.spriteLabel.ImageColor3 = self.originalImageColor
 			self.originalImageColor = nil
