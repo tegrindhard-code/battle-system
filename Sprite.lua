@@ -1331,25 +1331,26 @@ return function(_p)
 			end
 		end)
 	end
+	-- Tera Jewel Asset IDs (add your rbxassetid numbers here)
 	local teraJewelAssets = {
-		Normal = '',
-		Fire = '',
-		Water = '',
-		Grass = '',
-		Electric = '',
-		Ice = '',
-		Fighting = '',
-		Poison = '',
-		Ground = '',
-		Flying = '',
-		Psychic = '',
-		Bug = '',
-		Rock = '',
-		Ghost = '',
-		Dragon = '',
-		Dark = '',
-		Steel = '',
-		Fairy = '',
+		Normal = '',    -- Add asset ID here
+		Fire = '',      -- Add asset ID here
+		Water = '',     -- Add asset ID here
+		Grass = '',     -- Add asset ID here
+		Electric = '',  -- Add asset ID here
+		Ice = '',       -- Add asset ID here
+		Fighting = '',  -- Add asset ID here
+		Poison = '',    -- Add asset ID here
+		Ground = '',    -- Add asset ID here
+		Flying = '',    -- Add asset ID here
+		Psychic = '',   -- Add asset ID here
+		Bug = '',       -- Add asset ID here
+		Rock = '',      -- Add asset ID here
+		Ghost = '',     -- Add asset ID here
+		Dragon = '',    -- Add asset ID here
+		Dark = '',      -- Add asset ID here
+		Steel = '',     -- Add asset ID here
+		Fairy = '',     -- Add asset ID here
 	}
 	function Sprite:addTeraJewel(teraType)
 		if self.teraJewel then return end
