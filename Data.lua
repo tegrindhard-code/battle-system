@@ -32,7 +32,7 @@ local modelsData = require(game:GetService('ServerStorage').Data.modelsData)
 return function(Battle)
 	local data = {}
 	Battle.data = data
-	
+
 	for _, file in pairs(game:GetService('ServerStorage').BattleData:GetChildren()) do
 		data[file.Name] = require(file)
 	end
