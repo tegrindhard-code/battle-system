@@ -353,7 +353,7 @@ return function(_p)--local _p = require(script.Parent)
 			interact = chat.interactableNPCs
 			Sprite = _p.Battle._SpriteClass
 		end,
-			leaveSafari = function(doorId, forced)
+		leaveSafari = function(doorId, forced)
 				local safari = _p.DataManager.currentChunk
 				if not (safari.id == "chunk90") then return end
 				if not forced then
@@ -402,8 +402,7 @@ return function(_p)--local _p = require(script.Parent)
 						MasterControl.WalkEnabled = true
 					end)
 				end
-			end
-end,
+		end,
 
 
 
@@ -18157,8 +18156,12 @@ end,
 				end
 			end
 
-			_p.Events["onDoorFocused_C_chunk89|a"] = _p.Events.leaveSafari('C_chunk89|a', false)
-			_p.Events["onDoorFocused_C_chunk89|b"] = _p.Events.leaveSafari('C_chunk89|b', false)
+			_p.Events["onDoorFocused_C_chunk89|a"] = function()
+				return _p.Events.leaveSafari('C_chunk89|a', false)
+			end
+			_p.Events["onDoorFocused_C_chunk89|b"] = function()
+				return _p.Events.leaveSafari('C_chunk89|b', false)
+			end
 
 			
 		end,
