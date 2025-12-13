@@ -84,20 +84,22 @@ return function(_p)--local _p = require(script.Parent)
 	end
 
 
-	local function TweenCameraQuadEaseInOut(cam, duration, Cframe)
+	local function TweenCameraQuadEaseInOut(cam, duration, endCFrame, startCFrame)
 		local ts = game:GetService("TweenService")
 		cam.CameraType = Enum.CameraType.Scriptable
-
+		if startCFrame then
+			cam.CFrame = startCFrame
+		end
 		local tweenInfo = TweenInfo.new(
 			duration,
 			Enum.EasingStyle.Quad,
 			Enum.EasingDirection.InOut
 		)
-
-		local tween = ts:Create(cam, tweenInfo, { CFrame = Cframe })
+		local tween = ts:Create(cam, tweenInfo, { CFrame = endCFrame })
 		tween:Play()
 		tween.Completed:Wait()
 	end
+	
 
 	--// Shake System
 	local function shake(vig, dur)
@@ -220,6 +222,7 @@ return function(_p)--local _p = require(script.Parent)
 	end
 
 	--// Gym7 Lighting
+	-- AI slop smfh
 	local function setGym7()
 		local lighting = game:GetService("Lighting")
 		local tweenService = game:GetService("TweenService")
@@ -329,6 +332,7 @@ return function(_p)--local _p = require(script.Parent)
 			if eventName and completedEvents[eventName] then return end
 			if eventName and completeOnTouch then
 				spawn(function() _p.PlayerData:completeEvent(eventName) end) -- is this all? just assume it's a plain trusted event?
+				-- No.
 			end
 			eventFn()
 		end)
@@ -348,6 +352,40 @@ return function(_p)--local _p = require(script.Parent)
 			chat = _p.NPCChat
 			interact = chat.interactableNPCs
 			Sprite = _p.Battle._SpriteClass
+		end,
+		leaveSafari = function(doorId, forced)
+			local safari = _p.DataManager.currentChunk
+			if not (safari.id == "chunk90") then return end
+			if not forced then
+			local choose = _p.NPCChat:say('[y/n]Leave the safari zone early?')
+				if choose then
+					_p.WalkEvents:removeSafariStepUI()
+					_p.Network:get('PDS', 'setSafariSteps', 0)
+				else
+					local d = _p.DataManager.currentChunk:getDoor(doorId)
+					if d and _p.player.Character then
+						local bp = d.Position - d.CFrame.lookVector * -8
+						_p.MasterControl:WalkTo(bp)
+					end
+					_p.NPCChat:enable()
+					_p.Menu:enable()
+					
+					local escort1 = {
+						"You're out of Safari Balls!\n" ..
+							"You were escorted out of the Safari Zone."
+					}
+					local escort = {
+						"You've hit the step limit!\n" ..
+							"You were escorted out of the Safari Zone."
+					}
+
+					pcall(function()
+						local MasterControl = _p.MasterControl
+						MasterControl.WalkEnabled = true
+					end)
+			
+			end
+			
 		end,
 
 		-- Sub-Contexts
@@ -836,11 +874,18 @@ return function(_p)--local _p = require(script.Parent)
 			chat:say(jake, 'This is the day we\'ve dreamed of since we were kids!',
 				'I\'m on my way to the lab to get mine right now!',
 				'Oh yeah, your parents wanted to see you before you went to the lab.')
-			chat:say(jake, 'I saw them pass my house earlier, heading towards the digging site.')
-			TweenCameraLinear(workspace.CurrentCamera, 5, Vector3.new(134.4, 82.5, 252.6), Vector3.new(-0.011, -1.062, -0.001) * -1, true)			
+			chat:say(jake, 'I saw them pass my house earlier, heading towards the digging site.'
+			)
+			TweenCameraQuadEaseInOut(cam, 8, CFrame.new(Vector3.new(109.8, 87.1, 249), Vector3.new(134.4, 82.5, 252.6)), CFrame.new(Vector3.new(102, 78, 189.6), Vector3.new(121, 70.5, 240.6)))
 			restorecams()
-			chat:say(jake,'Hurry and go talk to them.',
-				'I\'ll be waiting for you at the lab!')
+			chat:say(jake, 'Hurry and go talk to them.',
+				'I\'ll be waiting for you at the lab!',
+				'Oh yeah, and one thing before I go! Have this pair of Running Shoes!',
+				'Just press the ' .. (_p.Utilities.isTouchDevice() and 'Run button on the bottom of your screen' or (_p.Utilities.isConsole() and 'L2/LT button on your controller' or 'Left Shift key')) .. ' to run!'
+			)
+			onObtainItemSound()
+			_p.PlayerData:completeEvent('RunningShoesGiven')
+			
 			spawn(function()
 				jake:WalkTo(Vector3.new(-27, 53.7, 151.6))
 				jake:WalkTo(Vector3.new(-48.8, 53.7, 169))
@@ -2586,134 +2631,7 @@ return function(_p)--local _p = require(script.Parent)
 			end ]]
 		end,
 		onLoad_chunk4 = function(chunk)	
-			touchEvent('RunningShoesGiven', chunk.map.RunningShoesTrigger, true, function()
-				local wsly = chunk.npcs.Wsly
-				wsly.walkAnim = wsly.humanoid:LoadAnimation(create 'Animation' { AnimationId = 'rbxassetid://'.._p.animationId.Run })
-				local door = chunk:getDoor('Gate3')
-				wsly:Teleport(CFrame.new(door.Position + Vector3.new(-4, -2, 0), door.Position + Vector3.new(0, -2, 0)))
-				spawn(function() _p.Menu:disable() end)
-				door:open(.5)
-				MasterControl.WalkEnabled = false
-				MasterControl:Stop()
-				chat:say('Hey, wait up!')
-				local midZ = -1398
-				local pRoot = _p.player.Character.HumanoidRootPart
-				local dir = -Vector3.new(pRoot.CFrame.Z - midZ, 0, 0).unit.X
-				workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
-				local walking = true
-				spawn(function()
-					local p = _p.player.Character.Head.Position + Vector3.new(8, 5, dir*5)
-					Utilities.lookAt(p, function() return wsly.model.Head.Position end, 1)
-					while walking do
-						stepped:wait()
-						workspace.CurrentCamera.CoordinateFrame = CFrame.new(p, wsly.model.Head.Position)
-					end
-				end)
-				wsly.humanoid.WalkSpeed = 26
-				delay(.5, function()
-					door:close(.75)
-				end)
-				spawn(function()
-					MasterControl:LookAt(wsly.model.Head.Position)
-				end)
-				wsly:WalkTo(pRoot.Position + (wsly.model.Torso.Position-pRoot.Position).unit*5)
-				walking = false
-				local answer = chat:say(wsly, '[y/n]You look like you love running, am I right?')
-				if answer then
-					chat:say(wsly, 'Me too!')
-				else
-					chat:say(wsly, 'Well I do!')
-				end
-				chat:say(wsly, 'I just ran for 024035103:56...')
-				if answer then
-					chat:say(wsly, 'I actually have an extra pair of Running Shoes!',
-						'Here, I want you to have them.')
-				else
-					chat:say(wsly, 'Take this extra pair of Running Shoes.',
-						'I know you\'ll fall in love with running in no time!')
-				end
-				onObtainKeyItemSound()
-				chat:say('Obtained the Running Shoes!')
-				_p.RunningShoes:enable()
-				if Utilities.isTouchDevice() then
-					chat:say(wsly, 'Just hit the Run button on your screen to use them!')
-				else
-					chat:say(wsly, 'Just hold the left Shift key to use them!',
-						'If that\'s not your style, you can change how they work from the Options menu.')
-				end
-				chat:say(wsly, 'Try and keep up with me!')
-				if dir == 0 then dir = 1 end
-				local wp = pRoot.Position + Vector3.new(0, 0, dir*5)
-				wsly:WalkTo(wp)
-				spawn(function()
-					--				Utilities.lookBackAtMe()
-					Utilities.lookAt(_p.player.Character.Head.Position + Vector3.new(-4, 1, 0).unit*12.5, _p.player.Character.Head.Position, 1)
-					workspace.CurrentCamera.CameraType = Enum.CameraType.Custom
-					MasterControl.WalkEnabled = true
-					_p.Menu:enable()
-				end)
-				if math.abs(wp.z-midZ) > 12 then
-					wp = Vector3.new(-976, 119, wp.z<midZ and midZ-12 or midZ+12)
-					wsly:WalkTo(wp)
-				end
-				wsly.gyro.Parent = nil
-				wsly.position.Parent = nil
-				spawn(function()
-					wsly:WalkTo(Vector3.new(wp.x+50, wp.y, midZ+6))
-				end)
-				wait(1.5)
-				local cage = chunk.map.RopeCage:Clone()
-				cage.Parent = chunk.map--wsly.model
-				local main = cage.Main
-				local function w(m)
-					for _, p in pairs(m:GetChildren()) do
-						if p:IsA('BasePart') and p ~= main then
-							create 'Weld' {
-								Part0 = main,
-								Part1 = p,
-								C0 = CFrame.new(),
-								C1 = p.CFrame:inverse() * main.CFrame,
-								Parent = main,
-							}
-							p.Anchored = false
-						elseif p:IsA('Model') then
-							w(p)
-						end
-					end
-				end
-				w(cage)
-				main.Anchored = false
-				local root = wsly.model.HumanoidRootPart
-				create 'Weld' {
-					Part0 = root,
-					Part1 = main,
-					C0 = CFrame.new(0, 3.6, 0),
-					C1 = CFrame.new(),
-					Parent = root,
-				}
-				wsly.humanoid.PlatformStand = true
-				wsly:Stop()
-				wait(1)
-				--			_p.BubbleChat:enable()
-				--			_p.BubbleChat:OnGameChatMessage(wsly.model.Head, 'not again!')
-				local bbg = wsly.model.Head.ChatGui
-				bbg.Adornee = bbg.Parent
-				bbg.BillboardFrame.Visible = true
-				wait(2)
-				wsly.model:BreakJoints()
-				local sound = create 'Sound' {
-					SoundId = 'rbxasset://sounds/uuhhh.mp3',
-					Volume = 1,
-					Parent = wsly.model.Head,
-				}
-				sound:Play()
-				wait(2)
-				bbg:Destroy()
-				wait(2)
-				wsly:Destroy()
-				cage:Destroy()
-				--			_p.BubbleChat:disable()
-			end)
+			-- RIP running shoes
 		end,
 
 		onDoorFocused_Gate4 = function()
@@ -2883,7 +2801,6 @@ return function(_p)--local _p = require(script.Parent)
 
 
 
-			-- Volcanion Security
 			local door = chunk.map:FindFirstChild('CaveDoor:chunk62')
 			if not completedEvents.RevealSteamChamber then
 				door.CanTouch = false
@@ -2971,12 +2888,10 @@ return function(_p)--local _p = require(script.Parent)
 				end
 			end
 
-			-- Teraorb custom hookup (item #67)
-			local teraorbItem = chunk.map:FindFirstChild('#Item')
+			local teraorbItem = chunk.map:FindFirstChild('Item')
 			if teraorbItem then
 				local oinTag = teraorbItem:FindFirstChild('ObtainableItemNumber')
 				if oinTag and oinTag.Value == 67 then
-					-- Custom hookup for teraorb with fleurcannon effect
 					local part = teraorbItem:FindFirstChild("Top")
 					local hinge = teraorbItem:FindFirstChild("Hinge")
 					local itemIdObj = teraorbItem:FindFirstChild("ItemId")
@@ -2996,7 +2911,6 @@ return function(_p)--local _p = require(script.Parent)
 							MasterControl:Stop()
 							_p.Hoverboard:unequip(true)
 
-							-- Play fleurcannon effect aimed at player's back
 							local char = player.Character
 							local hrp = char and char:FindFirstChild("HumanoidRootPart")
 							if hrp then
@@ -3005,17 +2919,14 @@ return function(_p)--local _p = require(script.Parent)
 								local Misc = storage.Models.Misc
 								local Particles = Misc.Particles
 
-								-- Calculate positions: from item to behind the player
 								local from = part.Position
 								local playerPos = hrp.Position
 								local distance = (playerPos - from)
 								local centerPoint = CFrame.new(from, playerPos) * CFrame.new(0, 0, -1)
 
-								-- Make player turn around (face away from the item)
 								local lookAway = CFrame.new(playerPos, from)
 								hrp.CFrame = CFrame.new(playerPos, from - (from - playerPos).unit * 10)
 
-								-- Rainbow colors for fleurcannon
 								local colors = {
 									Color3.fromRGB(255, 0, 0),
 									Color3.fromRGB(248, 129, 60),
@@ -3029,7 +2940,6 @@ return function(_p)--local _p = require(script.Parent)
 								local effectScene = create 'Model' { Parent = workspace, Name = "TeraorbEffect" }
 								local parts = {}
 
-								-- Phase 1: Spinning rainbow balls
 								for indexColor, Color in pairs(colors) do
 									local Part = create 'Part' {
 										Anchored = true,
@@ -3106,7 +3016,6 @@ return function(_p)--local _p = require(script.Parent)
 								partTbl = {}
 								rotation = 2
 
-								-- Phase 2: The blast
 								local Attachment3 = Instance.new("Attachment", workspace.Terrain)
 								Attachment3.WorldCFrame = centerPoint + distance
 								local blastPart = Particles.Blast:Clone()
@@ -3197,7 +3106,6 @@ return function(_p)--local _p = require(script.Parent)
 									end
 								end)
 
-								-- Impact effects at player position
 								local clonedNeonBall = NeonBall:Clone()
 								clonedNeonBall.CFrame = centerPoint + distance
 								clonedNeonBall.Size = Vector3.new(3, 3, 3)
@@ -3279,16 +3187,14 @@ return function(_p)--local _p = require(script.Parent)
 										NeonBall3.Size = Vector3.new(magnitude + size / 2, 0.5 - 0.5 * a, 0.5 - 0.5 * a)
 									end)
 
-									-- Cleanup
 									game.Debris:AddItem(Attachment3, 1)
 									Attachment4:Destroy()
 									effectScene:Destroy()
 								end)
 
-								wait(2) -- Wait for effect to complete
+								wait(2) 
 							end
 
-							-- Now proceed with normal item obtain
 							obtainedCache[itemId] = true
 
 							local itemName, done
@@ -12336,8 +12242,8 @@ return function(_p)--local _p = require(script.Parent)
 				_p.Battle.npcPartner = nil
 			end)
 		end,
-		
-		
+
+
 		onBeforeEnter_EnergyCore = function(room)
 			local model = room.model
 			if completedEvents.DefeatTEinAC then
@@ -18134,7 +18040,7 @@ return function(_p)--local _p = require(script.Parent)
 				end)
 				MasterControl:LookAt(salesperson.model.Head.Position)
 				salesperson:LookAt(_p.player.Character.HumanoidRootPart.Position)
-				
+
 				salesperson:Say('Welcome to Roria\'s Safari Zone.')
 				salesperson:Say('Would you like to have a go at capturing Pokemon safari style?.')
 
@@ -18212,12 +18118,12 @@ return function(_p)--local _p = require(script.Parent)
 				_p.WalkEvents:createSafariStepUI()
 			end
 
-			-- Set up Safari exit door prompts
 			local function createSafariExitHandler(doorId)
 				return function()
 					local choose = _p.NPCChat:say('[y/n]Leave the safari zone early?')
 					if choose then
 						_p.WalkEvents:removeSafariStepUI()
+						_p.Network:get('PDS', 'setSafariSteps', 0)
 						return false
 					else
 						local d = _p.DataManager.currentChunk:getDoor(doorId)
@@ -18232,8 +18138,8 @@ return function(_p)--local _p = require(script.Parent)
 				end
 			end
 
-			_p.Events["onBeforeEnter_C_chunk89|a"] = createSafariExitHandler('C_chunk89|a')
-			_p.Events["onBeforeEnter_C_chunk89|b"] = createSafariExitHandler('C_chunk89|b')
+			_p.Events["onDoorFocused_C_chunk89|a"] = _p.Events.leaveSafari('C_chunk89|a', false)
+			_p.Events["onDoorFocused_C_chunk89|b"] = _p.Events.leaveSafari('C_chunk89|b', false)
 
 			local function leaveSafari(chunk)
 				local escort1 = {
@@ -18270,8 +18176,8 @@ return function(_p)--local _p = require(script.Parent)
 							print("escort")
 						end
 
-heks()
-if count == 0 or steps == 0 then
+						heks()
+						if count == 0 or steps == 0 then
 							wait(0.5)
 							if _p.DataManager then
 								_p.DataManager.currentChunk:Destroy()
@@ -18297,7 +18203,7 @@ if count == 0 or steps == 0 then
 				onTouched()
 			end]] -- ☠️
 		end,
-		
+
 		onExit_chunk90 = function(chunk)
 			_p.Network:get('PDS', 'removeSafariBalls')
 
@@ -18306,7 +18212,7 @@ if count == 0 or steps == 0 then
 				_p.WalkEvents:removeSafariStepUI()
 			end
 		end,
-		
+
 		onExitC_chunk83 = function()
 			local chunk = _p.DataManager.currentChunk
 			if chunk.id ~= 'chunk84' then return end
