@@ -963,8 +963,11 @@ return function(Battle)
 		-- Update type display (silent to avoid duplicate message)
 		self:add('-start', pokemon, 'typechange', pokemon.teraType, '[silent]')
 
-		-- Boost all stats by 3
-		self:boost({atk = 3, def = 3, spa = 3, spd = 3, spe = 3}, pokemon, pokemon, self:getEffect('Terastallization'))
+		-- Boost all stats by 3 (silent mode)
+		self:boost({atk = 3, def = 3, spa = 3, spd = 3, spe = 3}, pokemon, pokemon, self:getEffect('Terastallization'), true)
+
+		-- Add summary message instead of individual stat boosts
+		self:add('-boostMultipleFromZEffect', pokemon)
 
 		return true
 	end

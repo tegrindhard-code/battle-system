@@ -2403,7 +2403,7 @@ end
 end ]]
 
 
-function Battle:boost(boost, target, source, effect)
+function Battle:boost(boost, target, source, effect, silent)
 	if self.event then
 		if not target then target = self.event.target end
 		if not source then source = self.event.source end
@@ -2419,21 +2419,24 @@ function Battle:boost(boost, target, source, effect)
 		currentBoost[i] = b
 		if b ~= 0 and target:boostBy(currentBoost) then
 			success = true
-			local msg = '-boost'
-			if b < 0 then
-				msg = '-unboost'
-				b = -b
-			end
-			local e = effect.id
-			if e == 'bellydrum' then
-				self:add('-setboost', target, 'atk', target.boosts['atk'], '[from] move: Belly Drum')
-			elseif e == 'intimidate' or e == 'gooey' then
-				self:add(msg, target, i, b)
-			else
-				if effect.effectType == 'Move' then
+			-- Only add individual boost messages if not silent
+			if not silent then
+				local msg = '-boost'
+				if b < 0 then
+					msg = '-unboost'
+					b = -b
+				end
+				local e = effect.id
+				if e == 'bellydrum' then
+					self:add('-setboost', target, 'atk', target.boosts['atk'], '[from] move: Belly Drum')
+				elseif e == 'intimidate' or e == 'gooey' then
 					self:add(msg, target, i, b)
 				else
-					self:add(msg, target, i, b, '[from] ' .. effect.fullname)
+					if effect.effectType == 'Move' then
+						self:add(msg, target, i, b)
+					else
+						self:add(msg, target, i, b, '[from] ' .. effect.fullname)
+					end
 				end
 			end
 			self:runEvent('AfterEachBoost', target, source, effect, currentBoost)
