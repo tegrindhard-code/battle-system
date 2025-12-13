@@ -4650,10 +4650,11 @@ end
 
 function PlayerData:removeSafariBalls()
 	-- Safari Ball has num = 5 and is in bag category 3 (Poke Balls)
+	-- Remove ALL safari balls (handles bug where players have >30)
 	local safariData = self:getBagDataByNum(5, 3)
 	if not safariData then return end
 
-	self:incrementBagItem(5, -30)
+	self:incrementBagItem(5, -safariData.quantity)
 	return 'Safari Ball'
 end
 
