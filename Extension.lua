@@ -745,7 +745,7 @@ return function(Battle)
 				return false
 			end
 		end
-		
+
 		if moveData.self then
 			local selfRoll
 			if not isSecondary and moveData.self.boosts then selfRoll = math.random(100) end
@@ -917,7 +917,6 @@ return function(Battle)
 
 		if pokemon.item ~= 'teraorb' then return false end
 
-		-- Check if player has Tera Orb with sufficient charge (at least 10%)
 		local playerData = self:getPlayerDataForPokemon(pokemon)
 		if playerData then
 			local teraOrbCharge = playerData.teraOrbCharge or 0
@@ -930,7 +929,6 @@ return function(Battle)
 	end
 
 	function Battle:runTerastallize(pokemon)
-		-- Drain 10% from Tera Orb charge
 		local playerData = self:getPlayerDataForPokemon(pokemon)
 		print("[TERA DEBUG] runTerastallize called for", pokemon.name)
 		print("[TERA DEBUG] playerData:", playerData)
@@ -944,47 +942,37 @@ return function(Battle)
 			print("[TERA DEBUG] No playerData found!")
 		end
 
-		-- Store original types for STAB calculation
 		pokemon.originalTypes = pokemon:getTypes(true)
 
-		-- Set Terastallized state
 		pokemon.isTerastallized = true
 		pokemon.usedTerastallization = true
 
-		-- Update details
 		pokemon.details = pokemon.template.species .. ', L' .. pokemon.level ..
 			(pokemon.gender == '' and '' or ', ') .. pokemon.gender ..
 			(pokemon.set.shiny and ', shiny' or '') ..
 			', tera:' .. pokemon.teraType
 
-		-- Announce Terastallization
+	
 		self:add('-terastallize', pokemon, pokemon.teraType)
 
-		-- Update type display (silent to avoid duplicate message)
 		self:add('-start', pokemon, 'typechange', pokemon.teraType, '[silent]')
-
-		-- Boost all stats by 3
-		self:boost({atk = 3, def = 3, spa = 3, spd = 3, spe = 3}, pokemon, pokemon, self:getEffect('Terastallization'))
-
+		self:boost({atk = 3, def = 3, spa = 3, spd = 3, spe = 3}, pokemon, pokemon, self:getEffect('Terastallization'), '[silent]')
+        self:add('-message', 'All of your'.. pokemon.name .. '\'s stats were boosted drastically!')
 		return true
 	end
 
 	function Battle:runUnterastallize(pokemon)
 		if not pokemon.isTerastallized then return false end
 
-		-- Remove Terastallized state
 		pokemon.isTerastallized = false
 
-		-- Restore original type display
 		local types = pokemon:getTypes(true)
 		self:add('-start', pokemon, 'typechange', table.concat(types, '/'), '[silent]')
 
-		-- Update details
 		pokemon.details = pokemon.template.species .. ', L' .. pokemon.level ..
 			(pokemon.gender == '' and '' or ', ') .. pokemon.gender ..
 			(pokemon.set.shiny and ', shiny' or '')
 
-		-- Announce Unterastallization
 		self:add('-unterastallize', pokemon)
 
 		return true
