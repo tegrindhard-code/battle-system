@@ -1166,15 +1166,15 @@ return function(Battle)
 		local zPower = self:getEffect('zpower')
 		local bonus = self:findIn(move.name)
 		print(move..''..(bonus or ''))
-		if (move.category == 'Status') then --Should I add a default Status boost if one can't be found? 
+		if (move.category == 'Status') then --Should I add a default Status boost if one can't be found?
 			self:attrLastMove('[zeffect]')
 			if (bonus:sub(4, 4) == '1' or bonus:sub(4, 4) == '2' or bonus:sub(4, 4) == '3') then
 				local atk, num = bonus:match("^(%a+)(%d-)$")
 				self:boost({[atk] = tonumber(num)}, pokemon, pokemon, zPower);
-				self:add('-boostFromZEffect', pokemon, atk, tonumber(num));		
+				self:add('-boostMultipleFromZEffect', pokemon);
 			elseif (bonus == 'acc') then
 				self:boost({accuracy = 1}, pokemon, pokemon, zPower);
-				self:add('-boostFromZEffect', pokemon, 'accuracy', 1);
+				self:add('-boostMultipleFromZEffect', pokemon);
 			elseif (bonus == 'all') then
 				self:boost({atk = 1,def = 1,spa = 1,spd = 1,spe = 1}, pokemon, pokemon, zPower);
 				self:add('-boostMultipleFromZEffect', pokemon);
