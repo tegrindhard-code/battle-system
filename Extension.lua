@@ -957,11 +957,8 @@ return function(Battle)
 
 		self:add('-start', pokemon, 'typechange', pokemon.teraType, '[silent]')
 
-		-- Boost all stats by 3 (silent mode)
-		self:boost({atk = 3, def = 3, spa = 3, spd = 3, spe = 3}, pokemon, pokemon, self:getEffect('Terastallization'), true)
-
-		-- Add summary message instead of individual stat boosts
-		self:add('-boostMultipleFromZEffect', pokemon)
+		self:boost({atk = 3, def = 3, spa = 3, spd = 3, spe = 3}, pokemon, pokemon, self:getEffect('Terastallization'), '[silent]')
+		self:add('-message', 'All of your'.. pokemon.name .. '\'s stats were boosted drastically!')
 
 		return true
 	end
