@@ -3373,10 +3373,8 @@ function Battle:runSafariBall()
 	if self.p1 and self.p1.player then
 		local PlayerData = _f.PlayerDataService[self.p1.player]
 		if PlayerData then
-			local item = _f.Database.ItemById['safariball']
-			if item then
-				PlayerData:incrementBagItem(item.num, -1)
-			end
+			-- Safari Ball has num = 5
+			PlayerData:incrementBagItem(5, -1)
 		end
 	end
 
