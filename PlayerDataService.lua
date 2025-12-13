@@ -4644,17 +4644,18 @@ end
 function PlayerData:BuySafariBalls()
 	if not self:addMoney(-5000) then return 'nm' end
 
-	local item = _f.Database.ItemById['safariball']
-	self:addBagItems({num = item.num, quantity = 30})
-	return item.name
+	self:addBagItems({id = 'safariball', quantity = 30})
+	return 'Safari Ball'
 end
 
 function PlayerData:removeSafariBalls()
-	if not self:getBagDataById('safariball', 1) then return end
+	-- Safari Ball has num = 5 and is in bag category 3 (Poke Balls)
+	-- Remove ALL safari balls (handles bug where players have >30)
+	local safariData = self:getBagDataByNum(5, 3)
+	if not safariData then return end
 
-	local item = _f.Database.ItemById['safariball']
-	self:incrementBagItem(item.num, -30)
-	return item.name
+	self:incrementBagItem(5, -safariData.quantity)
+	return 'Safari Ball'
 end
 
 function PlayerData:updateSafariSteps(steps)
