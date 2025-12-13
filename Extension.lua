@@ -1164,10 +1164,10 @@ return function(Battle)
 			if (bonus:sub(4, 4) == '1' or bonus:sub(4, 4) == '2' or bonus:sub(4, 4) == '3') then
 				local atk, num = bonus:match("^(%a+)(%d-)$")
 				self:boost({[atk] = tonumber(num)}, pokemon, pokemon, zPower);
-				self:add('-boostMultipleFromZEffect', pokemon);
+				self:add('-boostFromZEffect', pokemon, atk, tonumber(num));
 			elseif (bonus == 'acc') then
 				self:boost({accuracy = 1}, pokemon, pokemon, zPower);
-				self:add('-boostMultipleFromZEffect', pokemon);
+				self:add('-boostFromZEffect', pokemon, 'accuracy', 1);
 			elseif (bonus == 'all') then
 				self:boost({atk = 1,def = 1,spa = 1,spd = 1,spe = 1}, pokemon, pokemon, zPower);
 				self:add('-boostMultipleFromZEffect', pokemon);
